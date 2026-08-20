@@ -8125,7 +8125,7 @@ function openGuiaModal(id = null) {
             <div class="ficha-section" style="border:1px solid #E2E8F0; border-radius:8px; background:#FFFFFF; overflow:hidden;">
                 <div class="ficha-section-title" style="padding:4px 10px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; color:#2563EB; font-size:11px; font-weight:900; display:flex; justify-content:space-between; align-items:center;">
                     <span><i class="bi bi-building"></i> Remitente (Origen)</span>
-                    <small style="color:#64748B; font-weight:700; font-size:8px;">🔒 Fijo</small>
+                    <small style="color:#64748B; font-weight:700; font-size:8px;s">🔒 Fijo</small>
                 </div>
                 <div style="padding:6px 10px;">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:2px;">
@@ -8584,7 +8584,6 @@ async function cargarGuiaParaEditar(id) {
         // 🔒 setSelectValue BLINDADO
         // Funciona tanto para <select> como para <input>.
         // Si el elemento no es <select>, actúa como setValue.
-        // Así este error NO vuelve a ocurrir sin importar el id que se le pase.
         // ============================================================
         const setSelectValue = (id, value) => {
             const el = document.getElementById(id);
@@ -8624,17 +8623,9 @@ async function cargarGuiaParaEditar(id) {
         setSelectValue('guiaOrigen', ORIGEN_FIJO.direccion);
         setValue('guiaDestino', g.destinatario_direccion);
         setSelectValue('guiaMotivo', g.motivo_traslado);
-        setValue('guiaObs', g.observaciones);
 
-
-        // ============================================================
-        // PARCHE PARA cargarGuiaParaEditar(id)
-        // Agregar este bloque DESPUÉS de la línea:
-        //
-        //     setValue('guiaObs', g.observaciones);
-        //
-        // y ANTES de la sección "SOBREESCRIBIR ORIGEN CON DATOS FIJOS"
-        // ============================================================
+        // ---- OBSERVACIONES (id correcto: guiaObservaciones, no guiaObs) ----
+        setValue('guiaObservaciones', g.observaciones);
 
         // ---- MODALIDAD DE TRANSPORTE (activa/desactiva el bloque transportista) ----
         setSelectValue('guiaModalidadTransporte', g.modalidad_transporte || 'PRIVADO');
@@ -8642,7 +8633,7 @@ async function cargarGuiaParaEditar(id) {
             setTimeout(() => toggleTransportistaGuia(), 50);
         }
 
-        // ---- VEHÍCULO Y CONDUCTOR (esto era lo que faltaba) ----
+        // ---- VEHÍCULO Y CONDUCTOR ----
         setValue('guiaPlaca', g.placa_vehiculo);
         setValue('guiaConductorDNI', g.conductor_dni);
         setValue('guiaConductorNombre', g.conductor_nombre);
@@ -8653,16 +8644,11 @@ async function cargarGuiaParaEditar(id) {
         setValue('guiaTransportistaNombre', g.transportista_nombre);
         setValue('guiaTransportistaDireccion', g.transportista_direccion);
 
-        // ---- MOTIVO DE TRASLADO ----
-        setSelectValue('guiaMotivo', g.motivo_traslado);
-
         // ---- FECHAS ----
-        // fecha_emision y fecha_traslado suelen venir como datetime/string desde la BD;
-        // los inputs son type="date", así que hay que recortarlos a YYYY-MM-DD.
+        // Los inputs son type="date", así que hay que recortar a YYYY-MM-DD
         const normalizarFecha = (valor) => {
             if (!valor) return '';
             const s = String(valor);
-            // admite "2026-08-19T00:00:00" o "2026-08-19 00:00:00" o "2026-08-19"
             return s.slice(0, 10);
         };
         setValue('guiaFechaEmision', normalizarFecha(g.fecha_emision));
@@ -8678,8 +8664,7 @@ async function cargarGuiaParaEditar(id) {
         setValue('guiaFactura', g.factura);
 
         // ---- DESTINATARIO: UBIGEO (departamento/provincia/distrito) ----
-        // Estos selects se llenan dinámicamente, así que hay que esperar a que
-        // las opciones existan antes de asignar el valor.
+        // Se llenan dinámicamente, así que hay que esperar a que las opciones existan.
         if (g.destinatario_departamento) {
             setTimeout(() => {
                 const deptoSel = document.getElementById('guiaDeptoDestino');
@@ -8716,7 +8701,6 @@ async function cargarGuiaParaEditar(id) {
             origenInput.style.cursor = 'not-allowed';
         }
 
-        // RUC Remitente
         const rucRemitente = document.getElementById('guiaRucRemitente');
         if (rucRemitente) {
             rucRemitente.value = ORIGEN_FIJO.ruc;
@@ -8725,7 +8709,6 @@ async function cargarGuiaParaEditar(id) {
             rucRemitente.style.color = '#64748B';
         }
 
-        // Nombre Remitente
         const nombreRemitente = document.getElementById('guiaRemitenteNombre');
         if (nombreRemitente) {
             nombreRemitente.value = ORIGEN_FIJO.nombre;
@@ -8734,7 +8717,6 @@ async function cargarGuiaParaEditar(id) {
             nombreRemitente.style.color = '#64748B';
         }
 
-        // Ubigeo Origen
         const deptoOrigen = document.getElementById('guiaDeptoOrigen');
         if (deptoOrigen) {
             deptoOrigen.value = ORIGEN_FIJO.departamento;
@@ -8775,7 +8757,8 @@ async function cargarGuiaParaEditar(id) {
         }
 
         // ============================================================
-        // PRODUCTOS (items_json)
+        // 🔽 PRODUCTOS (items_json) -> pintar filas EDITABLES reales
+        //     La tabla real es #guiaProductosBody (no existe #guiaProducts)
         // ============================================================
         let items = [];
         try {
@@ -8787,24 +8770,38 @@ async function cargarGuiaParaEditar(id) {
             items = [];
         }
 
-        const productosNormalizados = (items || []).map(it => ({
-            codigo: it.codigo || '',
-            producto: it.producto || it.descripcion || '',
-            marca: it.marca || '',
-            modelo: it.modelo || '',
-            um: it.um || 'NIU',
-            cantidad: it.cantidad || 1,
-            stock: it.stock || 0
-        }));
+        const tbody = document.getElementById('guiaProductosBody');
+        if (tbody) {
+            tbody.innerHTML = ''; // limpiar la fila vacía inicial que agrega openGuiaModal
 
-        const productsContainer = document.getElementById('guiaProducts');
-        if (productsContainer) {
-            productsContainer.innerHTML = productosNormalizados.length > 0
-                ? productTableHtml(productosNormalizados)
-                : '<div style="padding:20px;text-align:center;color:#94A3B8;">No hay productos registrados en esta guía.</div>';
+            (items || []).forEach(it => {
+                agregarFilaProductoGuia(); // crea la fila con los inputs reales
+                const lastRow = tbody.lastElementChild;
+                if (lastRow) {
+                    const codigoInput = lastRow.querySelector('.guia-producto-codigo');
+                    const descInput   = lastRow.querySelector('.guia-producto-desc');
+                    const unidadSel   = lastRow.querySelector('.guia-producto-unidad');
+                    const cantInput   = lastRow.querySelector('.guia-producto-cant');
+                    const pesoInput   = lastRow.querySelector('.guia-producto-peso');
+
+                    if (codigoInput) codigoInput.value = it.codigo || '';
+                    if (descInput)   descInput.value   = it.producto || it.descripcion || '';
+                    if (unidadSel)   unidadSel.value   = it.um || 'NIU';
+                    if (cantInput)   cantInput.value   = it.cantidad || 1;
+                    if (pesoInput)   pesoInput.value   = it.peso_unitario || 0.50;
+                }
+            });
+
+            if (!items || items.length === 0) {
+                // si la guía no tenía productos, dejar al menos una fila vacía
+                agregarFilaProductoGuia();
+            }
+
+            actualizarPesoTotalGuia();
+            actualizarContadorProductosGuia();
         }
 
-        window._guiaProductos = productosNormalizados;
+        window._guiaProductos = items;
 
         showToast('✅ Guía cargada correctamente', 'success');
 
