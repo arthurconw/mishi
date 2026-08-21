@@ -574,7 +574,7 @@ function renderTable(m, list) {
     headersHtml += `<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap">Acciones</th>`;
     
    const rows = list.map((r, i) => {
-       let cells = `<td><b>${i + 1}</b>${badgeNuevo(r, 'created_at', 'fecha_creacion')}</td>...`;
+       let cells = `<td><b>${i + 1}</b>${badgeNuevo(r, 'created_at', 'fecha_creacion')}</td>`;
         
         displayFields.forEach(f => {
             if (f === 'activo' || f === 'estado') {
