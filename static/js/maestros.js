@@ -157,7 +157,7 @@ function esRegistroNuevo(fecha) {
     }
 }
 
-function badgeNuevo(row, ...fechaFields) {
+function badgeNuevo(row, fechaFields) {
     const fecha = fechaFields.map(f => row[f]).find(v => v !== undefined && v !== null);
     if (!esRegistroNuevo(fecha)) return '';
     return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';

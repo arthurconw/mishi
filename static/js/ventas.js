@@ -1658,20 +1658,22 @@ function renderGuias() {
 
 
 
+// ============================================================
+// RENDERIZAR COMPROBANTES CON ESTADO DE CRÉDITO
+// ============================================================
+
 function renderComprobantes() {
     const q = document.getElementById('comprobanteSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('comprobanteStatus')?.value || '';
     
-    // 🔽 FILTRO POR FECHAS
     const fechaInicio = document.getElementById('comprobanteFechaInicio')?.value || '';
     const fechaFin = document.getElementById('comprobanteFechaFin')?.value || '';
     
     const list = comprobantesData.filter(r => {
-        const searchStr = `${r.numero || ''} ${r.serie || ''} ${r.cliente || ''} ${r.ruc || ''}`.toLowerCase();
+        const searchStr = `${r.numero || ''} ${r.serie || ''} ${r.cliente || ''} ${r.ruc || ''} ${r.condicion || ''}`.toLowerCase();
         const matchText = !q || searchStr.includes(q);
         const matchStatus = !st || r.estado === st;
         
-        // 🔽 FILTRO POR FECHAS
         let matchFecha = true;
         if (fechaInicio || fechaFin) {
             let fechaComp = r.fecha || r.created_at || '';
@@ -1707,7 +1709,6 @@ function renderComprobantes() {
                 }
             }
         }
-        
         return matchText && matchStatus && matchFecha;
     });
     
@@ -1715,27 +1716,52 @@ function renderComprobantes() {
     if (!tbody) return;
     
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay comprobantes registrados</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay comprobantes registrados</td></tr>`;
         return;
     }
     
-    tbody.innerHTML = list.map((r, i) => `
+    tbody.innerHTML = list.map((r, i) => {
+        // 🔽 Determinar si es crédito y su estado
+        const esCredito = r.condicion && r.condicion.includes('Crédito');
+        const estadoCredito = r.estado_credito || '';
+        const diasCredito = r.dias_credito || '';
+        
+        let badgeCredito = '';
+        if (esCredito) {
+            if (estadoCredito === 'Aceptada en Crédito') {
+                badgeCredito = `<span class="badge b-ok" style="background:#2563EB;border-color:#1D4ED8;">✅ ${estadoCredito}</span>`;
+            } else if (estadoCredito === 'Pendiente de aprobación') {
+                badgeCredito = `<span class="badge b-pending">⏳ ${estadoCredito}</span>`;
+            } else if (estadoCredito === 'Rechazada') {
+                badgeCredito = `<span class="badge b-canceled">❌ ${estadoCredito}</span>`;
+            } else {
+                badgeCredito = `<span class="badge b-gray">🔍 ${estadoCredito || 'Crédito'}</span>`;
+            }
+        }
+        
+        // Monto retenido
+        const montoRetenido = parseFloat(r.monto_retenido || 0);
+        const montoStr = montoRetenido > 0 ? `${money(r.monto)} <small style="color:#DC2626;font-size:8px;">(Ret: ${money(montoRetenido)})</small>` : money(r.monto);
+        
+        return `
         <tr>
             <td>${i + 1}</td>
             <td class="date-cell">${formatearFechaComprobante(r.fecha)}</td>
             <td>${badgeStatus(r.estado)}</td>
-            <td>${sd(r.tipo)}</td>
+            <td>${r.tipo || '-'}</td>
             <td><b>${sd(r.serie)}-${sd(r.numero)}</b>${badgeNuevo(r, 'fecha')}</td>
             <td>${sd(r.ruc)}</td>
             <td class="left">${sd(r.cliente)}</td>
             <td>${sd(r.cotizacion)}</td>
-            <td><b>${money(r.monto)}</b></td>
-            <td>${sd(r.condicion)}</td>
+            <td><b>${montoStr}</b></td>
+            <td>
+                ${esCredito ? `<div style="display:flex;flex-direction:column;gap:2px;align-items:center;">${badgeCredito}<small style="font-size:8px;color:#64748B;">${diasCredito} días</small></div>` : sd(r.condicion)}
+            </td>
             <td>
                 <button class="kebab" onclick="showComprobanteMenu(event, ${r.id})">⋮</button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 // ============================================================
@@ -3047,12 +3073,504 @@ async function saveGuia(estado) {
 window.saveGuia = saveGuia;
 
 
-// Reemplazar la función saveComprobante en ventas.js
+
+// ============================================================
+// RENDERIZAR CONTENIDO DEL MODAL DE COMPROBANTES CON RETENCIÓN
+// ============================================================
+
+function renderComprobanteFormContent(isEdit, data) {
+    const cotOptions = (cotizacionesData || []).map(q => 
+        `<option value="${q.numero}" ${data?.cotizacion === q.numero ? 'selected' : ''}>${q.numero} - ${q.razon || 'Sin cliente'}</option>`
+    ).join('');
+    
+    const guiaOptions = (guiasData || []).map(g => {
+        const valor = `${g.serie}-${g.numero}`;
+        return `<option value="${valor}" ${data?.guia === valor ? 'selected' : ''}>${valor} - ${g.cliente || 'Sin cliente'}</option>`;
+    }).join('');
+    
+    const pcOptions = (pedidosData || []).map(p => 
+        `<option value="${p.numero}" ${data?.pc === p.numero ? 'selected' : ''}>${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
+    ).join('');
+    
+    // Opciones de condición de pago con plazos de crédito
+    const condicionOptions = `
+        <option value="Contado" ${data?.condicion === 'Contado' ? 'selected' : ''}>Contado</option>
+        <option value="Crédito 7 días" ${data?.condicion === 'Crédito 7 días' ? 'selected' : ''}>Crédito 7 días</option>
+        <option value="Crédito 15 días" ${data?.condicion === 'Crédito 15 días' ? 'selected' : ''}>Crédito 15 días</option>
+        <option value="Crédito 30 días" ${data?.condicion === 'Crédito 30 días' ? 'selected' : ''}>Crédito 30 días</option>
+        <option value="Crédito 45 días" ${data?.condicion === 'Crédito 45 días' ? 'selected' : ''}>Crédito 45 días</option>
+        <option value="Crédito 60 días" ${data?.condicion === 'Crédito 60 días' ? 'selected' : ''}>Crédito 60 días</option>
+        <option value="Crédito 90 días" ${data?.condicion === 'Crédito 90 días' ? 'selected' : ''}>Crédito 90 días</option>
+        <option value="Crédito 120 días" ${data?.condicion === 'Crédito 120 días' ? 'selected' : ''}>Crédito 120 días</option>
+    `;
+    
+    // Estado del crédito (para retención)
+    const estadoCreditoOptions = `
+        <option value="Pendiente de aprobación" ${data?.estado_credito === 'Pendiente de aprobación' ? 'selected' : ''}>⏳ Pendiente de aprobación</option>
+        <option value="Aceptada en Crédito" ${data?.estado_credito === 'Aceptada en Crédito' ? 'selected' : ''}>✅ Aceptada en Crédito</option>
+        <option value="Rechazada" ${data?.estado_credito === 'Rechazada' ? 'selected' : ''}>❌ Rechazada</option>
+        <option value="En revisión" ${data?.estado_credito === 'En revisión' ? 'selected' : ''}>🔍 En revisión</option>
+    `;
+    
+    // Mostrar campo de retención SOLO si la condición es crédito
+    const isCredito = (data?.condicion || 'Contado').includes('Crédito');
+    const retencionStyle = isCredito ? 'display:block;' : 'display:none;';
+    
+    // Productos
+    const productos = data?.items || [];
+    const productosHtml = productos.length > 0 ? 
+        renderProductosComprobanteHTML(productos) : 
+        '<div style="padding:20px;text-align:center;color:#94A3B8;">📭 Seleccione una cotización o guía para ver los productos</div>';
+    
+    return `
+        <div class="ficha-section">
+            <div class="ficha-section-title">🧾 Documentos vinculados</div>
+            <div class="ficha-grid">
+                <div class="form-field col-4">
+                    <label>Cotización vinculada</label>
+                    <select id="compCotizacion" onchange="cargarProductosComprobanteDesdeCotizacion(this.value)">
+                        <option value="">-- Ninguna --</option>
+                        ${cotOptions || '<option value="" disabled>Sin cotizaciones</option>'}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Guía de Remisión vinculada</label>
+                    <select id="compGuia" onchange="loadComprobanteFromGuia(this.value); actualizarObservacionesComprobante()">
+                        <option value="">-- Ninguna --</option>
+                        ${guiaOptions || '<option value="" disabled>Sin guías</option>'}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>PC vinculado</label>
+                    <select id="compPC" onchange="loadComprobanteFromPC(this.value); actualizarObservacionesComprobante()">
+                        <option value="">-- Ninguno --</option>
+                        ${pcOptions || '<option value="" disabled>Sin PCs</option>'}
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ficha-section">
+            <div class="ficha-grid">
+                <div class="form-field col-3">
+                    <label>Tipo</label>
+                    <select id="compTipo">
+                        <option value="Factura" ${data?.tipo === 'Factura' ? 'selected' : ''}>Factura</option>
+                        <option value="Boleta" ${data?.tipo === 'Boleta' ? 'selected' : ''}>Boleta</option>
+                    </select>
+                </div>
+                <div class="form-field col-3">
+                    <label>Serie</label>
+                    <input id="compSerie" value="${data?.serie || 'F001'}">
+                </div>
+                <div class="form-field col-3">
+                    <label>Número</label>
+                    <input id="compNumero" value="${data?.numero || String(Date.now()).slice(-8)}">
+                </div>
+                <div class="form-field col-3">
+                    <label>Estado</label>
+                    <select id="compEstado">
+                        ${['Borrador','Emitido','Enviado','Pagado','Anulado'].map(s => `<option value="${s}" ${data?.estado === s ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Cliente</label>
+                    <input id="compCliente" value="${data?.cliente || ''}" placeholder="Razón social">
+                </div>
+                <div class="form-field col-4">
+                    <label>RUC</label>
+                    <input id="compRuc" value="${data?.ruc || ''}" placeholder="12345678901">
+                </div>
+                <div class="form-field col-4">
+                    <label>Monto</label>
+                    <input id="compMonto" type="number" value="${data?.monto || 0}" step="0.01">
+                </div>
+                <div class="form-field col-4">
+                    <label>Condición de pago</label>
+                    <select id="compCondicion" onchange="toggleRetencionComprobante()">
+                        ${condicionOptions}
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ============================================================ -->
+        <!-- SECCIÓN DE RETENCIÓN - SOLO PARA CRÉDITO -->
+        <!-- ============================================================ -->
+        <div class="ficha-section" id="retencionSection" style="${retencionStyle} border: 2px solid #2563EB; background: #F0F7FF;">
+            <div class="ficha-section-title" style="background: #DBEAFE; color: #1D4ED8; border-bottom: 2px solid #2563EB;">
+                🔒 Retención - Crédito
+                <small style="color: #1D4ED8; font-weight: 700;">El cliente acepta pagar en el plazo indicado</small>
+            </div>
+            <div class="ficha-grid" style="background: #F8FAFC;">
+                <div class="form-field col-4">
+                    <label>Estado del Crédito</label>
+                    <select id="compEstadoCredito" style="font-weight: 900; border: 2px solid #2563EB;">
+                        ${estadoCreditoOptions}
+                    </select>
+                </div>
+                <div class="form-field col-4">
+                    <label>Fecha de Aprobación</label>
+                    <input id="compFechaAprobacion" type="date" value="${data?.fecha_aprobacion || today()}" style="font-weight: 800;">
+                </div>
+                <div class="form-field col-4">
+                    <label>Fecha de Vencimiento</label>
+                    <input id="compFechaVencimiento" type="date" value="${data?.fecha_vencimiento || ''}" style="font-weight: 800; color: #DC2626;" readonly>
+                </div>
+                <div class="form-field col-4">
+                    <label>Días de Crédito</label>
+                    <input id="compDiasCredito" type="number" value="${data?.dias_credito || 30}" min="1" max="180" style="font-weight: 900; color: #1D4ED8;" 
+                           onchange="calcularFechaVencimientoComprobante()">
+                </div>
+                <div class="form-field col-4">
+                    <label>Monto Retenido</label>
+                    <input id="compMontoRetenido" type="number" value="${data?.monto_retenido || 0}" step="0.01" style="font-weight: 900; color: #DC2626; border-color: #DC2626;">
+                </div>
+                <div class="form-field col-8">
+                    <label>Observaciones de Retención</label>
+                    <input id="compObsRetencion" value="${data?.obs_retencion || ''}" placeholder="Ej: Cliente acepta crédito, se retiene el 10%..." style="font-weight: 700; border: 1px solid #2563EB;">
+                </div>
+            </div>
+            <!-- Alerta informativa -->
+            <div style="padding: 8px 14px; background: #DBEAFE; border-top: 1px solid #2563EB; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">💡</span>
+                <span style="font-size: 11px; font-weight: 700; color: #1D4ED8;">
+                    Al seleccionar "Aceptada en Crédito", la factura queda registrada como aceptada por el cliente con plazo de crédito.
+                    El monto retenido se descuenta del total a pagar.
+                </span>
+            </div>
+        </div>
+        
+        <div class="ficha-section">
+            <div class="ficha-section-title">🧾 Productos</div>
+            <div id="compProducts">
+                ${productosHtml}
+            </div>
+        </div>
+        
+        <div class="ficha-section">
+            <div class="ficha-grid">
+                <div class="form-field col-12">
+                    <label>Observaciones</label>
+                    <textarea id="compObs" placeholder="Observaciones del comprobante">${data?.observaciones || ''}</textarea>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+
+/**
+ * Renderiza la tabla de productos para el comprobante
+ */
+function renderProductosComprobanteHTML(productos) {
+    if (!productos || productos.length === 0) {
+        return '<div style="padding:20px;text-align:center;color:#94A3B8;">📭 No hay productos disponibles.</div>';
+    }
+    
+    const total = productos.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.valorVenta || 0) * 1.18), 0);
+    
+    return `
+        <div class="table-scroll">
+            <table class="master-table" style="font-size:11px;">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Unidad</th>
+                        <th>Cant.</th>
+                        <th>Precio Unit.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${productos.map((p, i) => {
+                        const subtotal = Number(p.cantidad || 0) * Number(p.valorVenta || 0);
+                        return `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${p.codigo || '-'}</td>
+                            <td class="left">${p.producto || p.descripcion || 'Sin nombre'}</td>
+                            <td>${p.marca || '-'}</td>
+                            <td>${p.modelo || '-'}</td>
+                            <td>${p.um || 'NIU'}</td>
+                            <td>${p.cantidad || 1}</td>
+                            <td>S/ ${Number(p.valorVenta || 0).toFixed(2)}</td>
+                            <td style="font-weight:900; color:#059669;">S/ ${subtotal.toFixed(2)}</td>
+                        </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="7" style="text-align:right; font-weight:900; background:#F8FAFC;">TOTAL</td>
+                        <td colspan="2" style="font-weight:900; font-size:14px; color:#EF233C; background:#FFF1F2;">
+                            S/ ${total.toFixed(2)}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+}
+
+
+/**
+ * Alterna la visibilidad de la sección de retención según la condición de pago
+ */
+function toggleRetencionComprobante() {
+    const condicion = document.getElementById('compCondicion')?.value || 'Contado';
+    const retencionSection = document.getElementById('retencionSection');
+    
+    if (condicion.includes('Crédito')) {
+        retencionSection.style.display = 'block';
+        retencionSection.style.animation = 'fadeIn 0.3s ease';
+        
+        // Calcular fecha de vencimiento automáticamente
+        calcularFechaVencimientoComprobante();
+        
+        // Mostrar mensaje informativo
+        showToast('💡 Condición de crédito seleccionada - Complete los datos de retención', 'info');
+    } else {
+        retencionSection.style.display = 'none';
+    }
+}
+
+
+/**
+ * Calcula la fecha de vencimiento basado en los días de crédito
+ */
+function calcularFechaVencimientoComprobante() {
+    const diasInput = document.getElementById('compDiasCredito');
+    const fechaAprobacion = document.getElementById('compFechaAprobacion');
+    const fechaVencimiento = document.getElementById('compFechaVencimiento');
+    
+    if (!diasInput || !fechaAprobacion || !fechaVencimiento) return;
+    
+    const dias = parseInt(diasInput.value) || 30;
+    const fecha = new Date(fechaAprobacion.value || today());
+    
+    if (isNaN(fecha.getTime())) {
+        fechaVencimiento.value = '';
+        return;
+    }
+    
+    fecha.setDate(fecha.getDate() + dias);
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    
+    fechaVencimiento.value = `${year}-${month}-${day}`;
+}
+
+
+/**
+ * Abre el modal de comprobante con la sección de retención
+ */
+async function openComprobanteModal(id = null) {
+    console.log('🧾 Abriendo modal de comprobante', { id });
+    editingId = id;
+    const isEdit = id !== null;
+    
+    // Cerrar todos los modales primero
+    const todosLosModales = document.querySelectorAll('.modal-bg.show, .modal-bg[style*="display: flex"]');
+    todosLosModales.forEach(m => {
+        if (m.id !== 'comprobanteModal') {
+            m.classList.remove('show');
+            m.style.display = 'none';
+        }
+    });
+    
+    const modal = document.getElementById('comprobanteModal');
+    if (!modal) {
+        console.error('❌ #comprobanteModal no encontrado');
+        showToast('Error: Modal de comprobante no disponible', 'error');
+        return;
+    }
+    
+    modal.classList.remove('show');
+    modal.style.cssText = '';
+    
+    const titleEl = document.getElementById('comprobanteModalTitle');
+    if (titleEl) {
+        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nueva factura / Boleta';
+    }
+    
+    const formContainer = document.getElementById('comprobanteForm');
+    if (!formContainer) {
+        console.error('❌ #comprobanteForm no encontrado');
+        showToast('Error: Formulario de comprobante no disponible', 'error');
+        return;
+    }
+    
+    // Cargar datos necesarios
+    try {
+        if (!guiasData || guiasData.length === 0) await loadGuias();
+        if (!pedidosData || pedidosData.length === 0) await loadPedidos();
+    } catch (error) {
+        console.warn('⚠️ Error cargando datos:', error);
+    }
+    
+    let data = null;
+    if (isEdit) {
+        try {
+            const response = await apiFetch(`/ventas/api/comprobantes/${id}`);
+            if (response.success) {
+                data = response.data;
+                console.log('📦 Datos del comprobante cargados:', data);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error cargando comprobante para edición:', error);
+        }
+    }
+    
+    // Renderizar el formulario con los datos
+    formContainer.innerHTML = renderComprobanteFormContent(isEdit, data);
+    
+    // Si hay datos, cargarlos
+    if (data && isEdit) {
+        cargarDatosComprobante(data);
+    }
+    
+    // Inicializar la sección de retención
+    setTimeout(() => {
+        toggleRetencionComprobante();
+        // Si es crédito, actualizar fechas
+        const condicion = document.getElementById('compCondicion')?.value || '';
+        if (condicion.includes('Crédito')) {
+            calcularFechaVencimientoComprobante();
+        }
+    }, 100);
+    
+    // Mostrar el modal
+    modal.classList.add('show');
+    modal.style.cssText = `
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 9999999 !important;
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(15, 23, 42, 0.8) !important;
+        backdrop-filter: blur(6px) !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 20px !important;
+        overflow: auto !important;
+    `;
+    
+    const box = modal.querySelector('.modal-box');
+    if (box) {
+        box.style.cssText = `
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: min(1100px, 96vw) !important;
+            max-height: 95vh !important;
+            background: #FFFFFF !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            box-shadow: 0 30px 80px rgba(15,23,42,.45) !important;
+            flex-direction: column !important;
+            z-index: 9999999 !important;
+            position: relative !important;
+        `;
+    }
+    
+    document.body.style.overflow = 'hidden';
+    console.log('✅ Modal de comprobante abierto correctamente');
+}
+
+
+/**
+ * Carga los datos de un comprobante existente en el formulario
+ */
+function cargarDatosComprobante(data) {
+    const setVal = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'SELECT') {
+                for (let opt of el.options) {
+                    if (opt.value === value) {
+                        opt.selected = true;
+                        return;
+                    }
+                }
+            } else {
+                el.value = value ?? '';
+            }
+        }
+    };
+    
+    setVal('compTipo', data.tipo_comprobante || data.tipo);
+    setVal('compSerie', data.serie);
+    setVal('compNumero', data.numero);
+    setVal('compEstado', data.estado_sunat || data.estado);
+    setVal('compCliente', data.cliente_nombre || data.cliente);
+    setVal('compRuc', data.cliente_numero_doc || data.ruc);
+    setVal('compMonto', data.total || data.monto);
+    setVal('compObs', data.observaciones);
+    setVal('compCondicion', data.condicion_pago || data.condicion || 'Contado');
+    setVal('compCotizacion', data.documento_asociado || data.cotizacion);
+    setVal('compGuia', data.guia_vinculada || data.guia);
+    setVal('compPC', data.pc_vinculado || data.pc);
+    
+    // 🔽 DATOS DE RETENCIÓN
+    setVal('compEstadoCredito', data.estado_credito || 'Pendiente de aprobación');
+    setVal('compFechaAprobacion', data.fecha_aprobacion || today());
+    setVal('compFechaVencimiento', data.fecha_vencimiento || '');
+    setVal('compDiasCredito', data.dias_credito || 30);
+    setVal('compMontoRetenido', data.monto_retenido || 0);
+    setVal('compObsRetencion', data.obs_retencion || '');
+    
+    // Productos
+    const items = data.items_json || data.items || [];
+    if (items.length > 0) {
+        window._compProductos = items;
+        const productsContainer = document.getElementById('compProducts');
+        if (productsContainer) {
+            productsContainer.innerHTML = renderProductosComprobanteHTML(items);
+        }
+    }
+}
+
+
+// ============================================================
+// GUARDAR COMPROBANTE CON DATOS DE RETENCIÓN
+// ============================================================
+
 async function _saveComprobante(estado) {
     try {
         console.log('🔄 Guardando comprobante...', { estado });
         
         let productos = window._compProductos || [];
+        
+        // ============================================================
+        // DATOS DE RETENCIÓN
+        // ============================================================
+        const condicion = document.getElementById('compCondicion')?.value || 'Contado';
+        const esCredito = condicion.includes('Crédito');
+        
+        let estadoCredito = null;
+        let fechaAprobacion = null;
+        let fechaVencimiento = null;
+        let diasCredito = null;
+        let montoRetenido = 0;
+        let obsRetencion = '';
+        
+        if (esCredito) {
+            estadoCredito = document.getElementById('compEstadoCredito')?.value || 'Pendiente de aprobación';
+            fechaAprobacion = document.getElementById('compFechaAprobacion')?.value || today();
+            fechaVencimiento = document.getElementById('compFechaVencimiento')?.value || '';
+            diasCredito = parseInt(document.getElementById('compDiasCredito')?.value) || 30;
+            montoRetenido = parseFloat(document.getElementById('compMontoRetenido')?.value) || 0;
+            obsRetencion = document.getElementById('compObsRetencion')?.value || '';
+        }
+        
+        // Calcular totales
         const montoTotal = parseFloat(document.getElementById('compMonto')?.value || 0);
         const subtotalCalc = montoTotal / 1.18;
         const igvCalc = montoTotal - subtotalCalc;
@@ -3064,20 +3582,28 @@ async function _saveComprobante(estado) {
             serie: document.getElementById('compSerie')?.value || 'F001',
             numero: document.getElementById('compNumero')?.value || String(Date.now()).slice(-8),
             cotizacion: document.getElementById('compCotizacion')?.value || '',
-            guia: document.getElementById('compGuia')?.value || '',        // 🆕
-            pc: document.getElementById('compPC')?.value || '',            // 🆕
+            guia: document.getElementById('compGuia')?.value || '',
+            pc: document.getElementById('compPC')?.value || '',
             cliente: document.getElementById('compCliente')?.value || '',
             ruc: document.getElementById('compRuc')?.value || '',
             monto: montoTotal,
             total: montoTotal,
             subtotal: subtotalCalc,
             igv: igvCalc,
-            condicion: document.getElementById('compCondicion')?.value || 'Contado',
+            condicion: condicion,
             observaciones: document.getElementById('compObs')?.value || '',
-            items: productos
+            items: productos,
+            // 🔽 DATOS DE RETENCIÓN
+            estado_credito: estadoCredito,
+            fecha_aprobacion: fechaAprobacion,
+            fecha_vencimiento: fechaVencimiento,
+            dias_credito: diasCredito,
+            monto_retenido: montoRetenido,
+            obs_retencion: obsRetencion,
+            es_credito: esCredito
         };
         
-        console.log('📦 Datos a guardar:', data);
+        console.log('📦 Datos a guardar con retención:', data);
         
         const response = await apiFetch('/ventas/api/comprobantes/guardar', {
             method: 'POST',
@@ -3085,9 +3611,6 @@ async function _saveComprobante(estado) {
         });
         
         if (response.success) {
-
-            
-
             showToast(`✅ Comprobante guardado como: ${estado}`, 'success');
             closeModal('comprobanteModal');
             await loadComprobantes();
@@ -3101,13 +3624,14 @@ async function _saveComprobante(estado) {
     }
 }
 
+
 function saveComprobante(estado) {
     const tipo = document.getElementById('compTipo')?.value || 'Comprobante';
     const numero = document.getElementById('compNumero')?.value || 'nuevo';
     const cliente = document.getElementById('compCliente')?.value || 'el cliente';
     const estadoLabel = estado || 'Borrador';
 
-    // 🔽 CERRAR EL MODAL DE COMPROBANTES PRIMERO 🔽
+    // CERRAR EL MODAL DE COMPROBANTES PRIMERO
     closeModal('comprobanteModal');
     
     // Pequeño delay para que el modal de comprobantes se cierre antes de mostrar la confirmación
@@ -3123,7 +3647,9 @@ function saveComprobante(estado) {
         );
     }, 300);
 }
-
+// ============================================================
+// GUARDAR COMPROBANTE CON DATOS DE RETENCIÓN
+// ============================================================
 
 async function _saveNotaCredito(estado) {
     try {
@@ -8811,220 +9337,6 @@ async function cargarGuiaParaEditar(id) {
     }
 }
 
-
-async function openComprobanteModal(id = null) {
-    console.log('🧾 Abriendo modal de comprobante', { id });
-    editingId = id;
-    const isEdit = id !== null;
-    
-    // 🔽 CERRAR TODOS LOS MODALES PRIMERO 🔽
-    const todosLosModales = document.querySelectorAll('.modal-bg.show, .modal-bg[style*="display: flex"]');
-    todosLosModales.forEach(m => {
-        if (m.id !== 'comprobanteModal') {
-            console.log(`🔄 Cerrando modal: ${m.id}`);
-            m.classList.remove('show');
-            m.style.display = 'none';
-            m.style.cssText = '';
-        }
-    });
-    
-    // 1. Verificar que el modal existe
-    const modal = document.getElementById('comprobanteModal');
-    if (!modal) {
-        console.error('❌ #comprobanteModal no encontrado');
-        showToast('Error: Modal de comprobante no disponible', 'error');
-        return;
-    }
-    
-    // 2. Asegurar que el modal esté limpio
-    modal.classList.remove('show');
-    modal.style.cssText = '';
-    
-    // 3. Establecer título
-    const titleEl = document.getElementById('comprobanteModalTitle');
-    if (titleEl) {
-        titleEl.textContent = isEdit ? '✏️ Editar comprobante' : '🧾 Nueva factura / Boleta';
-    }
-    
-    // 4. Verificar que el formulario existe
-    const formContainer = document.getElementById('comprobanteForm');
-    if (!formContainer) {
-        console.error('❌ #comprobanteForm no encontrado');
-        showToast('Error: Formulario de comprobante no disponible', 'error');
-        return;
-    }
-    
-    // 5. Cargar datos necesarios
-    try {
-        if (!guiasData || guiasData.length === 0) {
-            console.log('🔄 Cargando guías...');
-            await loadGuias();
-        }
-        if (!pedidosData || pedidosData.length === 0) {
-            console.log('🔄 Cargando pedidos...');
-            await loadPedidos();
-        }
-    } catch (error) {
-        console.warn('⚠️ Error cargando datos:', error);
-    }
-    
-    // 6. Generar opciones para selects
-    const cotOptions = (cotizacionesData || []).map(q => 
-        `<option value="${q.numero}">${q.numero} - ${q.razon || 'Sin cliente'}</option>`
-    ).join('');
-    
-    const guiaOptions = (guiasData || []).map(g => {
-        const valor = `${g.serie}-${g.numero}`;
-        return `<option value="${valor}">${valor} - ${g.cliente || 'Sin cliente'}</option>`;
-    }).join('');
-    
-    const pcOptions = (pedidosData || []).map(p => 
-        `<option value="${p.numero}">${p.numero} - ${p.cliente || 'Sin cliente'}</option>`
-    ).join('');
-    
-    // 7. Renderizar el formulario
-    formContainer.innerHTML = `
-        <div class="ficha-section">
-            <div class="ficha-section-title">🧾 Documentos vinculados</div>
-            <div class="ficha-grid">
-                <div class="form-field col-4">
-                    <label>Cotización vinculada</label>
-                    <select id="compCotizacion" onchange="cargarProductosComprobanteDesdeCotizacion(this.value)">
-                        <option value="">-- Ninguna --</option>
-                        ${cotOptions || '<option value="" disabled>Sin cotizaciones</option>'}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Guía de Remisión vinculada</label>
-                    <select id="compGuia" onchange="loadComprobanteFromGuia(this.value); actualizarObservacionesComprobante()">
-                        <option value="">-- Ninguna --</option>
-                        ${guiaOptions || '<option value="" disabled>Sin guías</option>'}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>PC vinculado</label>
-                    <select id="compPC" onchange="loadComprobanteFromPC(this.value); actualizarObservacionesComprobante()">
-                        <option value="">-- Ninguno --</option>
-                        ${pcOptions || '<option value="" disabled>Sin PCs</option>'}
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div class="ficha-section">
-            <div class="ficha-grid">
-                <div class="form-field col-3">
-                    <label>Tipo</label>
-                    <select id="compTipo">
-                        <option value="Factura">Factura</option>
-                        <option value="Boleta">Boleta</option>
-                    </select>
-                </div>
-                <div class="form-field col-3">
-                    <label>Serie</label>
-                    <input id="compSerie" value="F001">
-                </div>
-                <div class="form-field col-3">
-                    <label>Número</label>
-                    <input id="compNumero" value="${String(Date.now()).slice(-8)}">
-                </div>
-                <div class="form-field col-3">
-                    <label>Estado</label>
-                    <select id="compEstado">
-                        ${['Borrador','Emitido','Enviado','Pagado','Anulado'].map(s => `<option value="${s}" ${s === 'Borrador' ? 'selected' : ''}>${s}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="form-field col-4">
-                    <label>Cliente</label>
-                    <input id="compCliente" placeholder="Razón social">
-                </div>
-                <div class="form-field col-4">
-                    <label>RUC</label>
-                    <input id="compRuc" placeholder="12345678901">
-                </div>
-                <div class="form-field col-4">
-                    <label>Monto</label>
-                    <input id="compMonto" type="number" value="0" step="0.01">
-                </div>
-                <div class="form-field col-4">
-                    <label>Condición de pago</label>
-                    <select id="compCondicion">
-                        <option value="Contado">Contado</option>
-                        <option value="Crédito 7 días">Crédito 7 días</option>
-                        <option value="Crédito 15 días">Crédito 15 días</option>
-                        <option value="Crédito 30 días">Crédito 30 días</option>
-                        <option value="Crédito 45 días">Crédito 45 días</option>
-                        <option value="Crédito 60 días">Crédito 60 días</option>
-                        <option value="Crédito 90 días">Crédito 90 días</option>
-                    </select>
-                </div>
-                <div class="form-field col-12">
-                    <label>Observaciones</label>
-                    <textarea id="compObs" placeholder="Observaciones del comprobante"></textarea>
-                </div>
-            </div>
-        </div>
-        
-        <div class="ficha-section">
-            <div class="ficha-section-title">🧾 Productos</div>
-            <div id="compProducts">
-                <div style="padding:20px;text-align:center;color:#94A3B8;">
-                    Seleccione una cotización para ver los productos.
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // 8. Si es edición, cargar datos
-    if (isEdit) {
-        setTimeout(() => cargarComprobanteParaEditar(id), 100);
-    }
-    
-    // 9. 🔽 MOSTRAR MODAL - CON LA MISMA LÓGICA QUE FUNCIONÓ 🔽
-    modal.classList.add('show');
-    
-    // 🔥 MOVER EL MODAL AL FINAL DEL BODY (clave 1)
-    document.body.appendChild(modal);
-    
-    // 🔥 FORZAR ESTILOS CON Z-INDEX MÁS ALTO (clave 2)
-    modal.style.cssText = `
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: 9999999 !important;
-        position: fixed !important;
-        inset: 0 !important;
-        background: rgba(15, 23, 42, 0.8) !important;
-        backdrop-filter: blur(6px) !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 20px !important;
-        overflow: auto !important;
-    `;
-    
-    // 🔥 FORZAR VISIBILIDAD DEL MODAL-BOX
-    const box = modal.querySelector('.modal-box');
-    if (box) {
-        box.style.cssText = `
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            width: min(1100px, 96vw) !important;
-            max-height: 95vh !important;
-            background: #FFFFFF !important;
-            border-radius: 16px !important;
-            overflow: hidden !important;
-            box-shadow: 0 30px 80px rgba(15,23,42,.45) !important;
-            flex-direction: column !important;
-            z-index: 9999999 !important;
-            position: relative !important;
-        `;
-    }
-    
-    document.body.style.overflow = 'hidden';
-    
-    console.log('✅ Modal de comprobante abierto correctamente');
-}
 
 /**
  * Carga los productos de una cotización en el comprobante
