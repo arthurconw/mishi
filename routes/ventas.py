@@ -1932,6 +1932,7 @@ def api_comprobantes_guardar():
             'documento_asociado': data.get('cotizacion') or data.get('cotizacion_numero') or '',
             'guia_vinculada': data.get('guia') or '',
             'pc_vinculado': data.get('pc') or '',
+            'tiene_retencion': data.get('tiene_retencion', False),
             'condicion_pago': condicion_pago,
             # 🔽 NUEVOS CAMPOS DE RETENCIÓN
             'es_credito': es_credito,
@@ -1942,7 +1943,7 @@ def api_comprobantes_guardar():
             'monto_retenido': monto_retenido,
             'obs_retencion': obs_retencion,
             'creado_por': usuario_id
-            'tiene_retencion': data.get('tiene_retencion', False),
+            
         }
 
         if data.get('id'):
