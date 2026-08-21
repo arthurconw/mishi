@@ -609,8 +609,8 @@ function renderTable(m, list) {
         return `<tr>${cells}</tr>`;
     }).join('');
     
-    return `<div class="table-scroll" style:"min-width: 1350px;">
-        <table class="master-table" style: "min-width: 1350px;">
+    return `<div class="table-scroll" style="min-width: 1350px;">
+        <table class="master-table" style= "min-width: 1350px;">
             <thead><tr>${headersHtml}</tr></thead>
             <tbody>${rows}</tbody>
         </table>
