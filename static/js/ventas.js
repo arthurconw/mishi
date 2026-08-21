@@ -3073,11 +3073,6 @@ async function saveGuia(estado) {
 window.saveGuia = saveGuia;
 
 
-
-// ============================================================
-// RENDERIZAR CONTENIDO DEL MODAL DE COMPROBANTES CON RETENCIÓN
-// ============================================================
-
 // ============================================================
 // RENDERIZAR CONTENIDO DEL MODAL DE COMPROBANTES CON RETENCIÓN TOGGLE
 // ============================================================
@@ -3116,13 +3111,8 @@ function renderComprobanteFormContent(isEdit, data) {
         <option value="En revisión" ${data?.estado_credito === 'En revisión' ? 'selected' : ''}>🔍 En revisión</option>
     `;
     
-    // 🔽 VERIFICAR SI TIENE RETENCIÓN ACTIVA
+    // 🔽 SIEMPRE mostrar el toggle, independientemente de si es crédito o no
     const tieneRetencion = data?.tiene_retencion || false;
-    const retencionActiva = data?.retencion_activa || false;
-    const mostrarRetencion = retencionActiva || (data?.estado_credito === 'Aceptada en Crédito');
-    
-    // Estilo de la sección de retención
-    const retencionStyle = mostrarRetencion ? 'display:block;' : 'display:none;';
     
     // Productos
     const productos = data?.items || [];
@@ -3203,7 +3193,7 @@ function renderComprobanteFormContent(isEdit, data) {
         </div>
         
         <!-- ============================================================ -->
-        <!-- 🔽 SECCIÓN DE RETENCIÓN CON BOTÓN TOGGLE -->
+        <!-- 🔽 SECCIÓN DE RETENCIÓN CON BOTÓN TOGGLE - SIEMPRE VISIBLE -->
         <!-- ============================================================ -->
         <div class="ficha-section" style="border: 2px solid #E5E7EB; background: #F8FAFC; margin-bottom: 10px;">
             <div class="ficha-section-title" style="background: #F1F5F9; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center;">
@@ -3236,7 +3226,7 @@ function renderComprobanteFormContent(isEdit, data) {
                 </div>
             </div>
             
-            <!-- Contenido de retención (se muestra/oculta) -->
+            <!-- Contenido de retención (se muestra/oculta según el toggle) -->
             <div id="retencionContent" style="${tieneRetencion ? 'display:block;' : 'display:none;'} padding: 10px 14px; background: #FFFFFF;">
                 <div class="ficha-grid" style="background: #F8FAFC; padding: 10px; border-radius: 8px;">
                     <!-- 🔽 Alerta si la condición NO es crédito pero la retención está activa -->
@@ -3303,7 +3293,6 @@ function renderComprobanteFormContent(isEdit, data) {
         </div>
     `;
 }
-
 /**
  * Renderiza la tabla de productos para el comprobante
  */
@@ -3362,30 +3351,8 @@ function renderProductosComprobanteHTML(productos) {
 }
 
 
-/**
- * Alterna la visibilidad de la sección de retención según la condición de pago
- */
-function toggleRetencionComprobante() {
-    const condicion = document.getElementById('compCondicion')?.value || 'Contado';
-    const retencionSection = document.getElementById('retencionSection');
-    
-    if (condicion.includes('Crédito')) {
-        retencionSection.style.display = 'block';
-        retencionSection.style.animation = 'fadeIn 0.3s ease';
-        
-        // Calcular fecha de vencimiento automáticamente
-        calcularFechaVencimientoComprobante();
-        
-        // Mostrar mensaje informativo
-        showToast('💡 Condición de crédito seleccionada - Complete los datos de retención', 'info');
-    } else {
-        retencionSection.style.display = 'none';
-    }
-}
 
-// ============================================================
-// FUNCIONES PARA TOGGLE DE RETENCIÓN
-// ============================================================
+
 
 /**
  * Alterna la visibilidad de la sección de retención
@@ -3460,7 +3427,6 @@ function actualizarEstadoRetencion() {
         calcularFechaVencimientoComprobante();
     }
 }
-
 /**
  * Renderiza los productos en el comprobante
  */
@@ -3570,7 +3536,6 @@ function calcularFechaVencimientoComprobante() {
     fechaVencimiento.value = `${year}-${month}-${day}`;
 }
 
-
 /**
  * Abre el modal de comprobante con la sección de retención toggle
  */
@@ -3640,11 +3605,14 @@ async function openComprobanteModal(id = null) {
     }
     
     // 🔽 AGREGAR CAMPO OCULTO PARA GUARDAR ESTADO DE RETENCIÓN
-    const hiddenField = document.createElement('input');
-    hiddenField.type = 'hidden';
-    hiddenField.id = 'compTieneRetencion';
+    let hiddenField = document.getElementById('compTieneRetencion');
+    if (!hiddenField) {
+        hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.id = 'compTieneRetencion';
+        formContainer.appendChild(hiddenField);
+    }
     hiddenField.value = data?.tiene_retencion ? 'true' : 'false';
-    formContainer.appendChild(hiddenField);
     
     // 🔽 INICIALIZAR EL TOGGLE SEGÚN EL ESTADO GUARDADO
     setTimeout(() => {
