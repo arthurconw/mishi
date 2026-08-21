@@ -39,6 +39,44 @@ def login_required(f):
 # FUNCIONES DE AYUDA PARA COTIZACIONES - VERSIÓN CORREGIDA
 # ============================================================
 
+def crear_tabla_cotizaciones_eliminadas_si_no_existe():
+    """Crea la tabla de respaldo de cotizaciones eliminadas si no existe"""
+    try:
+        query = """
+            CREATE TABLE IF NOT EXISTS cotizaciones_eliminadas (
+                id SERIAL PRIMARY KEY,
+                cotizacion_id_original INTEGER,
+                numero_cotizacion VARCHAR(50),
+                codigo_cotizacion VARCHAR(50),
+                cliente_id INTEGER,
+                cliente_razon_social VARCHAR(255),
+                cliente_ruc VARCHAR(20),
+                fecha_creacion TIMESTAMP,
+                estado_anterior VARCHAR(50),
+                subtotal NUMERIC(12,2),
+                igv NUMERIC(12,2),
+                total NUMERIC(12,2),
+                condicion_pago VARCHAR(100),
+                tiempo_entrega VARCHAR(100),
+                direccion_entrega TEXT,
+                vendedor VARCHAR(150),
+                contacto_cliente VARCHAR(150),
+                telefono_cliente VARCHAR(50),
+                email_cliente VARCHAR(150),
+                nota_cotizacion TEXT,
+                requerimiento TEXT,
+                productos_json JSONB,
+                datos_completos_json JSONB,
+                motivo_eliminacion TEXT NOT NULL,
+                eliminado_por INTEGER,
+                eliminado_en TIMESTAMP DEFAULT NOW()
+            )
+        """
+        db_execute(query)
+    except Exception as e:
+        print(f"❌ Error creando tabla cotizaciones_eliminadas: {e}")
+        raise
+
 def obtener_cotizaciones_db():
     """Obtiene todas las cotizaciones con datos del cliente"""
     try:
