@@ -4049,25 +4049,25 @@ async function reactivarCotizacion(id) {
 
 // En ventas.js - Reemplaza la función deleteCotizacion
 async function deleteCotizacion(id) {
-    // Buscar la cotización para mostrar info
     const cotizacion = cotizacionesData.find(c => c.id === id);
     const numero = cotizacion?.numero || 'COT-XXXXXX';
     const cliente = cotizacion?.razon || 'Cliente';
     const estado = cotizacion?.estado || 'Desconocido';
-    
-    showConfirmModal(
+
+    showDeleteConfirmModal(
         '🗑️ ¿Eliminar cotización?',
         `Estás a punto de eliminar la cotización <b>${numero}</b> del cliente <b>${cliente}</b>.<br>Estado actual: <b>${estado}</b>`,
-        '⚠️ Esta acción cambiará el estado a "Anulada" y no podrá recuperarse.',
-        async function() {
+        '⚠️ Esta acción cambiará el estado a "Anulada" y no podrá recuperarse. Se guardará un respaldo con el motivo indicado.',
+        async function(motivo) {
             try {
-                console.log(`🗑️ Eliminando cotización ID: ${id}`);
+                console.log(`🗑️ Eliminando cotización ID: ${id} - Motivo: ${motivo}`);
                 showToast('⏳ Anulando cotización...', 'info');
-                
+
                 const response = await apiFetch(`/ventas/api/cotizaciones/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    body: JSON.stringify({ motivo: motivo })
                 });
-                
+
                 if (response.success) {
                     showToast('✅ Cotización anulada correctamente', 'success');
                     await loadCotizaciones();
@@ -4078,8 +4078,7 @@ async function deleteCotizacion(id) {
                 console.error('❌ Error eliminando cotización:', error);
                 showToast('❌ Error al eliminar la cotización: ' + error.message, 'error');
             }
-        },
-        '🗑️ Sí, eliminar'
+        }
     );
 }
 
@@ -11371,6 +11370,128 @@ function showConfirmModal(title, message, warning, onConfirm, confirmText = '✅
     });
 }
 
+// ============================================================
+// MODAL DE CONFIRMACIÓN CON CAMPO DE MOTIVO (para eliminaciones)
+// ============================================================
+function showDeleteConfirmModal(title, message, warning, onConfirm, confirmText = '🗑️ Sí, eliminar') {
+    document.querySelectorAll('.confirm-modal-overlay').forEach(el => el.remove());
+
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-modal-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: #FFFFFF;
+        border-radius: 20px;
+        max-width: 520px;
+        width: 95%;
+        padding: 32px 28px 24px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+        animation: modalSlideUp 0.3s ease;
+        text-align: center;
+    `;
+
+    modal.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 12px;">🗑️</div>
+        <h2 style="font-size: 22px; font-weight: 900; color: #0F172A; margin-bottom: 8px;">${title}</h2>
+        <p style="font-size: 15px; color: #475569; line-height: 1.5; margin-bottom: 12px;">${message}</p>
+        <div style="background: #FEF2F2; border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; border-left: 4px solid #EF233C;">
+            <span style="font-size: 13px; font-weight: 700; color: #DC2626;">${warning}</span>
+        </div>
+        <div style="text-align:left; margin-bottom:20px;">
+            <label style="display:block;font-size:13px;font-weight:800;color:#0F172A;margin-bottom:6px;">
+                Motivo de eliminación <span style="color:#DC2626;">*</span>
+            </label>
+            <textarea id="deleteReasonInput" placeholder="Escribe el motivo por el cual se elimina este registro..."
+                style="width:100%;min-height:80px;border:1px solid #E5E7EB;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;resize:vertical;outline:none;transition:border-color 0.2s;"></textarea>
+            <div id="deleteReasonError" style="display:none;color:#DC2626;font-size:11px;font-weight:700;margin-top:4px;">⚠️ Debes ingresar un motivo para continuar</div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button class="confirm-cancel-btn" style="
+                padding: 12px 32px;
+                border-radius: 12px;
+                border: 1px solid #E5E7EB;
+                background: #FFFFFF;
+                color: #0F172A;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            ">Cancelar</button>
+            <button class="confirm-accept-btn" style="
+                padding: 12px 32px;
+                border-radius: 12px;
+                border: none;
+                background: #EF233C;
+                color: #FFFFFF;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+                box-shadow: 0 4px 14px rgba(239, 35, 60, 0.35);
+            ">${confirmText}</button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalSlideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .confirm-cancel-btn:hover { background: #F1F5F9; }
+        .confirm-accept-btn:hover { background: #D91A30; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239,35,60,0.45); }
+    `;
+    document.head.appendChild(style);
+
+    const textarea = modal.querySelector('#deleteReasonInput');
+    const errorMsg = modal.querySelector('#deleteReasonError');
+
+    textarea.addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.style.borderColor = '#E5E7EB';
+            errorMsg.style.display = 'none';
+        }
+    });
+
+    modal.querySelector('.confirm-cancel-btn').addEventListener('click', function() {
+        overlay.remove();
+    });
+
+    modal.querySelector('.confirm-accept-btn').addEventListener('click', function() {
+        const motivo = textarea.value.trim();
+        if (!motivo) {
+            textarea.style.borderColor = '#DC2626';
+            textarea.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.15)';
+            errorMsg.style.display = 'block';
+            textarea.focus();
+            return;
+        }
+        overlay.remove();
+        if (typeof onConfirm === 'function') {
+            onConfirm(motivo);
+        }
+    });
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.remove();
+    });
+
+    setTimeout(() => textarea.focus(), 150);
+}
+
 function toggleAllProductCheckboxes(checked) {
     document.querySelectorAll('.product-select-checkbox').forEach(cb => {
         cb.checked = checked;
@@ -14124,6 +14245,7 @@ window.clearPcDateFilter = clearPcDateFilter;
 window.exportData = exportData;
 window.showSuccessModal = showSuccessModal;
 window.showConfirmModal = showConfirmModal;
+window.showDeleteConfirmModal = showDeleteConfirmModal;
 window.setFieldValue = setFieldValue;
 window.getFieldValue = getFieldValue;
 window.toggleCustomField = toggleCustomField;

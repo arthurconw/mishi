@@ -1542,30 +1542,122 @@ def api_cotizaciones_toggle(id):
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['DELETE'])
 @login_required
 def api_cotizaciones_eliminar(id):
-    """Elimina (anula) una cotización - Cambia estado a Anulada"""
+    """Elimina (anula) una cotización - guarda respaldo con motivo y cambia estado a Anulada"""
     try:
         print(f"🗑️ Eliminando cotización ID: {id}")
-        
-        # Primero verificar si existe y mostrar estado actual
-        query_check = "SELECT id, estado FROM cotizaciones WHERE id = %s"
-        result_check = db_query(query_check, (id,))
-        print(f"📊 Estado actual: {result_check}")
-        
+
+        data = request.get_json(silent=True) or {}
+        motivo = (data.get('motivo') or '').strip()
+
+        if not motivo:
+            return jsonify({'success': False, 'error': 'El motivo de eliminación es obligatorio'}), 400
+
+        # 1. Obtener datos completos de la cotización + cliente
+        query_cabecera = """
+            SELECT 
+                c.*, 
+                cl.razon_social as cliente_razon_social,
+                cl.numero_documento as cliente_ruc
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+            WHERE c.id = %s
+        """
+        result_check = db_query(query_cabecera, (id,))
+
         if not result_check:
             return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
-        
-        estado_actual = result_check[0].get('estado')
+
+        cot = result_check[0]
+        estado_actual = cot.get('estado')
         print(f"📊 Estado actual de la cotización: {estado_actual}")
-        
-        # Si ya está anulada, no hacer nada
+
         if estado_actual == 'Anulada':
             return jsonify({
-                'success': True, 
+                'success': True,
                 'message': 'La cotización ya estaba anulada',
                 'data': {'id': id, 'estado': 'Anulada'}
             })
-        
-        # Cambiar estado a 'Anulada'
+
+        # 2. Obtener productos de la cotización
+        query_productos = """
+            SELECT 
+                d.id, d.producto_id, d.cantidad,
+                d.costo_unitario, d.subtotal_costo, d.margen_porcentaje,
+                d.precio_venta_unitario, d.subtotal_venta,
+                d.descuento_porcentaje, d.precio_venta_con_descuento,
+                d.subtotal_venta_con_descuento, d.descuento_total, d.margen_final,
+                p.codigo, p.descripcion, p.modelo, p.marca, p.unidad
+            FROM cotizacion_detalle d
+            LEFT JOIN productos p ON p.id = d.producto_id
+            WHERE d.cotizacion_id = %s
+        """
+        productos = db_query(query_productos, (id,))
+
+        # 3. Asegurar que la tabla de respaldo exista
+        crear_tabla_cotizaciones_eliminadas_si_no_existe()
+
+        usuario_id = session.get('usuario_id', 8)
+
+        # 4. Serializar valores no compatibles con JSON (fechas, Decimal)
+        from decimal import Decimal
+
+        def _serializar(v):
+            if isinstance(v, datetime):
+                return v.isoformat()
+            if isinstance(v, Decimal):
+                return float(v)
+            return v
+
+        datos_completos = {k: _serializar(v) for k, v in cot.items()}
+        productos_snapshot = [{k: _serializar(v) for k, v in p.items()} for p in (productos or [])]
+
+        # 5. Guardar el respaldo ANTES de anular
+        query_insert = """
+            INSERT INTO cotizaciones_eliminadas (
+                cotizacion_id_original, numero_cotizacion, codigo_cotizacion,
+                cliente_id, cliente_razon_social, cliente_ruc,
+                fecha_creacion, estado_anterior, subtotal, igv, total,
+                condicion_pago, tiempo_entrega, direccion_entrega, vendedor,
+                contacto_cliente, telefono_cliente, email_cliente,
+                nota_cotizacion, requerimiento,
+                productos_json, datos_completos_json,
+                motivo_eliminacion, eliminado_por
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s
+            )
+        """
+        params_insert = (
+            id,
+            cot.get('numero_cotizacion'),
+            cot.get('codigo_cotizacion'),
+            cot.get('cliente_id'),
+            cot.get('cliente_razon_social'),
+            cot.get('cliente_ruc'),
+            cot.get('fecha_creacion'),
+            estado_actual,
+            cot.get('subtotal'),
+            cot.get('igv'),
+            cot.get('total'),
+            cot.get('condicion_pago'),
+            cot.get('tiempo_entrega'),
+            cot.get('direccion_entrega'),
+            cot.get('vendedor'),
+            cot.get('contacto_cliente'),
+            cot.get('telefono_cliente'),
+            cot.get('email_cliente'),
+            cot.get('nota_cotizacion'),
+            cot.get('requerimiento'),
+            json.dumps(productos_snapshot),
+            json.dumps(datos_completos),
+            motivo,
+            usuario_id
+        )
+        db_execute(query_insert, params_insert)
+        print(f"✅ Respaldo guardado en cotizaciones_eliminadas para cotización {id}")
+
+        # 6. Cambiar estado a 'Anulada' (igual que antes)
         query_update = """
             UPDATE cotizaciones 
             SET estado = 'Anulada'
@@ -1573,28 +1665,16 @@ def api_cotizaciones_eliminar(id):
             RETURNING id, estado
         """
         result_update = db_query(query_update, (id,))
-        print(f"📊 Resultado UPDATE: {result_update}")
-        
+
         if result_update:
-            # Verificar que realmente se actualizó
-            query_verify = "SELECT id, estado FROM cotizaciones WHERE id = %s"
-            result_verify = db_query(query_verify, (id,))
-            print(f"📊 Verificación después de UPDATE: {result_verify}")
-            
-            if result_verify and result_verify[0].get('estado') == 'Anulada':
-                return jsonify({
-                    'success': True, 
-                    'message': 'Cotización anulada correctamente',
-                    'data': result_verify[0]
-                })
-            else:
-                return jsonify({
-                    'success': False, 
-                    'error': 'La cotización no se pudo anular correctamente'
-                }), 400
-        
+            return jsonify({
+                'success': True,
+                'message': 'Cotización anulada y respaldada correctamente',
+                'data': result_update[0]
+            })
+
         return jsonify({'success': False, 'error': 'No se pudo anular la cotización'}), 400
-        
+
     except Exception as e:
         print(f"❌ Error en api_cotizaciones_eliminar: {e}")
         import traceback
