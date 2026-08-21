@@ -157,8 +157,9 @@ function esRegistroNuevo(fecha) {
     }
 }
 
-function badgeNuevo(row, fechaField) {
-    if (!esRegistroNuevo(row[fechaField])) return '';
+function badgeNuevo(row, ...fechaFields) {
+    const fecha = fechaFields.map(f => row[f]).find(v => v !== undefined && v !== null);
+    if (!esRegistroNuevo(fecha)) return '';
     return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
 }
 
@@ -573,7 +574,7 @@ function renderTable(m, list) {
     headersHtml += `<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap">Acciones</th>`;
     
    const rows = list.map((r, i) => {
-        let cells = `<td><b>${i + 1}</b>${badgeNuevo(r, 'created_at')}</td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
+       let cells = `<td><b>${i + 1}</b>${badgeNuevo(r, 'created_at', 'fecha_creacion')}</td>...`;
         
         displayFields.forEach(f => {
             if (f === 'activo' || f === 'estado') {
