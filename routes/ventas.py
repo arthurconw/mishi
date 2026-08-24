@@ -2060,7 +2060,7 @@ def api_comprobantes_guardar():
             'tipo_comprobante': data.get('tipo', 'FACTURA'),
             'serie': data.get('serie', 'F001'),
             'numero': data.get('numero'),
-            'fecha_emision': fecha_emision,  # ✅ CON HORA
+            'fecha_emision': data.get('fecha_emision') or datetime.now().isoformat(), 
             'moneda': data.get('moneda', 'PEN'),
             'cliente_tipo_doc': data.get('cliente_tipo_doc', 'RUC'),
             'cliente_numero_doc': data.get('ruc'),
