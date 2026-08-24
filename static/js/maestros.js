@@ -26,7 +26,8 @@ const MODULE_CONFIG = {
         headers: ['Código / Clientes ', 'Razón Social', 'RUC/DNI', 'Nombre Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
         codeField: 'codigo_cliente',
-        apiBase: '/maestros/api'
+        apiBase: '/maestros/api',
+        dataFiel: 'created_at'
     },
     proveedores: {
         title: 'Proveedores',
@@ -46,7 +47,8 @@ const MODULE_CONFIG = {
         headers: ['Código / Proveedores ', 'Razón Social', 'RUC', 'Razón Comercial', 'Contacto', 'Teléfono', 'Email', 'Estado'],
         idField: 'id',
         codeField: 'codigo_proveedor',
-        apiBase: '/maestros/api'
+        apiBase: '/maestros/api',
+        dataFiel: 'fecha_creacion'
     },
     almacenes: {
         title: 'Almacenes',
@@ -65,7 +67,8 @@ const MODULE_CONFIG = {
         headers: ['Código', 'Nombre', 'Tipo', 'Responsable', 'Teléfono', 'Estado'],
         idField: 'id',
         codeField: 'codigo',
-        apiBase: '/maestros/api'
+        apiBase: '/maestros/api',
+        dataFiel: 'created_at'
     },
     categorias: {
         title: 'Categorías',
@@ -81,7 +84,8 @@ const MODULE_CONFIG = {
         headers: ['Código', 'Nombre', 'Categoría Principal', 'Estado'],
         idField: 'id',
         codeField: 'codigo',
-        apiBase: '/maestros/api'
+        apiBase: '/maestros/api',
+        dataFiel: 'created_at'
     },
     marcas: {
         title: 'Marcas',
@@ -97,7 +101,8 @@ const MODULE_CONFIG = {
         headers: ['Código', 'Marca', 'Tipo', 'Estado'],
         idField: 'id',
         codeField: 'codigo',
-        apiBase: '/maestros/api'
+        apiBase: '/maestros/api',
+        dataFiel: 'created_at'
     },
     um: {
         title: 'Unidades de Medida',
@@ -117,7 +122,8 @@ const MODULE_CONFIG = {
         headers: ['Código', 'Unidad', 'Abreviatura', 'Tipo', 'Decimales', 'Ámbito', 'Uso', 'Estado'],
         idField: 'id',
         codeField: 'codigo',
-        apiBase: '/maestros/api'
+        apiBase: '/maestros/api',
+        dataFiel: 'created_at'
     }
 };
 
@@ -573,7 +579,7 @@ function renderTable(m, list) {
     headersHtml += `<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap">Acciones</th>`;
     
    const rows = list.map((r, i) => {
-       let cells = `<td><b>${i + 1}</b>${badgeNuevo(r, 'created_at')}</td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
+       let cells = `<td><b>${i + 1}</b>${badgeNuevo(r, config.dateField || 'created_at')}</td><td>${bAmbito(r.ambito || 'COMPARTIDO')}</td>`;
         
         displayFields.forEach(f => {
             if (f === 'activo' || f === 'estado') {
