@@ -593,51 +593,6 @@ def actualizar_estado_comprobante_db(comp_id, nuevo_estado):
         raise
 
 
-@ventas_bp.route('/ventas/api/comprobantes/<int:id>', methods=['GET'])
-@login_required
-def api_comprobantes_obtener(id):
-    """Obtiene un comprobante específico por su ID"""
-    try:
-        query = """
-            SELECT 
-                id, tipo_comprobante, serie, numero, fecha_emision,
-                moneda, cliente_tipo_doc, cliente_numero_doc,
-                cliente_nombre, cliente_direccion, cliente_email,
-                cliente_telefono, subtotal, igv, total,
-                items_json, observaciones, estado_sunat,
-                condicion_pago, documento_asociado, guia_vinculada,
-                pc_vinculado, 
-                -- 🔽 NUEVOS CAMPOS DE RETENCIÓN
-                es_credito, estado_credito, fecha_aprobacion,
-                fecha_vencimiento, dias_credito, monto_retenido,
-                obs_retencion,
-                sunat_response, cdr_response, creado_por,
-                created_at, updated_at
-            FROM comprobantes
-            WHERE id = %s
-        """
-        result = db_query(query, (id,))
-        if not result:
-            return jsonify({'success': False, 'error': 'Comprobante no encontrado'}), 404
-
-        comp = result[0]
-
-        # Parsear items_json de forma segura
-        try:
-            raw_val = comp.get('items_json')
-            if raw_val:
-                comp['items_json'] = json.loads(raw_val) if isinstance(raw_val, str) else raw_val
-            else:
-                comp['items_json'] = []
-        except Exception as e:
-            print(f"⚠️ Error parseando items_json de comprobante: {e}")
-            comp['items_json'] = []
-
-        return jsonify({'success': True, 'data': comp})
-    except Exception as e:
-        print(f"❌ Error en api_comprobantes_obtener: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
 # ============================================================
 # FUNCIONES DE AYUDA PARA NOTAS DE CRÉDITO
 # ============================================================
@@ -2055,7 +2010,6 @@ def api_comprobantes_obtener(id):
     except Exception as e:
         print(f"❌ Error en api_comprobantes_obtener: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/comprobantes/<int:id>', methods=['DELETE'])
 @login_required
