@@ -27,7 +27,7 @@ const MODULE_CONFIG = {
         idField: 'id',
         codeField: 'codigo_cliente',
         apiBase: '/maestros/api',
-        dataFiel: 'created_at'
+        dataField: 'created_at'
     },
     proveedores: {
         title: 'Proveedores',
@@ -48,7 +48,7 @@ const MODULE_CONFIG = {
         idField: 'id',
         codeField: 'codigo_proveedor',
         apiBase: '/maestros/api',
-        dataFiel: 'fecha_creacion'
+        dataField: 'fecha_creacion'
     },
     almacenes: {
         title: 'Almacenes',
@@ -68,7 +68,7 @@ const MODULE_CONFIG = {
         idField: 'id',
         codeField: 'codigo',
         apiBase: '/maestros/api',
-        dataFiel: 'created_at'
+        dataField: 'created_at'
     },
     categorias: {
         title: 'Categorías',
@@ -85,7 +85,7 @@ const MODULE_CONFIG = {
         idField: 'id',
         codeField: 'codigo',
         apiBase: '/maestros/api',
-        dataFiel: 'created_at'
+        dataField: 'created_at'
     },
     marcas: {
         title: 'Marcas',
@@ -102,7 +102,7 @@ const MODULE_CONFIG = {
         idField: 'id',
         codeField: 'codigo',
         apiBase: '/maestros/api',
-        dataFiel: 'created_at'
+        dataField: 'created_at'
     },
     um: {
         title: 'Unidades de Medida',
@@ -123,7 +123,7 @@ const MODULE_CONFIG = {
         idField: 'id',
         codeField: 'codigo',
         apiBase: '/maestros/api',
-        dataFiel: 'created_at'
+        dataField: 'created_at'
     }
 };
 

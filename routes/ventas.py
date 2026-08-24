@@ -3409,6 +3409,8 @@ def api_cotizaciones_obtener_completa(id):
         result['cliente_ruc'] = result.get('cliente_ruc') or str(result.get('cliente_id', ''))
         result['cod_cliente'] = result.get('cod_cliente') or f"CLI-{str(result.get('cliente_id', '')).zfill(6)}"
         result['cliente_direccion'] = result.get('cliente_direccion') or result.get('direccion_entrega', '')
+        result['cliente_email'] = result.get('cliente_email') or result.get('email_cliente', '')
+        result['cliente_telefono'] = result.get('cliente_telefono') or result.get('telefono_cliente', '')
         
         # 🔽 ASEGURAR QUE PRODUCTOS SE DEVUELVAN CORRECTAMENTE
         result['productos'] = []
