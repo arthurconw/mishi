@@ -1657,11 +1657,6 @@ function renderGuias() {
 }
 
 
-
-// ============================================================
-// RENDERIZAR COMPROBANTES CON ESTADO DE CRÉDITO
-// ============================================================
-
 function renderComprobantes() {
     const q = document.getElementById('comprobanteSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('comprobanteStatus')?.value || '';
@@ -1721,7 +1716,19 @@ function renderComprobantes() {
     }
     
     tbody.innerHTML = list.map((r, i) => {
-        // 🔽 Determinar si es crédito y su estado
+        // 🔽 Determinar si tiene retención del IGV
+        const tieneRetencion = r.tiene_retencion || false;
+        const montoRetenido = parseFloat(r.monto_retenido || 0);
+        const montoAPagar = parseFloat(r.monto_a_pagar || r.monto || 0);
+        const porcentajeRetencion = parseFloat(r.porcentaje_retencion || 3.00);
+        
+        // Monto mostrado (con retención si aplica)
+        let montoStr = money(r.monto);
+        if (tieneRetencion && montoRetenido > 0) {
+            montoStr = `${money(r.monto)} <small style="color:#DC2626;font-size:8px;">(Ret: ${money(montoRetenido)})</small>`;
+        }
+        
+        // Estado del crédito
         const esCredito = r.condicion && r.condicion.includes('Crédito');
         const estadoCredito = r.estado_credito || '';
         const diasCredito = r.dias_credito || '';
@@ -1739,9 +1746,11 @@ function renderComprobantes() {
             }
         }
         
-        // Monto retenido
-        const montoRetenido = parseFloat(r.monto_retenido || 0);
-        const montoStr = montoRetenido > 0 ? `${money(r.monto)} <small style="color:#DC2626;font-size:8px;">(Ret: ${money(montoRetenido)})</small>` : money(r.monto);
+        // Badge de retención
+        let badgeRetencion = '';
+        if (tieneRetencion) {
+            badgeRetencion = `<span class="badge b-info" style="background:#DC2626;border-color:#991B1B;color:#fff;">🔒 ${porcentajeRetencion}%</span>`;
+        }
         
         return `
         <tr>
@@ -1755,7 +1764,10 @@ function renderComprobantes() {
             <td>${sd(r.cotizacion)}</td>
             <td><b>${montoStr}</b></td>
             <td>
-                ${esCredito ? `<div style="display:flex;flex-direction:column;gap:2px;align-items:center;">${badgeCredito}<small style="font-size:8px;color:#64748B;">${diasCredito} días</small></div>` : sd(r.condicion)}
+                <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
+                    ${esCredito ? badgeCredito : sd(r.condicion)}
+                    ${badgeRetencion}
+                </div>
             </td>
             <td>
                 <button class="kebab" onclick="showComprobanteMenu(event, ${r.id})">⋮</button>
@@ -3077,6 +3089,10 @@ window.saveGuia = saveGuia;
 // RENDERIZAR CONTENIDO DEL MODAL DE COMPROBANTES CON RETENCIÓN TOGGLE
 // ============================================================
 
+// ============================================================
+// RENDERIZAR CONTENIDO DEL MODAL DE COMPROBANTES CON RETENCIÓN DEL 3%
+// ============================================================
+
 function renderComprobanteFormContent(isEdit, data) {
     const cotOptions = (cotizacionesData || []).map(q => 
         `<option value="${q.numero}" ${data?.cotizacion === q.numero ? 'selected' : ''}>${q.numero} - ${q.razon || 'Sin cliente'}</option>`
@@ -3111,8 +3127,15 @@ function renderComprobanteFormContent(isEdit, data) {
         <option value="En revisión" ${data?.estado_credito === 'En revisión' ? 'selected' : ''}>🔍 En revisión</option>
     `;
     
-    // 🔽 SIEMPRE mostrar el toggle, independientemente de si es crédito o no
+    // ============================================================
+    // 🔽 DATOS DE RETENCIÓN DEL IGV (3% para Perú)
+    // ============================================================
     const tieneRetencion = data?.tiene_retencion || false;
+    const porcentajeRetencion = data?.porcentaje_retencion || 3.00; // 3% por defecto
+    const montoRetenido = data?.monto_retenido || 0;
+    const montoTotal = data?.total || data?.monto || 0;
+    const montoBaseRetencion = montoTotal; // Se retiene sobre el total (incluye IGV)
+    const montoRetenidoCalculado = (montoBaseRetencion * porcentajeRetencion) / 100;
     
     // Productos
     const productos = data?.items || [];
@@ -3121,6 +3144,7 @@ function renderComprobanteFormContent(isEdit, data) {
         '<div style="padding:20px;text-align:center;color:#94A3B8;">📭 Seleccione una cotización o guía para ver los productos</div>';
     
     return `
+        <!-- SECCIÓN: DOCUMENTOS VINCULADOS -->
         <div class="ficha-section">
             <div class="ficha-section-title">🧾 Documentos vinculados</div>
             <div class="ficha-grid">
@@ -3148,6 +3172,7 @@ function renderComprobanteFormContent(isEdit, data) {
             </div>
         </div>
         
+        <!-- SECCIÓN: DATOS DEL COMPROBANTE -->
         <div class="ficha-section">
             <div class="ficha-grid">
                 <div class="form-field col-3">
@@ -3192,12 +3217,12 @@ function renderComprobanteFormContent(isEdit, data) {
                     <input id="compDireccion" value="${data?.cliente_direccion || data?.direccion || ''}" placeholder="Dirección del cliente">
                 </div>
                 <div class="form-field col-4">
-                    <label>Monto</label>
-                    <input id="compMonto" type="number" value="${data?.monto || 0}" step="0.01">
+                    <label>Monto Total</label>
+                    <input id="compMonto" type="number" value="${data?.total || data?.monto || 0}" step="0.01" oninput="calcularRetencionComprobante()">
                 </div>
                 <div class="form-field col-4">
                     <label>Condición de pago</label>
-                    <select id="compCondicion" onchange="actualizarEstadoRetencion()">
+                    <select id="compCondicion" onchange="actualizarEstadoRetencion(); calcularRetencionComprobante()">
                         ${condicionOptions}
                     </select>
                 </div>
@@ -3205,11 +3230,11 @@ function renderComprobanteFormContent(isEdit, data) {
         </div>
         
         <!-- ============================================================ -->
-        <!-- 🔽 SECCIÓN DE RETENCIÓN CON BOTÓN TOGGLE - SIEMPRE VISIBLE -->
+        <!-- 🔽 SECCIÓN DE RETENCIÓN DEL IGV (3% - LEY PERUANA) -->
         <!-- ============================================================ -->
         <div class="ficha-section" style="border: 2px solid #E5E7EB; background: #F8FAFC; margin-bottom: 10px;">
             <div class="ficha-section-title" style="background: #F1F5F9; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center;">
-                <span style="color: #0F172A; font-weight: 900;">🔒 Retención</span>
+                <span style="color: #0F172A; font-weight: 900;">🔒 Retención del IGV (3%)</span>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 11px; color: #64748B; font-weight: 700;" id="retencionStatusLabel">
                         ${tieneRetencion ? '✅ Activa' : '⭕ Inactiva'}
@@ -3241,53 +3266,74 @@ function renderComprobanteFormContent(isEdit, data) {
             <!-- Contenido de retención (se muestra/oculta según el toggle) -->
             <div id="retencionContent" style="${tieneRetencion ? 'display:block;' : 'display:none;'} padding: 10px 14px; background: #FFFFFF;">
                 <div class="ficha-grid" style="background: #F8FAFC; padding: 10px; border-radius: 8px;">
-                    <!-- 🔽 Alerta si la condición NO es crédito pero la retención está activa -->
+                    
+                    <!-- Alerta informativa -->
+                    <div style="grid-column: span 12; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 8px 12px; margin-bottom: 4px; font-size: 11px; color: #1E3A8A; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px;">📌</span>
+                        <span>Según normativa peruana, la retención del IGV es del <strong>3%</strong> sobre el importe total de la operación. 
+                        Solo aplica en operaciones gravadas con el IGV que superen los <strong>S/ 700</strong>.</span>
+                    </div>
+                    
+                    <!-- Alerta si la condición NO es crédito pero la retención está activa -->
                     <div id="retencionAlert" style="display: ${tieneRetencion && !data?.condicion?.includes('Crédito') ? 'block' : 'none'}; 
+                        grid-column: span 12;
                         background: #FFF7ED; border: 1px solid #FDBA74; border-radius: 8px; 
-                        padding: 8px 12px; margin-bottom: 8px; font-size: 11px; color: #9A3412; font-weight: 700;">
+                        padding: 8px 12px; margin-bottom: 4px; font-size: 11px; color: #9A3412; font-weight: 700;">
                         ⚠️ La retención está activa pero la condición de pago NO es crédito. Verifica que sea correcto.
                     </div>
                     
-                    <div class="form-field col-4">
+                    <div class="form-field col-3">
                         <label style="font-weight: 900;">Estado del Crédito</label>
                         <select id="compEstadoCredito" style="font-weight: 900; border: 2px solid #2563EB;">
                             ${estadoCreditoOptions}
                         </select>
                     </div>
-                    <div class="form-field col-4">
-                        <label style="font-weight: 900;">Fecha de Aprobación</label>
+                    <div class="form-field col-2">
+                        <label style="font-weight: 900;">Fecha Aprobación</label>
                         <input id="compFechaAprobacion" type="date" value="${data?.fecha_aprobacion || today()}" style="font-weight: 800;">
                     </div>
-                    <div class="form-field col-4">
-                        <label style="font-weight: 900; color: #DC2626;">Fecha de Vencimiento</label>
+                    <div class="form-field col-2">
+                        <label style="font-weight: 900; color: #DC2626;">Fecha Vencimiento</label>
                         <input id="compFechaVencimiento" type="date" value="${data?.fecha_vencimiento || ''}" style="font-weight: 800; color: #DC2626;" readonly>
                     </div>
-                    <div class="form-field col-4">
+                    <div class="form-field col-2">
                         <label style="font-weight: 900; color: #1D4ED8;">Días de Crédito</label>
                         <input id="compDiasCredito" type="number" value="${data?.dias_credito || 30}" min="1" max="180" style="font-weight: 900; color: #1D4ED8;" 
-                               onchange="calcularFechaVencimientoComprobante()">
+                               onchange="calcularFechaVencimientoComprobante(); calcularRetencionComprobante()">
                     </div>
-                    <div class="form-field col-4">
+                    <div class="form-field col-3">
+                        <label style="font-weight: 900; color: #DC2626;">% Retención</label>
+                        <input id="compPorcentajeRetencion" type="number" value="${data?.porcentaje_retencion || 3.00}" step="0.01" min="0" max="100" style="font-weight: 900; color: #DC2626; border-color: #DC2626;" 
+                               onchange="calcularRetencionComprobante()">
+                        <small style="color: #64748B; font-size: 8px;">Por defecto 3% (normativa peruana)</small>
+                    </div>
+                    <div class="form-field col-3">
                         <label style="font-weight: 900; color: #DC2626;">Monto Retenido</label>
-                        <input id="compMontoRetenido" type="number" value="${data?.monto_retenido || 0}" step="0.01" style="font-weight: 900; color: #DC2626; border-color: #DC2626;">
+                        <input id="compMontoRetenido" type="number" value="${data?.monto_retenido || montoRetenidoCalculado.toFixed(2)}" step="0.01" style="font-weight: 900; color: #DC2626; border-color: #DC2626;" 
+                               onchange="actualizarMontoRetenidoManual()">
                     </div>
-                    <div class="form-field col-8">
+                    <div class="form-field col-3">
+                        <label style="font-weight: 900; color: #059669;">Monto a Pagar (97%)</label>
+                        <input id="compMontoAPagar" type="number" value="${(montoTotal - (data?.monto_retenido || montoRetenidoCalculado)).toFixed(2)}" step="0.01" style="font-weight: 900; color: #059669; border-color: #059669; background: #F1F5F9;" readonly>
+                    </div>
+                    <div class="form-field col-6">
                         <label style="font-weight: 900;">Observaciones de Retención</label>
-                        <input id="compObsRetencion" value="${data?.obs_retencion || ''}" placeholder="Ej: Cliente acepta crédito, se retiene el 10%..." style="font-weight: 700; border: 1px solid #2563EB;">
+                        <input id="compObsRetencion" value="${data?.obs_retencion || ''}" placeholder="Ej: Retención del 3% por IGV según normativa..." style="font-weight: 700; border: 1px solid #2563EB;">
                     </div>
                 </div>
                 
-                <!-- Alerta informativa -->
+                <!-- Nota informativa -->
                 <div style="padding: 8px 14px; background: #DBEAFE; border-radius: 8px; margin-top: 8px; display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 18px;">💡</span>
                     <span style="font-size: 11px; font-weight: 700; color: #1D4ED8;">
-                        Al seleccionar "Aceptada en Crédito", la factura queda registrada como aceptada por el cliente con plazo de crédito.
-                        El monto retenido se descuenta del total a pagar.
+                        El cliente paga el <strong>97%</strong> del total y retiene el <strong>3%</strong> para entregarlo a la SUNAT.
+                        Solo aplica en operaciones con IGV que superen los <strong>S/ 700</strong>.
                     </span>
                 </div>
             </div>
         </div>
         
+        <!-- SECCIÓN: PRODUCTOS -->
         <div class="ficha-section">
             <div class="ficha-section-title">🧾 Productos</div>
             <div id="compProducts">
@@ -3295,6 +3341,7 @@ function renderComprobanteFormContent(isEdit, data) {
             </div>
         </div>
         
+        <!-- SECCIÓN: OBSERVACIONES -->
         <div class="ficha-section">
             <div class="ficha-grid">
                 <div class="form-field col-12">
@@ -3305,6 +3352,150 @@ function renderComprobanteFormContent(isEdit, data) {
         </div>
     `;
 }
+
+
+
+
+
+// ============================================================
+// FUNCIONES PARA RETENCIÓN DEL IGV (3% - LEY PERUANA)
+// ============================================================
+
+/**
+ * Calcula la retención del IGV (3%) automáticamente
+ */
+function calcularRetencionComprobante() {
+    const montoTotal = parseFloat(document.getElementById('compMonto')?.value) || 0;
+    const porcentajeRetencion = parseFloat(document.getElementById('compPorcentajeRetencion')?.value) || 3.00;
+    const diasCredito = parseInt(document.getElementById('compDiasCredito')?.value) || 30;
+    
+    // Calcular monto retenido (3% del total)
+    const montoRetenido = (montoTotal * porcentajeRetencion) / 100;
+    const montoAPagar = montoTotal - montoRetenido;
+    
+    // Actualizar campos
+    const montoRetenidoInput = document.getElementById('compMontoRetenido');
+    const montoAPagarInput = document.getElementById('compMontoAPagar');
+    const retencionStatusLabel = document.getElementById('retencionStatusLabel');
+    
+    if (montoRetenidoInput) {
+        montoRetenidoInput.value = montoRetenido.toFixed(2);
+    }
+    if (montoAPagarInput) {
+        montoAPagarInput.value = montoAPagar.toFixed(2);
+    }
+    
+    // Verificar si aplica retención (monto > S/ 700)
+    const aplicaRetencion = montoTotal > 700;
+    if (aplicaRetencion && retencionStatusLabel) {
+        retencionStatusLabel.textContent = '✅ Activa (S/ ' + montoTotal.toFixed(2) + ' > S/ 700)';
+        retencionStatusLabel.style.color = '#16A34A';
+    } else if (!aplicaRetencion && retencionStatusLabel) {
+        retencionStatusLabel.textContent = '⭕ No aplica (S/ ' + montoTotal.toFixed(2) + ' ≤ S/ 700)';
+        retencionStatusLabel.style.color = '#F59E0B';
+    }
+    
+    // Calcular fecha de vencimiento
+    calcularFechaVencimientoComprobante();
+    
+    console.log(`📊 Retención calculada: ${porcentajeRetencion}% de S/ ${montoTotal.toFixed(2)} = S/ ${montoRetenido.toFixed(2)}. A pagar: S/ ${montoAPagar.toFixed(2)}`);
+}
+
+/**
+ * Actualiza el monto retenido manualmente y recalcula el monto a pagar
+ */
+function actualizarMontoRetenidoManual() {
+    const montoTotal = parseFloat(document.getElementById('compMonto')?.value) || 0;
+    const montoRetenido = parseFloat(document.getElementById('compMontoRetenido')?.value) || 0;
+    const montoAPagar = montoTotal - montoRetenido;
+    
+    const montoAPagarInput = document.getElementById('compMontoAPagar');
+    if (montoAPagarInput) {
+        montoAPagarInput.value = montoAPagar.toFixed(2);
+    }
+    
+    // Calcular porcentaje efectivo
+    const porcentajeRetencion = (montoRetenido / montoTotal) * 100;
+    const porcentajeInput = document.getElementById('compPorcentajeRetencion');
+    if (porcentajeInput && montoTotal > 0) {
+        porcentajeInput.value = porcentajeRetencion.toFixed(2);
+    }
+}
+
+/**
+ * Alterna la visibilidad de la sección de retención
+ */
+function toggleRetencion() {
+    const content = document.getElementById('retencionContent');
+    const btn = document.getElementById('btnToggleRetencion');
+    const icon = document.getElementById('btnToggleIcon');
+    const text = document.getElementById('btnToggleText');
+    const statusLabel = document.getElementById('retencionStatusLabel');
+    
+    if (!content || !btn) return;
+    
+    const isActive = content.style.display !== 'none';
+    
+    if (isActive) {
+        // DESACTIVAR
+        content.style.display = 'none';
+        btn.style.borderColor = '#22C55E';
+        btn.style.background = '#DCFCE7';
+        btn.style.color = '#166534';
+        icon.textContent = '🟢';
+        text.textContent = 'Activar';
+        statusLabel.textContent = '⭕ Inactiva';
+        statusLabel.style.color = '#64748B';
+        
+        // Guardar estado
+        const hiddenField = document.getElementById('compTieneRetencion');
+        if (hiddenField) hiddenField.value = 'false';
+        
+        showToast('⭕ Retención desactivada', 'info');
+    } else {
+        // ACTIVAR
+        content.style.display = 'block';
+        btn.style.borderColor = '#DC2626';
+        btn.style.background = '#FEE2E2';
+        btn.style.color = '#991B1B';
+        icon.textContent = '🔴';
+        text.textContent = 'Desactivar';
+        statusLabel.textContent = '✅ Activa';
+        statusLabel.style.color = '#16A34A';
+        
+        // Guardar estado
+        const hiddenField = document.getElementById('compTieneRetencion');
+        if (hiddenField) hiddenField.value = 'true';
+        
+        // Calcular automáticamente
+        calcularRetencionComprobante();
+        
+        showToast('🔒 Retención del IGV activada (3%)', 'success');
+    }
+}
+
+/**
+ * Actualiza el estado de la retención según la condición de pago
+ */
+function actualizarEstadoRetencion() {
+    const condicion = document.getElementById('compCondicion')?.value || '';
+    const esCredito = condicion.includes('Crédito');
+    const content = document.getElementById('retencionContent');
+    const alert = document.getElementById('retencionAlert');
+    
+    // Si la retención está activa y la condición cambia a NO crédito, mostrar alerta
+    if (content && content.style.display !== 'none' && !esCredito) {
+        if (alert) alert.style.display = 'block';
+    } else {
+        if (alert) alert.style.display = 'none';
+    }
+    
+    // Si es crédito y la retención está activa, calcular automáticamente
+    if (esCredito && content && content.style.display !== 'none') {
+        calcularRetencionComprobante();
+    }
+}
+
 /**
  * Renderiza la tabla de productos para el comprobante
  */
@@ -3698,10 +3889,7 @@ function cargarDatosComprobante(data) {
         if (el) {
             if (el.tagName === 'SELECT') {
                 for (let opt of el.options) {
-                    if (opt.value === value) {
-                        opt.selected = true;
-                        return;
-                    }
+                    if (opt.value === value) { opt.selected = true; return; }
                 }
             } else {
                 el.value = value ?? '';
@@ -3715,42 +3903,54 @@ function cargarDatosComprobante(data) {
     setVal('compEstado', data.estado_sunat || data.estado);
     setVal('compCliente', data.cliente_nombre || data.cliente);
     setVal('compRuc', data.cliente_numero_doc || data.ruc);
-    setVal('compEmail', data.cliente_email);
-    setVal('compTelefono', data.cliente_telefono);
-    setVal('compDireccion', data.cliente_direccion);
+    // 🔽 agregar fallback a las claves "planas" que usa el guardado
+    setVal('compEmail', data.cliente_email || data.email);
+    setVal('compTelefono', data.cliente_telefono || data.telefono);
+    setVal('compDireccion', data.cliente_direccion || data.direccion);
     setVal('compMonto', data.total || data.monto);
     setVal('compObs', data.observaciones);
     setVal('compCondicion', data.condicion_pago || data.condicion || 'Contado');
     setVal('compCotizacion', data.documento_asociado || data.cotizacion);
     setVal('compGuia', data.guia_vinculada || data.guia);
     setVal('compPC', data.pc_vinculado || data.pc);
-    
-    // 🔽 DATOS DE RETENCIÓN
-    setVal('compEstadoCredito', data.estado_credito || 'Pendiente de aprobación');
-    setVal('compFechaAprobacion', data.fecha_aprobacion || today());
-    setVal('compFechaVencimiento', data.fecha_vencimiento || '');
-    setVal('compDiasCredito', data.dias_credito || 30);
-    setVal('compMontoRetenido', data.monto_retenido || 0);
-    setVal('compObsRetencion', data.obs_retencion || '');
-    
-    // Productos
-    const items = data.items_json || data.items || [];
-    if (items.length > 0) {
-        window._compProductos = items;
-        const productsContainer = document.getElementById('compProducts');
-        if (productsContainer) {
-            productsContainer.innerHTML = renderProductosComprobanteHTML(items);
-        }
+
+    // 🔽 NUEVO: si quedaron vacíos, jalarlos directo de la cotización vinculada
+    const cotVal = document.getElementById('compCotizacion')?.value || '';
+    const emailVal = document.getElementById('compEmail')?.value?.trim() || '';
+    const telVal    = document.getElementById('compTelefono')?.value?.trim() || '';
+    const dirVal    = document.getElementById('compDireccion')?.value?.trim() || '';
+
+    if (cotVal && (!emailVal || !telVal || !dirVal)) {
+        completarDatosClienteDesdeCotizacion(cotVal);
     }
+}
+
+// 🔽 NUEVA función auxiliar
+function completarDatosClienteDesdeCotizacion(numeroCotizacion) {
+    const cotizacion = cotizacionesData.find(c => c.numero === numeroCotizacion);
+    if (!cotizacion) return;
+
+    apiFetch(`/ventas/api/cotizaciones/${cotizacion.id}/completa`)
+        .then(response => {
+            if (!response.success) return;
+            const data = response.data;
+
+            const emailEl = document.getElementById('compEmail');
+            const telEl   = document.getElementById('compTelefono');
+            const dirEl   = document.getElementById('compDireccion');
+
+            if (emailEl && !emailEl.value.trim()) emailEl.value = data.cliente_email || '';
+            if (telEl && !telEl.value.trim())     telEl.value   = data.cliente_telefono || '';
+            if (dirEl && !dirEl.value.trim())      dirEl.value  = data.cliente_direccion || data.direccion_entrega || '';
+
+            console.log('✅ Datos de contacto completados desde cotización', numeroCotizacion);
+        })
+        .catch(err => console.error('Error completando datos desde cotización:', err));
 }
 
 
 // ============================================================
-// GUARDAR COMPROBANTE CON DATOS DE RETENCIÓN
-// ============================================================
-
-// ============================================================
-// GUARDAR COMPROBANTE CON DATOS DE RETENCIÓN (TOGGLE)
+// GUARDAR COMPROBANTE CON DATOS DE RETENCIÓN DEL 3%
 // ============================================================
 
 async function _saveComprobante(estado) {
@@ -3760,7 +3960,7 @@ async function _saveComprobante(estado) {
         let productos = window._compProductos || [];
         
         // ============================================================
-        // 🔽 OBTENER ESTADO DE RETENCIÓN (TOGGLE)
+        // 🔽 OBTENER ESTADO DE RETENCIÓN
         // ============================================================
         const hiddenField = document.getElementById('compTieneRetencion');
         const tieneRetencion = hiddenField ? hiddenField.value === 'true' : false;
@@ -3768,11 +3968,16 @@ async function _saveComprobante(estado) {
         const condicion = document.getElementById('compCondicion')?.value || 'Contado';
         const esCredito = condicion.includes('Crédito');
         
+        // ============================================================
+        // 🔽 DATOS DE RETENCIÓN DEL IGV (3%)
+        // ============================================================
         let estadoCredito = null;
         let fechaAprobacion = null;
         let fechaVencimiento = null;
         let diasCredito = null;
+        let porcentajeRetencion = 3.00;
         let montoRetenido = 0;
+        let montoAPagar = 0;
         let obsRetencion = '';
         
         // Solo guardar datos de retención si está activa
@@ -3781,7 +3986,9 @@ async function _saveComprobante(estado) {
             fechaAprobacion = document.getElementById('compFechaAprobacion')?.value || today();
             fechaVencimiento = document.getElementById('compFechaVencimiento')?.value || '';
             diasCredito = parseInt(document.getElementById('compDiasCredito')?.value) || 30;
+            porcentajeRetencion = parseFloat(document.getElementById('compPorcentajeRetencion')?.value) || 3.00;
             montoRetenido = parseFloat(document.getElementById('compMontoRetenido')?.value) || 0;
+            montoAPagar = parseFloat(document.getElementById('compMontoAPagar')?.value) || 0;
             obsRetencion = document.getElementById('compObsRetencion')?.value || '';
         }
         
@@ -3801,7 +4008,7 @@ async function _saveComprobante(estado) {
             pc: document.getElementById('compPC')?.value || '',
             cliente: document.getElementById('compCliente')?.value || '',
             ruc: document.getElementById('compRuc')?.value || '',
-            direccion: document.getElementById('comDireccion')?.value || '',
+            direccion: document.getElementById('compDireccion')?.value || '',
             email: document.getElementById('compEmail')?.value || '',
             telefono: document.getElementById('compTelefono')?.value || '',
             monto: montoTotal,
@@ -3811,18 +4018,20 @@ async function _saveComprobante(estado) {
             condicion: condicion,
             observaciones: document.getElementById('compObs')?.value || '',
             items: productos,
-            // 🔽 DATOS DE RETENCIÓN (SOLO SI ESTÁ ACTIVA)
+            // 🔽 DATOS DE RETENCIÓN (3% - LEY PERUANA)
             tiene_retencion: tieneRetencion,
             es_credito: esCredito,
             estado_credito: estadoCredito,
             fecha_aprobacion: fechaAprobacion,
             fecha_vencimiento: fechaVencimiento,
             dias_credito: diasCredito,
+            porcentaje_retencion: porcentajeRetencion,
             monto_retenido: montoRetenido,
+            monto_a_pagar: montoAPagar,
             obs_retencion: obsRetencion
         };
         
-        console.log('📦 Datos a guardar con retención:', data);
+        console.log('📦 Datos a guardar con retención del 3%:', data);
         
         const response = await apiFetch('/ventas/api/comprobantes/guardar', {
             method: 'POST',

@@ -2008,224 +2008,52 @@ def api_comprobantes_listar():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@ventas_bp.route('/ventas/api/comprobantes/guardar', methods=['POST'])
-@login_required
-def api_comprobantes_guardar():
-    try:
-        data = request.get_json()
-        usuario_id = session.get('usuario_id', 8)
-        
-        items_json = data.get('items', [])
-        
-        # ============================================================
-        # 🔽 OBTENER DATOS DE RETENCIÓN (CRÉDITO)
-        # ============================================================
-        es_credito = data.get('es_credito', False)
-        estado_credito = data.get('estado_credito')
-        fecha_aprobacion = data.get('fecha_aprobacion')
-        fecha_vencimiento = data.get('fecha_vencimiento')
-        dias_credito = data.get('dias_credito')
-        monto_retenido = data.get('monto_retenido', 0)
-        obs_retencion = data.get('obs_retencion')
-        condicion_pago = data.get('condicion', 'Contado')
-        
-        comprobante_data = {
-            'tipo_comprobante': data.get('tipo', 'FACTURA'),
-            'serie': data.get('serie', 'F001'),
-            'numero': data.get('numero'),
-            'fecha_emision': datetime.now().date().isoformat(),
-            'moneda': data.get('moneda', 'PEN'),
-            'cliente_tipo_doc': data.get('cliente_tipo_doc', 'RUC'),
-            'cliente_numero_doc': data.get('ruc'),
-            'cliente_nombre': data.get('cliente'),
-            'cliente_direccion': data.get('direccion') or '',
-            'cliente_email': data.get('email') or '',
-            'cliente_telefono': data.get('telefono') or '',
-            'subtotal': float(data.get('subtotal', 0)),
-            'igv': float(data.get('igv', 0)),
-            'total': float(data.get('total', 0)),
-            'items_json': json.dumps(items_json),
-            'observaciones': data.get('observaciones', ''),
-            'estado_sunat': data.get('estado', 'BORRADOR'),
-            'documento_asociado': data.get('cotizacion') or data.get('cotizacion_numero') or '',
-            'guia_vinculada': data.get('guia') or '',
-            'pc_vinculado': data.get('pc') or '',
-            'tiene_retencion': data.get('tiene_retencion', False),
-            'condicion_pago': condicion_pago,
-            # 🔽 NUEVOS CAMPOS DE RETENCIÓN
-            'es_credito': es_credito,
-            'estado_credito': estado_credito,
-            'fecha_aprobacion': fecha_aprobacion,
-            'fecha_vencimiento': fecha_vencimiento,
-            'dias_credito': dias_credito,
-            'monto_retenido': monto_retenido,
-            'obs_retencion': obs_retencion,
-            'creado_por': usuario_id
-            
-        }
 
-        if data.get('id'):
-            # ============================================================
-            # ACTUALIZAR COMPROBANTE EXISTENTE
-            # ============================================================
-            query = """
-                UPDATE comprobantes SET
-                    tipo_comprobante = %s, 
-                    serie = %s, 
-                    numero = %s,
-                    fecha_emision = %s, 
-                    moneda = %s,
-                    cliente_tipo_doc = %s, 
-                    cliente_numero_doc = %s,
-                    cliente_nombre = %s, 
-                    cliente_direccion = %s,
-                    cliente_email = %s, 
-                    cliente_telefono = %s,
-                    subtotal = %s, 
-                    igv = %s, 
-                    total = %s,
-                    items_json = %s, 
-                    observaciones = %s,
-                    estado_sunat = %s, 
-                    documento_asociado = %s,
-                    guia_vinculada = %s, 
-                    pc_vinculado = %s,
-                    condicion_pago = %s,
-                    -- 🔽 NUEVOS CAMPOS DE RETENCIÓN
-                    es_credito = %s,
-                    estado_credito = %s,
-                    fecha_aprobacion = %s,
-                    fecha_vencimiento = %s,
-                    dias_credito = %s,
-                    monto_retenido = %s,
-                    obs_retencion = %s,
-                    updated_at = NOW()
-                WHERE id = %s
-                RETURNING id, serie, numero
-            """
-            params = (
-                comprobante_data['tipo_comprobante'],
-                comprobante_data['serie'],
-                comprobante_data['numero'],
-                comprobante_data['fecha_emision'],
-                comprobante_data['moneda'],
-                comprobante_data['cliente_tipo_doc'],
-                comprobante_data['cliente_numero_doc'],
-                comprobante_data['cliente_nombre'],
-                comprobante_data['cliente_direccion'],
-                comprobante_data['cliente_email'],
-                comprobante_data['cliente_telefono'],
-                comprobante_data['subtotal'],
-                comprobante_data['igv'],
-                comprobante_data['total'],
-                comprobante_data['items_json'],
-                comprobante_data['observaciones'],
-                comprobante_data['estado_sunat'],
-                comprobante_data['documento_asociado'],
-                comprobante_data['guia_vinculada'],
-                comprobante_data['pc_vinculado'],
-                comprobante_data['condicion_pago'],
-                # 🔽 NUEVOS CAMPOS
-                comprobante_data['es_credito'],
-                comprobante_data['estado_credito'],
-                comprobante_data['fecha_aprobacion'],
-                comprobante_data['fecha_vencimiento'],
-                comprobante_data['dias_credito'],
-                comprobante_data['monto_retenido'],
-                comprobante_data['obs_retencion'],
-                data['id']
-            )
-            result = db_query(query, params)
-    
-            if result:
-                return jsonify({
-                    'success': True, 
-                    'message': 'Comprobante actualizado correctamente', 
-                    'data': result[0]
-                })
-            return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
-        
-        # ============================================================
-        # CREAR NUEVO COMPROBANTE
-        # ============================================================
-        if not comprobante_data['numero']:
-            count_data = db_query("SELECT COUNT(*) as total FROM comprobantes")
-            count = count_data[0]['total'] + 1 if count_data else 1
-            comprobante_data['numero'] = str(count)
-        
-        # Usar la función guardar_comprobante_db con los nuevos campos
-        # Pero necesitamos modificar la función para incluir los nuevos campos
-        # O podemos hacer el INSERT directamente aquí
-        
-        query_insert = """
-            INSERT INTO comprobantes (
-                tipo_comprobante, serie, numero, fecha_emision,
+@ventas_bp.route('/ventas/api/comprobantes/<int:id>', methods=['GET'])
+@login_required
+def api_comprobantes_obtener(id):
+    """Obtiene un comprobante específico por su ID"""
+    try:
+        query = """
+            SELECT 
+                id, tipo_comprobante, serie, numero, fecha_emision,
                 moneda, cliente_tipo_doc, cliente_numero_doc,
                 cliente_nombre, cliente_direccion, cliente_email,
                 cliente_telefono, subtotal, igv, total,
                 items_json, observaciones, estado_sunat,
                 condicion_pago, documento_asociado, guia_vinculada,
-                pc_vinculado, creado_por,
-                -- 🔽 NUEVOS CAMPOS DE RETENCIÓN
+                pc_vinculado, 
+                -- 🔽 CAMPOS DE RETENCIÓN (3%)
+                tiene_retencion, 
                 es_credito, estado_credito, fecha_aprobacion,
-                fecha_vencimiento, dias_credito, monto_retenido,
-                obs_retencion
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s,
-                %s, %s, %s, %s, %s, %s, %s
-            )
-            RETURNING id, serie, numero
+                fecha_vencimiento, dias_credito, 
+                porcentaje_retencion, monto_retenido, monto_a_pagar,
+                obs_retencion,
+                sunat_response, cdr_response, creado_por,
+                created_at, updated_at
+            FROM comprobantes
+            WHERE id = %s
         """
-        
-        params_insert = (
-            comprobante_data['tipo_comprobante'],
-            comprobante_data['serie'],
-            comprobante_data['numero'],
-            comprobante_data['fecha_emision'],
-            comprobante_data['moneda'],
-            comprobante_data['cliente_tipo_doc'],
-            comprobante_data['cliente_numero_doc'],
-            comprobante_data['cliente_nombre'],
-            comprobante_data['cliente_direccion'],
-            comprobante_data['cliente_email'],
-            comprobante_data['cliente_telefono'],
-            comprobante_data['subtotal'],
-            comprobante_data['igv'],
-            comprobante_data['total'],
-            comprobante_data['items_json'],
-            comprobante_data['observaciones'],
-            comprobante_data['estado_sunat'],
-            comprobante_data['condicion_pago'],
-            comprobante_data['documento_asociado'],
-            comprobante_data['guia_vinculada'],
-            comprobante_data['pc_vinculado'],
-            comprobante_data['creado_por'],
-            # 🔽 NUEVOS CAMPOS
-            comprobante_data['es_credito'],
-            comprobante_data['estado_credito'],
-            comprobante_data['fecha_aprobacion'],
-            comprobante_data['fecha_vencimiento'],
-            comprobante_data['dias_credito'],
-            comprobante_data['monto_retenido'],
-            comprobante_data['obs_retencion']
-        )
-        
-        result = db_query(query_insert, params_insert)
-        
-        if result:
-            return jsonify({
-                'success': True, 
-                'message': 'Comprobante creado correctamente', 
-                'data': result[0]
-            })
-        return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
-            
+        result = db_query(query, (id,))
+        if not result:
+            return jsonify({'success': False, 'error': 'Comprobante no encontrado'}), 404
+
+        comp = result[0]
+
+        # Parsear items_json de forma segura
+        try:
+            raw_val = comp.get('items_json')
+            if raw_val:
+                comp['items_json'] = json.loads(raw_val) if isinstance(raw_val, str) else raw_val
+            else:
+                comp['items_json'] = []
+        except Exception as e:
+            print(f"⚠️ Error parseando items_json de comprobante: {e}")
+            comp['items_json'] = []
+
+        return jsonify({'success': True, 'data': comp})
     except Exception as e:
-        print(f"❌ Error en api_comprobantes_guardar: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ Error en api_comprobantes_obtener: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
