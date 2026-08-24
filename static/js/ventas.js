@@ -3966,6 +3966,7 @@ async function _saveComprobante(estado) {
             tipo: document.getElementById('compTipo')?.value || 'Factura',
             serie: document.getElementById('compSerie')?.value || 'F001',
             numero: document.getElementById('compNumero')?.value || String(Date.now()).slice(-8),
+             fecha_emision: new Date().toISOString(),
             cotizacion: document.getElementById('compCotizacion')?.value || '',
             guia: document.getElementById('compGuia')?.value || '',
             pc: document.getElementById('compPC')?.value || '',
