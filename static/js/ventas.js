@@ -3180,6 +3180,18 @@ function renderComprobanteFormContent(isEdit, data) {
                     <input id="compRuc" value="${data?.ruc || ''}" placeholder="12345678901">
                 </div>
                 <div class="form-field col-4">
+                    <label>Email</label>
+                    <input id="compEmail" value="${data?.cliente_email || data?.email || ''}" placeholder="cliente@email.com">
+                </div>
+                <div class="form-field col-4">
+                    <label>Teléfono</label>
+                    <input id="compTelefono" value="${data?.cliente_telefono || data?.telefono || ''}" placeholder="999999999">
+                </div>
+                <div class="form-field col-4">
+                    <label>Dirección</label>
+                    <input id="compDireccion" value="${data?.cliente_direccion || data?.direccion || ''}" placeholder="Dirección del cliente">
+                </div>
+                <div class="form-field col-4">
                     <label>Monto</label>
                     <input id="compMonto" type="number" value="${data?.monto || 0}" step="0.01">
                 </div>
@@ -3703,6 +3715,9 @@ function cargarDatosComprobante(data) {
     setVal('compEstado', data.estado_sunat || data.estado);
     setVal('compCliente', data.cliente_nombre || data.cliente);
     setVal('compRuc', data.cliente_numero_doc || data.ruc);
+    setVal('compEmail', data.cliente_email);
+    setVal('compTelefono', data.cliente_telefono);
+    setVal('compDireccion', data.cliente_direccion);
     setVal('compMonto', data.total || data.monto);
     setVal('compObs', data.observaciones);
     setVal('compCondicion', data.condicion_pago || data.condicion || 'Contado');
@@ -3786,6 +3801,9 @@ async function _saveComprobante(estado) {
             pc: document.getElementById('compPC')?.value || '',
             cliente: document.getElementById('compCliente')?.value || '',
             ruc: document.getElementById('compRuc')?.value || '',
+            direccion: document.getElementById('comDireccion')?.value || '',
+            email: document.getElementById('compEmail')?.value || '',
+            telefono: document.getElementById('compTelefono')?.value || '',
             monto: montoTotal,
             total: montoTotal,
             subtotal: subtotalCalc,
@@ -4763,6 +4781,18 @@ async function openComprobanteModalWithData(id, cotizacion) {
             <div class="form-field col-4">
                 <label>RUC</label>
                 <input id="compRuc" value="${esc(cotizacion.cliente_ruc || '')}">
+            </div>
+            <div class="form-field col-4">
+                <label>Email</label>
+                <input id="compEmail" value="${esc(cotizacion.cliente_email || '')}">
+            </div>
+            <div class="form-field col-4">
+                <label>Teléfono</label>
+                <input id="compTelefono" value="${esc(cotizacion.cliente_telefono || '')}">
+            </div>
+            <div class="form-field col-4">
+                <label>Dirección</label>
+                <input id="compDireccion" value="${esc(cotizacion.direccion_entrega || cotizacion.cliente_direccion || '')}">
             </div>
             <div class="form-field col-4">
                 <label>Monto</label>
@@ -9576,6 +9606,9 @@ async function cargarProductosComprobanteDesdeCotizacion(numeroCotizacion) {
         // Actualizar cliente y RUC automáticamente
         document.getElementById('compCliente').value = data.cliente_razon_social || '';
         document.getElementById('compRuc').value = data.cliente_ruc || '';
+        document.getElementById('compEmail').value = data.cliente_email || '';
+        document.getElementById('compTelefono').value = data.cliente_telefono || '';
+        document.getElementById('compDireccion').value = data.cliente_direccion || '';
         
         // Calcular monto total
         const total = productos.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.valorVenta || 0) * 1.18), 0);
