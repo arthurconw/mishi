@@ -4956,15 +4956,15 @@ async function openComprobanteModalWithData(id, cotizacion) {
             </div>
             <div class="form-field col-4">
                 <label>Email</label>
-                <input id="compEmail" value="${esc(cotizacion.cliente_email || '')}">
+                <input id="compEmail" value="${esc(cotizacion.cliente_email || cotizacion.email_cliente || cotizacion.email || '')}">
             </div>
             <div class="form-field col-4">
                 <label>Teléfono</label>
-                <input id="compTelefono" value="${esc(cotizacion.cliente_telefono || '')}">
+                <input id="compTelefono" value="${esc(cotizacion.cliente_telefono || cotizacion.telefono_cliente || cotizacion.telefono || '')}">
             </div>
             <div class="form-field col-4">
                 <label>Dirección</label>
-                <input id="compDireccion" value="${esc(cotizacion.direccion_entrega || cotizacion.cliente_direccion || '')}">
+                <input id="compDireccion" value="${esc(cotizacion.direccion_entrega || cotizacion.cliente_direccion || cotizacion.direccion || '')}">
             </div>
             <div class="form-field col-4">
                 <label>Monto</label>
@@ -9778,9 +9778,9 @@ async function cargarProductosComprobanteDesdeCotizacion(numeroCotizacion) {
         // Actualizar cliente y RUC automáticamente
         document.getElementById('compCliente').value = data.cliente_razon_social || '';
         document.getElementById('compRuc').value = data.cliente_ruc || '';
-        document.getElementById('compEmail').value = data.cliente_email || '';
-        document.getElementById('compTelefono').value = data.cliente_telefono || '';
-        document.getElementById('compDireccion').value = data.cliente_direccion || '';
+        document.getElementById('compEmail').value = data.cliente_email || data.email_cliente || data.email || '';
+        document.getElementById('compTelefono').value = data.cliente_telefono || data.telefono_cliente || data.telefono || '';
+        document.getElementById('compDireccion').value = data.cliente_direccion || data.direccion_entrega || data.direccion || data.cliente_direccion_entrega || '';
         
         // Calcular monto total
         const total = productos.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.valorVenta || 0) * 1.18), 0);
