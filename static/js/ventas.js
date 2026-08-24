@@ -214,46 +214,22 @@ function empresa() {
 // ============================================================
 // FUNCIÓN PARA FORMATEAR FECHA DE COMPROBANTE (CON HORA)
 // ============================================================
-
 function formatearFechaComprobante(fechaStr) {
     if (!fechaStr) return '-';
     
     try {
         let fecha;
         
-        // Si es un objeto Date o string
-        if (fechaStr instanceof Date) {
-            fecha = fechaStr;
-        } else if (typeof fechaStr === 'string') {
-            // Si viene en formato RFC (Fri, 12 Jun 2026 00:00:00 GMT)
-            if (fechaStr.includes('GMT') || fechaStr.includes('UTC')) {
-                fecha = new Date(fechaStr);
-            }
-            // Si viene en formato ISO
-            else if (fechaStr.includes('T')) {
-                fecha = new Date(fechaStr);
-            }
-            // Si viene en formato YYYY-MM-DD
-            else if (fechaStr.includes('-') && fechaStr.length === 10) {
-                fecha = new Date(fechaStr + 'T00:00:00');
-            }
-            // Si viene en formato DD/MM/YYYY
-            else if (fechaStr.includes('/')) {
-                const partes = fechaStr.split('/');
-                if (partes.length === 3) {
-                    fecha = new Date(partes[2], partes[1] - 1, partes[0]);
-                } else {
-                    fecha = new Date(fechaStr);
-                }
-            }
-            // Si viene con formato "Fri, 12 Jun 2026 00:00:00 GMT"
-            else if (fechaStr.match(/^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4}/)) {
-                fecha = new Date(fechaStr);
-            }
-            else {
-                fecha = new Date(fechaStr);
-            }
-        } else {
+        // Si es string ISO con T (ej: 2026-08-24T15:31:17.659662)
+        if (typeof fechaStr === 'string' && fechaStr.includes('T')) {
+            fecha = new Date(fechaStr);
+        } 
+        // Si es string con formato YYYY-MM-DD (sin hora)
+        else if (typeof fechaStr === 'string' && fechaStr.includes('-') && fechaStr.length === 10) {
+            fecha = new Date(fechaStr + 'T00:00:00');
+        }
+        // Otros formatos
+        else {
             fecha = new Date(fechaStr);
         }
         
@@ -262,7 +238,7 @@ function formatearFechaComprobante(fechaStr) {
             return String(fechaStr);
         }
         
-        // Formatear: 12/06/2026 14:30
+        // Formatear: 24/08/2026 15:31
         const dia = String(fecha.getDate()).padStart(2, '0');
         const mes = String(fecha.getMonth() + 1).padStart(2, '0');
         const anio = fecha.getFullYear();
@@ -3889,7 +3865,10 @@ function cargarDatosComprobante(data) {
         if (el) {
             if (el.tagName === 'SELECT') {
                 for (let opt of el.options) {
-                    if (opt.value === value) { opt.selected = true; return; }
+                    if (opt.value === value) {
+                        opt.selected = true;
+                        return;
+                    }
                 }
             } else {
                 el.value = value ?? '';
@@ -3903,49 +3882,33 @@ function cargarDatosComprobante(data) {
     setVal('compEstado', data.estado_sunat || data.estado);
     setVal('compCliente', data.cliente_nombre || data.cliente);
     setVal('compRuc', data.cliente_numero_doc || data.ruc);
-    // 🔽 agregar fallback a las claves "planas" que usa el guardado
-    setVal('compEmail', data.cliente_email || data.email);
-    setVal('compTelefono', data.cliente_telefono || data.telefono);
-    setVal('compDireccion', data.cliente_direccion || data.direccion);
+    setVal('compEmail', data.cliente_email);
+    setVal('compTelefono', data.cliente_telefono);
+    setVal('compDireccion', data.cliente_direccion);
     setVal('compMonto', data.total || data.monto);
     setVal('compObs', data.observaciones);
     setVal('compCondicion', data.condicion_pago || data.condicion || 'Contado');
     setVal('compCotizacion', data.documento_asociado || data.cotizacion);
     setVal('compGuia', data.guia_vinculada || data.guia);
     setVal('compPC', data.pc_vinculado || data.pc);
-
-    // 🔽 NUEVO: si quedaron vacíos, jalarlos directo de la cotización vinculada
-    const cotVal = document.getElementById('compCotizacion')?.value || '';
-    const emailVal = document.getElementById('compEmail')?.value?.trim() || '';
-    const telVal    = document.getElementById('compTelefono')?.value?.trim() || '';
-    const dirVal    = document.getElementById('compDireccion')?.value?.trim() || '';
-
-    if (cotVal && (!emailVal || !telVal || !dirVal)) {
-        completarDatosClienteDesdeCotizacion(cotVal);
+    
+    // 🔽 DATOS DE RETENCIÓN
+    setVal('compEstadoCredito', data.estado_credito || 'Pendiente de aprobación');
+    setVal('compFechaAprobacion', data.fecha_aprobacion || today());
+    setVal('compFechaVencimiento', data.fecha_vencimiento || '');
+    setVal('compDiasCredito', data.dias_credito || 30);
+    setVal('compMontoRetenido', data.monto_retenido || 0);
+    setVal('compObsRetencion', data.obs_retencion || '');
+    
+    // Productos
+    const items = data.items_json || data.items || [];
+    if (items.length > 0) {
+        window._compProductos = items;
+        const productsContainer = document.getElementById('compProducts');
+        if (productsContainer) {
+            productsContainer.innerHTML = renderProductosComprobanteHTML(items);
+        }
     }
-}
-
-// 🔽 NUEVA función auxiliar
-function completarDatosClienteDesdeCotizacion(numeroCotizacion) {
-    const cotizacion = cotizacionesData.find(c => c.numero === numeroCotizacion);
-    if (!cotizacion) return;
-
-    apiFetch(`/ventas/api/cotizaciones/${cotizacion.id}/completa`)
-        .then(response => {
-            if (!response.success) return;
-            const data = response.data;
-
-            const emailEl = document.getElementById('compEmail');
-            const telEl   = document.getElementById('compTelefono');
-            const dirEl   = document.getElementById('compDireccion');
-
-            if (emailEl && !emailEl.value.trim()) emailEl.value = data.cliente_email || '';
-            if (telEl && !telEl.value.trim())     telEl.value   = data.cliente_telefono || '';
-            if (dirEl && !dirEl.value.trim())      dirEl.value  = data.cliente_direccion || data.direccion_entrega || '';
-
-            console.log('✅ Datos de contacto completados desde cotización', numeroCotizacion);
-        })
-        .catch(err => console.error('Error completando datos desde cotización:', err));
 }
 
 

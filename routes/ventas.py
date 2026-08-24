@@ -528,10 +528,17 @@ def obtener_comprobantes_db():
         print(f"❌ Error en obtener_comprobantes_db: {e}")
         return []
 
-
 def guardar_comprobante_db(data):
-    """Guarda un nuevo comprobante"""
+    """Guarda un nuevo comprobante con fecha y hora correcta"""
     try:
+        # ✅ OBTENER FECHA Y HORA COMPLETA
+        from datetime import datetime
+        fecha_emision = data.get('fecha_emision')
+        if not fecha_emision:
+            fecha_emision = datetime.now().isoformat()  # "2026-08-24T15:31:17.659662"
+        
+        print(f"📅 Guardando comprobante con fecha: {fecha_emision}")
+        
         query = """
             INSERT INTO comprobantes (
                 tipo_comprobante, serie, numero, fecha_emision,
@@ -540,18 +547,26 @@ def guardar_comprobante_db(data):
                 cliente_telefono, subtotal, igv, total,
                 items_json, observaciones, estado_sunat,
                 condicion_pago, documento_asociado, guia_vinculada,
-                pc_vinculado, creado_por
+                pc_vinculado, creado_por,
+                -- 🔽 CAMPOS DE RETENCIÓN
+                tiene_retencion, es_credito, estado_credito,
+                fecha_aprobacion, fecha_vencimiento, dias_credito,
+                porcentaje_retencion, monto_retenido, monto_a_pagar,
+                obs_retencion
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             RETURNING id, serie, numero
         """
+        
         params = (
             data.get('tipo_comprobante', 'FACTURA'),
             data.get('serie', 'F001'),
             data.get('numero'),
-            data.get('fecha_emision') or datetime.now().date().isoformat(),
+            fecha_emision,  # ✅ CON FECHA Y HORA COMPLETA
             data.get('moneda', 'PEN'),
             data.get('cliente_tipo_doc', 'RUC'),
             data.get('cliente_numero_doc'),
@@ -567,15 +582,28 @@ def guardar_comprobante_db(data):
             data.get('estado_sunat', 'BORRADOR'),
             data.get('condicion_pago', 'Contado'),
             data.get('documento_asociado'),
-            data.get('guia_vinculada'),      # 🆕
-            data.get('pc_vinculado'),        # 🆕
-            data.get('creado_por')
+            data.get('guia_vinculada'),
+            data.get('pc_vinculado'),
+            data.get('creado_por'),
+            # 🔽 CAMPOS DE RETENCIÓN
+            data.get('tiene_retencion', False),
+            data.get('es_credito', False),
+            data.get('estado_credito'),
+            data.get('fecha_aprobacion'),
+            data.get('fecha_vencimiento'),
+            data.get('dias_credito'),
+            data.get('porcentaje_retencion', 3.00),
+            data.get('monto_retenido', 0),
+            data.get('monto_a_pagar', 0),
+            data.get('obs_retencion')
         )
+        
         result = db_query(query, params)
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en guardar_comprobante_db: {e}")
         raise
+
 
 def actualizar_estado_comprobante_db(comp_id, nuevo_estado):
     """Actualiza el estado de un comprobante"""
@@ -1961,6 +1989,253 @@ def api_comprobantes_listar():
             })
         return jsonify({'success': True, 'data': formatted_data})
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/comprobantes/guardar', methods=['POST'])
+@login_required
+def api_comprobantes_guardar():
+    try:
+        data = request.get_json()
+        usuario_id = session.get('usuario_id', 8)
+        
+        items_json = data.get('items', [])
+        
+        # ============================================================
+        # 🔽 OBTENER DATOS DE RETENCIÓN DEL IGV (3%)
+        # ============================================================
+        tiene_retencion = data.get('tiene_retencion', False)
+        es_credito = data.get('es_credito', False)
+        estado_credito = data.get('estado_credito')
+        fecha_aprobacion = data.get('fecha_aprobacion')
+        fecha_vencimiento = data.get('fecha_vencimiento')
+        dias_credito = data.get('dias_credito')
+        porcentaje_retencion = float(data.get('porcentaje_retencion', 3.00))
+        monto_retenido = float(data.get('monto_retenido', 0))
+        monto_a_pagar = float(data.get('monto_a_pagar', 0))
+        obs_retencion = data.get('obs_retencion')
+        condicion_pago = data.get('condicion', 'Contado')
+        
+        # Calcular totales
+        monto_total = float(data.get('total', 0))
+        subtotal = float(data.get('subtotal', 0))
+        igv = float(data.get('igv', 0))
+        
+        # ============================================================
+        # 🔽 OBTENER FECHA Y HORA ACTUAL CORRECTA
+        # ============================================================
+        from datetime import datetime
+        fecha_emision = datetime.now().isoformat()  # ✅ CON HORA COMPLETA
+        print(f"📅 Fecha emisión guardando: {fecha_emision}")
+        
+        # ============================================================
+        # 🔽 VALIDAR Y RECALCULAR LA RETENCIÓN
+        # ============================================================
+        if tiene_retencion:
+            if monto_total > 700:
+                if monto_retenido == 0:
+                    monto_retenido = (monto_total * porcentaje_retencion) / 100
+                monto_a_pagar = monto_total - monto_retenido
+                if not estado_credito:
+                    estado_credito = 'Pendiente de aprobación'
+                if not fecha_aprobacion:
+                    fecha_aprobacion = datetime.now().date().isoformat()
+                if not dias_credito:
+                    dias_credito = 30
+                if not fecha_vencimiento and dias_credito:
+                    from datetime import timedelta
+                    fecha_aprobacion_dt = datetime.strptime(fecha_aprobacion, '%Y-%m-%d')
+                    fecha_vencimiento_dt = fecha_aprobacion_dt + timedelta(days=int(dias_credito))
+                    fecha_vencimiento = fecha_vencimiento_dt.isoformat()
+                if not obs_retencion:
+                    obs_retencion = f'Retención del {porcentaje_retencion}% por IGV según normativa peruana. Monto: S/ {monto_total:.2f} > S/ 700. Se retiene S/ {monto_retenido:.2f} para la SUNAT.'
+            else:
+                tiene_retencion = False
+                monto_retenido = 0
+                monto_a_pagar = monto_total
+                estado_credito = 'No aplica (monto < S/ 700)'
+        
+        # Preparar datos para guardar
+        comprobante_data = {
+            'tipo_comprobante': data.get('tipo', 'FACTURA'),
+            'serie': data.get('serie', 'F001'),
+            'numero': data.get('numero'),
+            'fecha_emision': fecha_emision,  # ✅ CON HORA
+            'moneda': data.get('moneda', 'PEN'),
+            'cliente_tipo_doc': data.get('cliente_tipo_doc', 'RUC'),
+            'cliente_numero_doc': data.get('ruc'),
+            'cliente_nombre': data.get('cliente'),
+            'cliente_direccion': data.get('direccion') or '',
+            'cliente_email': data.get('email') or '',
+            'cliente_telefono': data.get('telefono') or '',
+            'subtotal': subtotal,
+            'igv': igv,
+            'total': monto_total,
+            'items_json': json.dumps(items_json),
+            'observaciones': data.get('observaciones', ''),
+            'estado_sunat': data.get('estado', 'BORRADOR'),
+            'condicion_pago': condicion_pago,
+            'documento_asociado': data.get('cotizacion') or data.get('cotizacion_numero') or '',
+            'guia_vinculada': data.get('guia') or '',
+            'pc_vinculado': data.get('pc') or '',
+            # 🔽 CAMPOS DE RETENCIÓN
+            'tiene_retencion': tiene_retencion,
+            'es_credito': es_credito,
+            'estado_credito': estado_credito,
+            'fecha_aprobacion': fecha_aprobacion,
+            'fecha_vencimiento': fecha_vencimiento,
+            'dias_credito': dias_credito,
+            'porcentaje_retencion': porcentaje_retencion,
+            'monto_retenido': monto_retenido,
+            'monto_a_pagar': monto_a_pagar,
+            'obs_retencion': obs_retencion,
+            'creado_por': usuario_id
+        }
+        
+        # ============================================================
+        # SI TIENE ID, ACTUALIZAR
+        # ============================================================
+        if data.get('id'):
+            query = """
+                UPDATE comprobantes SET
+                    tipo_comprobante = %s, serie = %s, numero = %s,
+                    fecha_emision = %s, moneda = %s,
+                    cliente_tipo_doc = %s, cliente_numero_doc = %s,
+                    cliente_nombre = %s, cliente_direccion = %s,
+                    cliente_email = %s, cliente_telefono = %s,
+                    subtotal = %s, igv = %s, total = %s,
+                    items_json = %s, observaciones = %s,
+                    estado_sunat = %s, condicion_pago = %s,
+                    documento_asociado = %s, guia_vinculada = %s,
+                    pc_vinculado = %s,
+                    tiene_retencion = %s, es_credito = %s,
+                    estado_credito = %s, fecha_aprobacion = %s,
+                    fecha_vencimiento = %s, dias_credito = %s,
+                    porcentaje_retencion = %s, monto_retenido = %s,
+                    monto_a_pagar = %s, obs_retencion = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+                RETURNING id, serie, numero
+            """
+            params = (
+                comprobante_data['tipo_comprobante'],
+                comprobante_data['serie'],
+                comprobante_data['numero'],
+                comprobante_data['fecha_emision'],
+                comprobante_data['moneda'],
+                comprobante_data['cliente_tipo_doc'],
+                comprobante_data['cliente_numero_doc'],
+                comprobante_data['cliente_nombre'],
+                comprobante_data['cliente_direccion'],
+                comprobante_data['cliente_email'],
+                comprobante_data['cliente_telefono'],
+                comprobante_data['subtotal'],
+                comprobante_data['igv'],
+                comprobante_data['total'],
+                comprobante_data['items_json'],
+                comprobante_data['observaciones'],
+                comprobante_data['estado_sunat'],
+                comprobante_data['condicion_pago'],
+                comprobante_data['documento_asociado'],
+                comprobante_data['guia_vinculada'],
+                comprobante_data['pc_vinculado'],
+                comprobante_data['tiene_retencion'],
+                comprobante_data['es_credito'],
+                comprobante_data['estado_credito'],
+                comprobante_data['fecha_aprobacion'],
+                comprobante_data['fecha_vencimiento'],
+                comprobante_data['dias_credito'],
+                comprobante_data['porcentaje_retencion'],
+                comprobante_data['monto_retenido'],
+                comprobante_data['monto_a_pagar'],
+                comprobante_data['obs_retencion'],
+                data['id']
+            )
+            result = db_query(query, params)
+            
+            if result:
+                return jsonify({'success': True, 'message': 'Comprobante actualizado', 'data': result[0]})
+            return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
+        
+        # ============================================================
+        # CREAR NUEVO COMPROBANTE
+        # ============================================================
+        if not comprobante_data['numero']:
+            count_data = db_query("SELECT COUNT(*) as total FROM comprobantes")
+            count = count_data[0]['total'] + 1 if count_data else 1
+            comprobante_data['numero'] = str(count).zfill(8)
+        
+        query_insert = """
+            INSERT INTO comprobantes (
+                tipo_comprobante, serie, numero, fecha_emision,
+                moneda, cliente_tipo_doc, cliente_numero_doc,
+                cliente_nombre, cliente_direccion, cliente_email,
+                cliente_telefono, subtotal, igv, total,
+                items_json, observaciones, estado_sunat,
+                condicion_pago, documento_asociado, guia_vinculada,
+                pc_vinculado, creado_por,
+                tiene_retencion, es_credito, estado_credito,
+                fecha_aprobacion, fecha_vencimiento, dias_credito,
+                porcentaje_retencion, monto_retenido, monto_a_pagar,
+                obs_retencion
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id, serie, numero
+        """
+        params_insert = (
+            comprobante_data['tipo_comprobante'],
+            comprobante_data['serie'],
+            comprobante_data['numero'],
+            comprobante_data['fecha_emision'],
+            comprobante_data['moneda'],
+            comprobante_data['cliente_tipo_doc'],
+            comprobante_data['cliente_numero_doc'],
+            comprobante_data['cliente_nombre'],
+            comprobante_data['cliente_direccion'],
+            comprobante_data['cliente_email'],
+            comprobante_data['cliente_telefono'],
+            comprobante_data['subtotal'],
+            comprobante_data['igv'],
+            comprobante_data['total'],
+            comprobante_data['items_json'],
+            comprobante_data['observaciones'],
+            comprobante_data['estado_sunat'],
+            comprobante_data['condicion_pago'],
+            comprobante_data['documento_asociado'],
+            comprobante_data['guia_vinculada'],
+            comprobante_data['pc_vinculado'],
+            comprobante_data['creado_por'],
+            comprobante_data['tiene_retencion'],
+            comprobante_data['es_credito'],
+            comprobante_data['estado_credito'],
+            comprobante_data['fecha_aprobacion'],
+            comprobante_data['fecha_vencimiento'],
+            comprobante_data['dias_credito'],
+            comprobante_data['porcentaje_retencion'],
+            comprobante_data['monto_retenido'],
+            comprobante_data['monto_a_pagar'],
+            comprobante_data['obs_retencion']
+        )
+        
+        result = db_query(query_insert, params_insert)
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': 'Comprobante creado correctamente',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'No se pudo crear'}), 400
+        
+    except Exception as e:
+        print(f"❌ Error en api_comprobantes_guardar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
