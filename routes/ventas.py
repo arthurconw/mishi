@@ -531,13 +531,14 @@ def obtener_comprobantes_db():
 def guardar_comprobante_db(data):
     """Guarda un nuevo comprobante con fecha y hora correcta"""
     try:
-        # ✅ OBTENER FECHA Y HORA COMPLETA
         from datetime import datetime
+        
+        # ✅ OBTENER FECHA Y HORA COMPLETA (mantiene la hora del frontend)
         fecha_emision = data.get('fecha_emision')
         if not fecha_emision:
-            fecha_emision = datetime.now().isoformat()  # "2026-08-24T15:31:17.659662"
+            fecha_emision = datetime.now().isoformat()
         
-        print(f"📅 Guardando comprobante con fecha: {fecha_emision}")
+        print(f"📅 Fecha emisión guardando: {fecha_emision}")  # Para depuración
         
         query = """
             INSERT INTO comprobantes (
