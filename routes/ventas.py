@@ -2245,6 +2245,8 @@ def api_comprobantes_guardar():
 def api_comprobantes_obtener(id):
     """Obtiene un comprobante específico por su ID"""
     try:
+        print(f"🔍 Buscando comprobante ID: {id}")
+        
         query = """
             SELECT 
                 id, tipo_comprobante, serie, numero, fecha_emision,
@@ -2254,7 +2256,6 @@ def api_comprobantes_obtener(id):
                 items_json, observaciones, estado_sunat,
                 condicion_pago, documento_asociado, guia_vinculada,
                 pc_vinculado, 
-                -- 🔽 CAMPOS DE RETENCIÓN (3%)
                 tiene_retencion, 
                 es_credito, estado_credito, fecha_aprobacion,
                 fecha_vencimiento, dias_credito, 
@@ -2266,25 +2267,64 @@ def api_comprobantes_obtener(id):
             WHERE id = %s
         """
         result = db_query(query, (id,))
+        
+        print(f"📊 Resultado de consulta: {result}")
+        
+        # 🔽 VERIFICAR QUE HAYA RESULTADOS
         if not result:
+            print(f"❌ No se encontró comprobante con ID: {id}")
             return jsonify({'success': False, 'error': 'Comprobante no encontrado'}), 404
-
+        
+        # Verificar que result sea una lista y tenga elementos
+        if not isinstance(result, list) or len(result) == 0:
+            print(f"❌ Resultado vacío o no es lista: {type(result)}")
+            return jsonify({'success': False, 'error': 'Comprobante no encontrado'}), 404
+        
+        # Tomar el primer resultado
         comp = result[0]
+        
+        # Verificar que comp sea un diccionario
+        if not isinstance(comp, dict):
+            print(f"⚠️ Resultado no es un diccionario: {type(comp)}")
+            # Si es una tupla, convertir a diccionario
+            if isinstance(comp, (tuple, list)):
+                # Obtener los nombres de las columnas
+                columns = [
+                    'id', 'tipo_comprobante', 'serie', 'numero', 'fecha_emision',
+                    'moneda', 'cliente_tipo_doc', 'cliente_numero_doc',
+                    'cliente_nombre', 'cliente_direccion', 'cliente_email',
+                    'cliente_telefono', 'subtotal', 'igv', 'total',
+                    'items_json', 'observaciones', 'estado_sunat',
+                    'condicion_pago', 'documento_asociado', 'guia_vinculada',
+                    'pc_vinculado', 'tiene_retencion', 'es_credito',
+                    'estado_credito', 'fecha_aprobacion', 'fecha_vencimiento',
+                    'dias_credito', 'porcentaje_retencion', 'monto_retenido',
+                    'monto_a_pagar', 'obs_retencion', 'sunat_response',
+                    'cdr_response', 'creado_por', 'created_at', 'updated_at'
+                ]
+                comp = dict(zip(columns, comp))
 
         # Parsear items_json de forma segura
         try:
             raw_val = comp.get('items_json')
             if raw_val:
-                comp['items_json'] = json.loads(raw_val) if isinstance(raw_val, str) else raw_val
+                if isinstance(raw_val, str):
+                    comp['items_json'] = json.loads(raw_val)
+                else:
+                    comp['items_json'] = raw_val
             else:
                 comp['items_json'] = []
         except Exception as e:
             print(f"⚠️ Error parseando items_json de comprobante: {e}")
             comp['items_json'] = []
 
+        print(f"✅ Comprobante encontrado: ID {comp.get('id')}, Serie {comp.get('serie')}-{comp.get('numero')}")
         return jsonify({'success': True, 'data': comp})
+        
     except Exception as e:
         print(f"❌ Error en api_comprobantes_obtener: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/ventas/api/comprobantes/<int:id>', methods=['DELETE'])
