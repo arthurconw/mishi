@@ -4352,7 +4352,7 @@ def preparar_datos_guia_pdf(guia):
         'serie': guia.get('serie', 'T001'),
         'numero': guia.get('numero', ''),
         'ruc_remitente': guia.get('ruc_remitente', '20602095704'),
-        'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION SAC'),
+        'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION E.I.R.L'),
         'remitente_direccion': guia.get('remitente_direccion', 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES'),
         'remitente_ubigeo': guia.get('remitente_ubigeo', '150139'),
         'ruc_destinatario': guia.get('ruc_destinatario', ''),
