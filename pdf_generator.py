@@ -165,7 +165,7 @@ class PDFGenerator:
         </div>
         <div class="recuadro-derecha">
             <div class="ruc">R.U.C. Nº {{ ruc_remitente }}</div>
-            <div class="titulo">GUIA DE REMISIÓN</div>
+            <div class="titulo">GUIA DE REMISIÓN REMITENTE</div>
             <div class="numero">{{ serie }}-{{ numero }}</div>
         </div>
     </div>
@@ -216,9 +216,8 @@ class PDFGenerator:
                 <tr>
                     <th style="width:8%">ITEM</th>
                     <th style="width:12%">CODIGO</th>
-                    <th style="width:30%">PRODUCTO</th>
-                    <th style="width:10%">BR</th>
-                    <th style="width:10%">U/M</th>
+                    <th style="width:30%">DESCRIPCION</th>
+                    <th style="width:10%">UM</th>
                     <th style="width:12%">CANTIDAD</th>
                 </tr>
             </thead>
@@ -575,7 +574,7 @@ class PDFGenerator:
                     <th style="width:5%">ITEM</th>
                     <th style="width:12%">CÓDIGO</th>
                     <th style="width:40%">DESCRIPCIÓN</th>
-                    <th style="width:8%">U/M</th>
+                    <th style="width:8%">UM</th>
                     <th style="width:10%">CANT.</th>
                     <th style="width:12%">P. UNIT</th>
                     <th style="width:13%">TOTAL</th>

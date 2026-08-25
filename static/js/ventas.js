@@ -3008,7 +3008,7 @@ async function saveGuia(estado) {
 
             // ---- REMITENTE (fijo) ----
             ruc_remitente: document.getElementById('guiaRucRemitente')?.value || '20602095704',
-            remitente_nombre: document.getElementById('guiaRemitenteNombre')?.value || 'KCF CORPORACION SAC',
+            remitente_nombre: document.getElementById('guiaRemitenteNombre')?.value || 'KCF CORPORACION E.I.R.L',
             remitente_direccion: document.getElementById('guiaOrigen')?.value || '',
             remitente_ubigeo: document.getElementById('guiaUbigeoOrigen')?.value || '150139',
 
@@ -7176,7 +7176,7 @@ function recolectarDatosGuia() {
     // ============================================================
     const ORIGEN_FIJO = {
         ruc: '20602095704',
-        nombre: 'KCF CORPORACION SAC',
+        nombre: 'KCF CORPORACION E.I.R.L',
         direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
         ubigeo: '150139',
         departamento: 'LIMA',
@@ -9010,7 +9010,7 @@ function openGuiaModal(id = null) {
     // ORIGEN FIJO - DATOS DEL REMITENTE
     const ORIGEN_FIJO = {
         ruc: '20602095704',
-        nombre: 'KCF CORPORACION SAC',
+        nombre: 'KCF CORPORACION E.I.R.L',
         direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
         ubigeo: '150139',
         departamento: 'LIMA',
@@ -9500,7 +9500,7 @@ async function cargarGuiaParaEditar(id) {
         // ============================================================
         const ORIGEN_FIJO = {
             ruc: '20602095704',
-            nombre: 'KCF CORPORACION SAC',
+            nombre: 'KCF CORPORACION E.I.R.L',
             direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
             ubigeo: '150139',
             departamento: 'LIMA',
