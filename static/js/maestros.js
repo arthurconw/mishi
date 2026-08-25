@@ -181,24 +181,49 @@ function esRegistroNuevo(fecha) {
     }
 }
 
+
+// ============================================================
+// BADGE "NUEVO" - VERSIÓN ULTRA SIMPLE Y DIRECTA
+// ============================================================
+
 function badgeNuevo(row, fechaField) {
-    // Si no se especifica un campo de fecha, intentar con varios campos comunes
-    if (!fechaField) {
-        const camposFecha = ['fecha_creacion', 'created_at', 'fechaCreacion', 'fecha_registro', 'creado_en'];
-        for (const campo of camposFecha) {
+    // 1. Intentar obtener la fecha
+    let fecha = null;
+    
+    if (fechaField && row[fechaField]) {
+        fecha = row[fechaField];
+    } else {
+        // Buscar automáticamente
+        const campos = ['fecha_creacion', 'created_at', 'fechaCreacion', 'fecha_registro'];
+        for (const campo of campos) {
             if (row[campo]) {
-                fechaField = campo;
+                fecha = row[campo];
                 break;
             }
         }
-        if (!fechaField) return ''; // No se encontró ningún campo de fecha
     }
     
-    const fecha = row[fechaField];
-    if (!esRegistroNuevo(fecha)) return '';
+    // Si no hay fecha, NO mostrar badge
+    if (!fecha) return '';
     
-    return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
+    try {
+        const f = new Date(fecha);
+        if (isNaN(f.getTime())) return '';
+        
+        const ahora = new Date();
+        const diffMs = Math.abs(f.getTime() - ahora.getTime());
+        const diffHoras = diffMs / (1000 * 60 * 60);
+        
+        // Mostrar badge si la diferencia es menor a 24 horas
+        if (diffHoras <= 24) {
+            return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
+        }
+        return '';
+    } catch (e) {
+        return '';
+    }
 }
+
 
 // ============================================================
 // FUNCIONES API
