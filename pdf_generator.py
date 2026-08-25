@@ -267,6 +267,7 @@ class PDFGenerator:
 </html>"""
 
 # pdf_generator.py - Función _mapear_datos_guia
+# pdf_generator.py - Función _mapear_datos_guia CORREGIDA
 
     def _mapear_datos_guia(self, datos_guia):
         """Mapea los datos de la guía al formato esperado"""
@@ -285,13 +286,44 @@ class PDFGenerator:
         logo_base64 = self._obtener_logo_base64()
         logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
         
-        # ... resto del código (items, productos, etc.) ...
-        # Asegúrate de que los campos como 'remitente_direccion' usen EMPRESA['direccion']
+        # Procesar items
+        items = datos_guia.get('items', [])
+        if isinstance(items, str):
+            try:
+                items = json.loads(items)
+            except:
+                items = []
+        
+        items_formateados = []
+        for idx, item in enumerate(items, 1):
+            if isinstance(item, dict):
+                items_formateados.append({
+                    'item': idx,
+                    'codigo': item.get('codigo', ''),
+                    'descripcion': item.get('producto', item.get('descripcion', '')),
+                    'unidad': item.get('um', 'NIU'),
+                    'cantidad': float(item.get('cantidad', 1))
+                })
+            elif isinstance(item, (list, tuple)):
+                items_formateados.append({
+                    'item': idx,
+                    'codigo': item[0] if len(item) > 0 else '',
+                    'descripcion': item[1] if len(item) > 1 else '',
+                    'unidad': 'NIU',
+                    'cantidad': float(item[2] if len(item) > 2 else 1)
+                })
+        
+        # Calcular peso total si no viene
+        peso_total = float(datos_guia.get('peso_total', 0))
+        if peso_total == 0 and items_formateados:
+            peso_total = sum(float(item['cantidad']) * 0.5 for item in items_formateados)
+        
+        # Construir el diccionario de retorno
         return {
             'logo_src': logo_src,
             'ruc_remitente': datos_guia.get('ruc_remitente', EMPRESA['ruc']),
             'remitente_nombre': datos_guia.get('remitente_nombre', EMPRESA['nombre']),
-            'remitente_direccion': datos_guia.get('remitente_direccion', EMPRESA['direccion']),  # <--- AQUÍ ESTABA EL ERROR, ESTABA VACÍO
+            'remitente_direccion': datos_guia.get('remitente_direccion', EMPRESA['direccion']),  # <--- AHORA CON DIRECCIÓN
             'remitente_ubigeo': datos_guia.get('remitente_ubigeo', '150101'),
             'telefono': EMPRESA['telefono'],
             'email': EMPRESA['email'],
@@ -309,14 +341,16 @@ class PDFGenerator:
             'motivo_texto': self._get_motivo_texto(datos_guia.get('motivo_traslado', '01')),
             'modalidad_transporte': datos_guia.get('modalidad_transporte', 'PRIVADO'),
             'modalidad_texto': 'Transporte privado' if datos_guia.get('modalidad_transporte') == 'PRIVADO' else 'Transporte público',
-            'peso_bruto_total': f"{float(datos_guia.get('peso_total', 0)):.1f}",
+            'peso_bruto_total': f"{peso_total:.1f}",
             'numero_bultos': datos_guia.get('numero_bultos', 1),
             'unidad_peso_texto': 'KGM',
             'transportista_nombre': datos_guia.get('transportista_nombre', '---'),
             'conductor_nombre': datos_guia.get('conductor_nombre', '---'),
             'conductor_dni': datos_guia.get('conductor_dni', '---'),
             'placa_vehiculo': datos_guia.get('placa_vehiculo', '---'),
-            'licencia_conductor': datos_guia.get('licencia_conductor', '---'),
+            'licencia_conductor': datos_guia.get('licencia_conductor', '---'),  # <--- SIN EL 2 SOBRANTE
+            'orden_compra_cliente': datos_guia.get('orden_compra_cliente', ''),
+            'factura': datos_guia.get('factura', ''),
             'nro_cotizacion': datos_guia.get('documento_asociado', datos_guia.get('cotizacion_numero', '')),
             'items': items_formateados,
             'observaciones': datos_guia.get('observaciones', ''),
