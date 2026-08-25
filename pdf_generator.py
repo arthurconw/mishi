@@ -1,3 +1,5 @@
+# pdf_generator.py - VERSIÓN COMPLETA Y CORREGIDA
+
 import os
 from weasyprint import HTML
 from datetime import datetime
@@ -12,14 +14,13 @@ class PDFGenerator:
         self.logo_base64 = None  # Cache para el logo
 
     # ============================================================
-    # 🔽 CORREGIDO: _obtener_logo_base64 AHORA DENTRO DE LA CLASE
+    # OBTENER LOGO EN BASE64
     # ============================================================
     def _obtener_logo_base64(self):
         """Obtiene el logo en base64 para incrustarlo en el PDF"""
         if self.logo_base64:
             return self.logo_base64 
         
-        # RUTA CORRECTA: dentro de la carpeta templates/
         logo_path = os.path.join('templates', 'logo-kcf.png')
         
         if os.path.exists(logo_path):
@@ -35,58 +36,81 @@ class PDFGenerator:
         return None
 
     # ============================================================
-    # 🔽 CORREGIDO: _reemplazar_variables_template_guia
+    # MÉTODO PRINCIPAL - GENERAR PDF UNIVERSAL
     # ============================================================
-    def _reemplazar_variables_template_guia(self, template, datos):
-        """Reemplaza variables del template de guía"""
-        html = template
-        
-        # 🔽 OBTENER LOGO EN BASE64
-        logo_src = datos.get('logo_src', '')
-        
-        # 🔽 REEMPLAZAR LA VARIABLE {{ logo_src }} EN EL TEMPLATE
-        html = html.replace('{{ logo_src }}', logo_src)
-        
-        # 🔽 LAS DEMÁS VARIABLES
-        variables = [
-            'ruc_remitente', 'remitente_nombre', 'remitente_direccion',
-            'remitente_ubigeo', 'telefono', 'email',
-            'ruc_destinatario', 'destinatario_nombre', 'destinatario_direccion',
-            'destinatario_ubigeo', 'serie', 'numero',
-            'fecha_emision', 'fecha_traslado', 'fecha_inicio_traslado',
-            'motivo_traslado', 'motivo_texto', 'modalidad_texto',
-            'peso_bruto_total', 'numero_bultos', 'unidad_peso_texto', 
-            'transportista_nombre', 'conductor_nombre', 'conductor_dni', 
-            'placa_vehiculo', 'licencia_conductor', 'nro_cotizacion', 'observaciones'
-        ]
-        
-        for var in variables:
-            value = datos.get(var, '')
-            html = html.replace(f"{{{{ {var} }}}}", str(value))
-        
-        qr = datos.get('qr_base64', '')
-        html = html.replace("{{ qr_base64 }}", qr)
-        
-        # Reemplazar el bucle de productos
-        inicio_tbody = html.find('<tbody>')
-        fin_tbody = html.find('</tbody>')
-        if inicio_tbody >= 0 and fin_tbody > inicio_tbody:
-            inicio_for = html.find('{% for item in items %}', inicio_tbody)
-            fin_for = html.find('{% endfor %}', inicio_for)
-            if inicio_for >= 0 and fin_for > inicio_for:
-                parte_antes = html[:inicio_for]
-                parte_despues = html[fin_for + len('{% endfor %}'):]
-                html = parte_antes + datos.get('filas_productos', '') + parte_despues
-        
-        # Limpiar etiquetas Jinja que quedaron
-        html = re.sub(r'{%.*?%}', '', html, flags=re.DOTALL)
-        html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
-        
-        return html
+    def generar_pdf_universal(self, datos):
+        """Genera PDF basado en el tipo de documento - MÉTODO PRINCIPAL"""
+        try:
+            tipo_documento = datos.get('tipo_documento', '')
+            
+            print(f"📄 Generando PDF universal - Tipo detectado: {tipo_documento}")
+            
+            # GUÍA DE REMISIÓN
+            if tipo_documento == 'guia_remision' or ('serie' in datos and 'numero' in datos and 'destinatario_nombre' in datos):
+                return self._generar_guia_remision(datos)
+            
+            # FACTURA / BOLETA (COMPROBANTE)
+            elif tipo_documento in ['factura', 'boleta', 'comprobante'] or ('serie' in datos and 'numero' in datos and 'cliente' in datos and 'tipo' in datos):
+                return self._generar_comprobante(datos)
+            
+            # ORDEN DE COMPRA
+            elif tipo_documento == 'orden_compra' or 'numero_orden' in datos:
+                return self._generar_orden_compra(datos)
+            
+            # COTIZACIÓN (por defecto)
+            elif tipo_documento == 'cotizacion' or 'numero_cotizacion' in datos:
+                return self._generar_cotizacion(datos)
+            else:
+                # Detección automática
+                if 'proveedor_razon_social' in datos:
+                    return self._generar_orden_compra(datos)
+                elif 'destinatario_nombre' in datos and 'serie' in datos:
+                    return self._generar_guia_remision(datos)
+                elif 'cliente' in datos and 'tipo' in datos:
+                    return self._generar_comprobante(datos)
+                else:
+                    return self._generar_cotizacion(datos)
+                    
+        except Exception as e:
+            print(f"❌ Error en generación universal de PDF: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
 
     # ============================================================
-    # 🔽 CORREGIDO: _obtener_template_guia - usa {{ logo_src }}
+    # GENERAR GUÍA DE REMISIÓN
     # ============================================================
+    def _generar_guia_remision(self, datos_guia):
+        """Genera PDF para Guía de Remisión usando template en memoria"""
+        try:
+            print("📄 Iniciando generación de PDF de Guía de Remisión...")
+            
+            datos_mapeados = self._mapear_datos_guia(datos_guia)
+            
+            template_content = self._obtener_template_guia()
+            
+            filas_productos = self._generar_filas_productos_guia(datos_mapeados.get('items', []))
+            datos_mapeados['filas_productos'] = filas_productos
+            
+            html_content = self._reemplazar_variables_template_guia(template_content, datos_mapeados)
+            
+            fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
+            pdf_file = f"guia_{datos_mapeados.get('serie', 'T001')}_{datos_mapeados.get('numero', 'sin_numero')}_{fecha}.pdf"
+            
+            print(f"Generando PDF: {pdf_file}")
+            
+            base_url = f"file://{os.getcwd()}/"
+            HTML(string=html_content, base_url=base_url).write_pdf(pdf_file)
+            
+            print("✅ PDF de Guía de Remisión generado exitosamente")
+            return pdf_file
+            
+        except Exception as e:
+            print(f"❌ Error generando PDF de guía: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
     def _obtener_template_guia(self):
         """Retorna el template HTML de la guía como string (en memoria)"""
         return """<!DOCTYPE html>
@@ -236,6 +260,9 @@ class PDFGenerator:
 </body>
 </html>"""
 
+    # ============================================================
+    # MAPEAR DATOS DE GUÍA
+    # ============================================================
     def _mapear_datos_guia(self, datos_guia):
         """Mapea los datos de la guía al formato esperado"""
         EMPRESA = {
@@ -316,6 +343,9 @@ class PDFGenerator:
             'qr_base64': self._generar_qr_guia(datos_guia)
         }
 
+    # ============================================================
+    # FUNCIONES AUXILIARES
+    # ============================================================
     def _formatear_fecha(self, fecha):
         """Formatea fecha para mostrar en DD/MM/YYYY"""
         if not fecha:
@@ -383,13 +413,15 @@ class PDFGenerator:
 """
         return filas
 
+    # ============================================================
+    # REEMPLAZAR VARIABLES DEL TEMPLATE GUÍA
+    # ============================================================
     def _reemplazar_variables_template_guia(self, template, datos):
         """Reemplaza variables del template de guía"""
         html = template
         
         logo_src = datos.get('logo_src', '')
-        if logo_src:
-            html = html.replace('src="logo-kcf.png"', f'src="{logo_src}"')
+        html = html.replace('{{ logo_src }}', logo_src)
         
         variables = [
             'ruc_remitente', 'remitente_nombre', 'remitente_direccion',
@@ -501,7 +533,7 @@ class PDFGenerator:
     <div class="header-superior">
         <div class="empresa-izquierda">
             <div class="logo-container">
-                <img src="logo-kcf.png" alt="Logo" style="max-height:60px;">
+                <img src="{{ logo_src }}" alt="Logo" style="max-height:60px;">
             </div>
             <div class="info-texto">
                 <div class="nombre">{{ empresa_nombre }}</div>
@@ -678,8 +710,7 @@ class PDFGenerator:
         html = template
         
         logo_src = datos.get('logo_src', '')
-        if logo_src:
-            html = html.replace('src="logo-kcf.png"', f'src="{logo_src}"')
+        html = html.replace('{{ logo_src }}', logo_src)
         
         variables = [
             'empresa_ruc', 'empresa_nombre', 'empresa_direccion',
@@ -788,9 +819,7 @@ class PDFGenerator:
 <body>
     <div class="header">
         <div class="logo-section">
-            {% if logo_base64 %}
-            <img src="data:image/png;base64,{{ logo_base64 }}" alt="Logo">
-            {% endif %}
+            <img src="{{ logo_src }}" alt="Logo">
         </div>
         <div class="empresa-info">
             <h1>KCF CORPORACION</h1>
@@ -938,8 +967,7 @@ class PDFGenerator:
         html = template
         
         logo_src = datos.get('logo_src', '')
-        if logo_src:
-            html = html.replace('src="logo-kcf.png"', f'src="{logo_src}"')
+        html = html.replace('{{ logo_src }}', logo_src)
         
         variables = [
             'numero_cotizacion', 'fecha_actual', 'cliente_razon_social',
