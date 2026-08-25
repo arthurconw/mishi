@@ -1773,7 +1773,7 @@ def api_guias_guardar():
         # ============================================================
         ORIGEN_FIJO = {
             'ruc': '20602095704',
-            'nombre': 'KCF CORPORACION SAC',
+             'nombre': 'KCF CORPORACION E.I.R.L',
             'direccion': 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
             'ubigeo': '150139'
         }
@@ -4125,7 +4125,7 @@ def generar_pdf_guia_endpoint(guia_id):
             # REMITENTE (DATOS FIJOS)
             # ============================================================
             'ruc_remitente': guia.get('ruc_remitente', '20602095704'),
-            'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION SAC'),
+            'remitente_nombre': guia.get('remitente_nombre', 'KCF CORPORACION E.I.R.L'),
             'remitente_direccion': guia.get('remitente_direccion', 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES'),
             'remitente_ubigeo': guia.get('remitente_ubigeo', '150139'),
             'remitente_departamento': 'LIMA',
