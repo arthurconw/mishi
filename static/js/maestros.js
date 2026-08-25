@@ -1277,8 +1277,6 @@ function mostrarAlertaClienteCreado(info) {
 }
 window.mostrarAlertaClienteCreado = mostrarAlertaClienteCreado;
 
-// En la función saveClient(), añade una pre-validación antes de guardar:
-
 async function saveClient() {
     const contacts = getContacts();
     const points = getPoints();
@@ -1314,7 +1312,7 @@ async function saveClient() {
         return;
     }
 
-    // ✅ VERIFICAR DUPLICADO EN FRONTEND (OPCIONAL, PERO MEJORA UX)
+    // ✅ VERIFICAR DUPLICADO EN FRONTEND - EXCLUYENDO EL REGISTRO ACTUAL
     const ruc = data.numero_documento;
     if (ruc && ruc.length >= 8) {
         try {
@@ -1323,8 +1321,21 @@ async function saveClient() {
             const checkResult = await checkResponse.json();
             
             if (checkResult.success && checkResult.data && checkResult.data.length > 0) {
-                // Verificar si alguno tiene exactamente el mismo RUC
-                const exists = checkResult.data.some(c => c.numero_documento === ruc || c.ruc === ruc);
+                // ✅ Si estamos editando (clientEditId existe), excluir el registro actual
+                // Verificar si alguno tiene exactamente el mismo RUC PERO diferente ID
+                const exists = checkResult.data.some(c => {
+                    const mismoRuc = c.numero_documento === ruc || c.ruc === ruc;
+                    
+                    // Si estamos editando, permitir el mismo RUC solo si es el mismo registro
+                    if (clientEditId) {
+                        // Excluir el registro actual de la verificación
+                        return mismoRuc && c.id !== clientEditId;
+                    }
+                    
+                    // Si es creación nueva, cualquier coincidencia es duplicado
+                    return mismoRuc;
+                });
+                
                 if (exists) {
                     showToast('❌ Este RUC ya está registrado en nuestra base de datos. No se puede volver a cargar.', 'error');
                     return;
@@ -1382,7 +1393,6 @@ async function saveClient() {
         showToast('❌ Error de conexión al guardar el cliente', 'error');
     }
 }
-
 
 // ============================================================
 // MODAL PROVEEDOR

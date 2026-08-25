@@ -371,7 +371,6 @@ def api_clientes_obtener(id):
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @maestros_bp.route('/api/clientes/<int:id>', methods=['PUT'])
 @login_required
 def api_clientes_actualizar(id):
@@ -391,7 +390,21 @@ def api_clientes_actualizar(id):
         
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
+
+        # ✅ VERIFICAR DUPLICADO - EXCLUYENDO EL ID ACTUAL
+        cur.execute("""
+            SELECT id FROM clientes 
+            WHERE numero_documento = %s AND id != %s
+        """, (numero_documento, id))
         
+        if cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({
+                "success": False, 
+                "error": "Este RUC ya está registrado en nuestra base de datos. No se puede volver a cargar."
+            })
+
         # 1. Actualizar datos principales del cliente
         query = """
             UPDATE clientes SET
@@ -426,7 +439,7 @@ def api_clientes_actualizar(id):
             data.get('nombre_contacto') or data.get('contacto'),
             data.get('email_contacto') or data.get('email'),
             data.get('condicion_pago', 'Contado'),
-            int(data.get('dias_credito', 0)),
+            int(data.get('dias_credito', 0) or 0),
             data.get('limite_credito', ''),
             data.get('descuento', ''),
             data.get('estado', 'Activo'),
@@ -439,7 +452,7 @@ def api_clientes_actualizar(id):
         cur.execute(query, params)
         result = cur.fetchone()
 
-        # 2. Reemplazar contactos (borrar y volver a insertar)
+        # 2. Reemplazar contactos
         cur.execute("DELETE FROM clientes_contactos WHERE cliente_id = %s", (id,))
         for c in data.get('contactos', []):
             if not (c.get('nombre') or c.get('telefono') or c.get('email')):
@@ -458,7 +471,7 @@ def api_clientes_actualizar(id):
                 bool(c.get('principal', False))
             ))
 
-        # 3. Reemplazar puntos de entrega - CORREGIDO (9 placeholders)
+        # 3. Reemplazar puntos de entrega
         cur.execute("DELETE FROM clientes_puntos_entrega WHERE cliente_id = %s", (id,))
         for p in data.get('puntos_entrega', []):
             if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
@@ -504,6 +517,7 @@ def api_clientes_actualizar(id):
         current_app.logger.error(f"❌ Error actualizando cliente: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['DELETE'])
 @login_required
