@@ -12,22 +12,26 @@ class PDFGenerator:
     def __init__(self):
         self.templates_dir = 'templates/cotizacion_oc/'
         self.logo_base64 = None  # Cache para el logo
-
-    def _obtener_logo_base64(self):
-        """Obtiene el logo en base64 para incrustarlo en el PDF"""
-        if self.logo_base64:
-            return self.logo_base64 
-        
-        logo_path = 'logo-kcf.png'
-        if os.path.exists(logo_path):
-            try:
-                with open(logo_path, 'rb') as f:
-                    logo_data = f.read()
-                    self.logo_base64 = base64.b64encode(logo_data).decode('utf-8')
-                    return self.logo_base64
-            except Exception as e:
-                print(f"Error al leer logo: {e}")
-        return None
+def _obtener_logo_base64(self):
+    """Obtiene el logo en base64 para incrustarlo en el PDF"""
+    if self.logo_base64:
+        return self.logo_base64 
+    
+    # 🔽 RUTA CORRECTA: dentro de la carpeta templates/
+    import os
+    logo_path = os.path.join('templates', 'logo-kcf.png')
+    
+    if os.path.exists(logo_path):
+        try:
+            with open(logo_path, 'rb') as f:
+                logo_data = f.read()
+                self.logo_base64 = base64.b64encode(logo_data).decode('utf-8')
+                return self.logo_base64
+        except Exception as e:
+            print(f"Error al leer logo: {e}")
+    else:
+        print(f"⚠️ Logo no encontrado en: {logo_path}")
+    return None
 
     # ============================================================
     # MÉTODO PRINCIPAL - GENERAR PDF UNIVERSAL
