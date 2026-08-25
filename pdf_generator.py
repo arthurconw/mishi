@@ -8,6 +8,7 @@ import json
 import base64
 import re
 
+
 class PDFGenerator:
     def __init__(self):
         self.templates_dir = 'templates/cotizacion_oc/'
@@ -111,10 +112,9 @@ class PDFGenerator:
             traceback.print_exc()
             return None
 
-
-def _obtener_template_guia(self):
-    """Retorna el template HTML de la guía como string (en memoria)"""
-    return """<!DOCTYPE html>
+    def _obtener_template_guia(self):
+        """Retorna el template HTML de la guía como string (en memoria)"""
+        return """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -278,9 +278,10 @@ def _obtener_template_guia(self):
     </div>
 </body>
 </html>"""
-# pdf_generator.py - Función _mapear_datos_guia
-# pdf_generator.py - Función _mapear_datos_guia CORREGIDA
 
+    # ============================================================
+    # MAPEAR DATOS DE GUÍA
+    # ============================================================
     def _mapear_datos_guia(self, datos_guia):
         """Mapea los datos de la guía al formato esperado"""
         # ============================================================
@@ -335,7 +336,7 @@ def _obtener_template_guia(self):
             'logo_src': logo_src,
             'ruc_remitente': datos_guia.get('ruc_remitente', EMPRESA['ruc']),
             'remitente_nombre': datos_guia.get('remitente_nombre', EMPRESA['nombre']),
-            'remitente_direccion': datos_guia.get('remitente_direccion', EMPRESA['direccion']),  # <--- AHORA CON DIRECCIÓN
+            'remitente_direccion': datos_guia.get('remitente_direccion', EMPRESA['direccion']),
             'remitente_ubigeo': datos_guia.get('remitente_ubigeo', '150101'),
             'telefono': EMPRESA['telefono'],
             'email': EMPRESA['email'],
@@ -360,7 +361,7 @@ def _obtener_template_guia(self):
             'conductor_nombre': datos_guia.get('conductor_nombre', '---'),
             'conductor_dni': datos_guia.get('conductor_dni', '---'),
             'placa_vehiculo': datos_guia.get('placa_vehiculo', '---'),
-            'licencia_conductor': datos_guia.get('licencia_conductor', '---'),  # <--- SIN EL 2 SOBRANTE
+            'licencia_conductor': datos_guia.get('licencia_conductor', '---'),
             'orden_compra_cliente': datos_guia.get('orden_compra_cliente', ''),
             'factura': datos_guia.get('factura', ''),
             'nro_cotizacion': datos_guia.get('documento_asociado', datos_guia.get('cotizacion_numero', '')),
@@ -368,6 +369,7 @@ def _obtener_template_guia(self):
             'observaciones': datos_guia.get('observaciones', ''),
             'qr_base64': self._generar_qr_guia(datos_guia)
         }
+
     # ============================================================
     # FUNCIONES AUXILIARES
     # ============================================================
@@ -477,6 +479,7 @@ def _obtener_template_guia(self):
         html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
         
         return html
+
     # ============================================================
     # GENERAR FACTURA / BOLETA (COMPROBANTE)
     # ============================================================
