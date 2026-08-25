@@ -279,96 +279,101 @@ class PDFGenerator:
 </body>
 </html>"""
 
+def _mapear_datos_guia(self, datos_guia):
+    """Mapea los datos de la guía al formato esperado"""
     # ============================================================
-    # MAPEAR DATOS DE GUÍA
+    # 🔽 DATOS CORRECTOS DE LA EMPRESA (KCF CORPORACION E.I.R.L)
     # ============================================================
-    def _mapear_datos_guia(self, datos_guia):
-        """Mapea los datos de la guía al formato esperado"""
-        # ============================================================
-        # 🔽 DATOS CORRECTOS DE LA EMPRESA (KCF CORPORACION E.I.R.L)
-        # ============================================================
-        EMPRESA = {
-            'ruc': '20602095704',  # RUC de KCF
-            'nombre': 'KCF CORPORACION E.I.R.L',  # Razón social correcta
-            'direccion': 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',  # Dirección completa
-            'telefono': '999 932 051',
-            'email': 'ventas@kcfcorporacion.com',
-            'web': 'https://kcfcorporacion.com/'  # Web
-        }
-        
-        logo_base64 = self._obtener_logo_base64()
-        logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
-        
-        # Procesar items
-        items = datos_guia.get('items', [])
-        if isinstance(items, str):
-            try:
-                items = json.loads(items)
-            except:
-                items = []
-        
-        items_formateados = []
-        for idx, item in enumerate(items, 1):
-            if isinstance(item, dict):
-                items_formateados.append({
-                    'item': idx,
-                    'codigo': item.get('codigo', ''),
-                    'descripcion': item.get('producto', item.get('descripcion', '')),
-                    'unidad': item.get('um', 'NIU'),
-                    'cantidad': float(item.get('cantidad', 1))
-                })
-            elif isinstance(item, (list, tuple)):
-                items_formateados.append({
-                    'item': idx,
-                    'codigo': item[0] if len(item) > 0 else '',
-                    'descripcion': item[1] if len(item) > 1 else '',
-                    'unidad': 'NIU',
-                    'cantidad': float(item[2] if len(item) > 2 else 1)
-                })
-        
-        # Calcular peso total si no viene
-        peso_total = float(datos_guia.get('peso_total', 0))
-        if peso_total == 0 and items_formateados:
-            peso_total = sum(float(item['cantidad']) * 0.5 for item in items_formateados)
-        
-        # Construir el diccionario de retorno
-        return {
-            'logo_src': logo_src,
-            'ruc_remitente': datos_guia.get('ruc_remitente', EMPRESA['ruc']),
-            'remitente_nombre': datos_guia.get('remitente_nombre', EMPRESA['nombre']),
-            'remitente_direccion': datos_guia.get('remitente_direccion', EMPRESA['direccion']),
-            'remitente_ubigeo': datos_guia.get('remitente_ubigeo', '150101'),
-            'telefono': EMPRESA['telefono'],
-            'email': EMPRESA['email'],
-            'web': EMPRESA.get('web', ''),
-            'ruc_destinatario': datos_guia.get('ruc_destinatario', datos_guia.get('ruc', '')),
-            'destinatario_nombre': datos_guia.get('destinatario_nombre', datos_guia.get('cliente', '')),
-            'destinatario_direccion': datos_guia.get('destinatario_direccion', datos_guia.get('destino', '')),
-            'destinatario_ubigeo': datos_guia.get('destinatario_ubigeo', '150101'),
-            'serie': datos_guia.get('serie', 'T001'),
-            'numero': datos_guia.get('numero', ''),
-            'fecha_emision': self._formatear_fecha(datos_guia.get('fecha_emision')),
-            'fecha_traslado': self._formatear_fecha(datos_guia.get('fecha_traslado')),
-            'fecha_inicio_traslado': self._formatear_fecha(datos_guia.get('fecha_inicio_traslado')),
-            'motivo_traslado': datos_guia.get('motivo_traslado', '01'),
-            'motivo_texto': self._get_motivo_texto(datos_guia.get('motivo_traslado', '01')),
-            'modalidad_transporte': datos_guia.get('modalidad_transporte', 'PRIVADO'),
-            'modalidad_texto': 'Transporte privado' if datos_guia.get('modalidad_transporte') == 'PRIVADO' else 'Transporte público',
-            'peso_bruto_total': f"{peso_total:.1f}",
-            'numero_bultos': datos_guia.get('numero_bultos', 1),
-            'unidad_peso_texto': 'KGM',
-            'transportista_nombre': datos_guia.get('transportista_nombre', '---'),
-            'conductor_nombre': datos_guia.get('conductor_nombre', '---'),
-            'conductor_dni': datos_guia.get('conductor_dni', '---'),
-            'placa_vehiculo': datos_guia.get('placa_vehiculo', '---'),
-            'licencia_conductor': datos_guia.get('licencia_conductor', '---'),
-            'orden_compra_cliente': datos_guia.get('orden_compra_cliente', ''),
-            'factura': datos_guia.get('factura', ''),
-            'nro_cotizacion': datos_guia.get('documento_asociado', datos_guia.get('cotizacion_numero', '')),
-            'items': items_formateados,
-            'observaciones': datos_guia.get('observaciones', ''),
-            'qr_base64': self._generar_qr_guia(datos_guia)
-        }
+    EMPRESA = {
+        'ruc': '20602095704',
+        'nombre': 'KCF CORPORACION E.I.R.L',
+        'direccion': 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+        'telefono': '999 932 051',
+        'email': 'ventas@kcfcorporacion.com',
+        'web': 'https://kcfcorporacion.com/'
+    }
+    
+    print(f"🔍 DATOS RECIBIDOS en _mapear_datos_guia:")
+    print(f"  - orden_compra_cliente: {datos_guia.get('orden_compra_cliente', 'NO')}")
+    print(f"  - factura: {datos_guia.get('factura', 'NO')}")
+    print(f"  - documento_asociado: {datos_guia.get('documento_asociado', 'NO')}")
+    
+    logo_base64 = self._obtener_logo_base64()
+    logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
+    
+    # Procesar items
+    items = datos_guia.get('items', [])
+    if isinstance(items, str):
+        try:
+            items = json.loads(items)
+        except:
+            items = []
+    
+    items_formateados = []
+    for idx, item in enumerate(items, 1):
+        if isinstance(item, dict):
+            items_formateados.append({
+                'item': idx,
+                'codigo': item.get('codigo', ''),
+                'descripcion': item.get('producto', item.get('descripcion', '')),
+                'unidad': item.get('um', 'NIU'),
+                'cantidad': float(item.get('cantidad', 1))
+            })
+        elif isinstance(item, (list, tuple)):
+            items_formateados.append({
+                'item': idx,
+                'codigo': item[0] if len(item) > 0 else '',
+                'descripcion': item[1] if len(item) > 1 else '',
+                'unidad': 'NIU',
+                'cantidad': float(item[2] if len(item) > 2 else 1)
+            })
+    
+    # Calcular peso total si no viene
+    peso_total = float(datos_guia.get('peso_total', 0))
+    if peso_total == 0 and items_formateados:
+        peso_total = sum(float(item['cantidad']) * 0.5 for item in items_formateados)
+    
+    # ============================================================
+    # 🔽 USAR LOS DATOS DEL BACKEND (datos_guia) como PRIORIDAD
+    # ============================================================
+    return {
+        'logo_src': logo_src,
+        'ruc_remitente': datos_guia.get('ruc_remitente', EMPRESA['ruc']),
+        'remitente_nombre': datos_guia.get('remitente_nombre', EMPRESA['nombre']),
+        'remitente_direccion': datos_guia.get('remitente_direccion', EMPRESA['direccion']),
+        'remitente_ubigeo': datos_guia.get('remitente_ubigeo', '150101'),
+        'telefono': EMPRESA['telefono'],
+        'email': EMPRESA['email'],
+        'web': EMPRESA.get('web', ''),
+        'ruc_destinatario': datos_guia.get('ruc_destinatario', datos_guia.get('ruc', '')),
+        'destinatario_nombre': datos_guia.get('destinatario_nombre', datos_guia.get('cliente', '')),
+        'destinatario_direccion': datos_guia.get('destinatario_direccion', datos_guia.get('destino', '')),
+        'destinatario_ubigeo': datos_guia.get('destinatario_ubigeo', '150101'),
+        'serie': datos_guia.get('serie', 'T001'),
+        'numero': datos_guia.get('numero', ''),
+        'fecha_emision': self._formatear_fecha(datos_guia.get('fecha_emision')),
+        'fecha_traslado': self._formatear_fecha(datos_guia.get('fecha_traslado')),
+        'fecha_inicio_traslado': self._formatear_fecha(datos_guia.get('fecha_inicio_traslado')),
+        'motivo_traslado': datos_guia.get('motivo_traslado', '01'),
+        'motivo_texto': self._get_motivo_texto(datos_guia.get('motivo_traslado', '01')),
+        'modalidad_transporte': datos_guia.get('modalidad_transporte', 'PRIVADO'),
+        'modalidad_texto': 'Transporte privado' if datos_guia.get('modalidad_transporte') == 'PRIVADO' else 'Transporte público',
+        'peso_bruto_total': f"{peso_total:.1f}",
+        'numero_bultos': datos_guia.get('numero_bultos', 1),
+        'unidad_peso_texto': 'KGM',
+        'transportista_nombre': datos_guia.get('transportista_nombre', '---'),
+        'conductor_nombre': datos_guia.get('conductor_nombre', '---'),
+        'conductor_dni': datos_guia.get('conductor_dni', '---'),
+        'placa_vehiculo': datos_guia.get('placa_vehiculo', '---'),
+        'licencia_conductor': datos_guia.get('licencia_conductor', '---'),
+        # 🔽 ESTOS SON LOS IMPORTANTES - VIENEN DEL BACKEND
+        'orden_compra_cliente': datos_guia.get('orden_compra_cliente', ''),
+        'factura': datos_guia.get('factura', ''),
+        'nro_cotizacion': datos_guia.get('nro_cotizacion', datos_guia.get('documento_asociado', '')),
+        'items': items_formateados,
+        'observaciones': datos_guia.get('observaciones', ''),
+        'qr_base64': self._generar_qr_guia(datos_guia)
+    }
 
     # ============================================================
     # FUNCIONES AUXILIARES
