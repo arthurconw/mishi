@@ -151,26 +151,52 @@ let umEditId = null;
 // BADGE "NUEVO" CON EXPIRACIÓN DE 24 HORAS
 // ============================================================
 
+// ============================================================
+// BADGE "NUEVO" CON EXPIRACIÓN DE 24 HORAS (CORREGIDO)
+// ============================================================
+
 const NUEVO_BADGE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas
 
 function esRegistroNuevo(fecha) {
     if (!fecha) return false;
     try {
-        const f = new Date(fecha);
+        const f = typeof fecha === 'string' ? new Date(fecha) : new Date(fecha);
         if (isNaN(f.getTime())) return false;
-        return (Date.now() - f.getTime()) < NUEVO_BADGE_DURATION_MS;
+        
+        const ahora = new Date();
+        const diff = f.getTime() - ahora.getTime(); // Diferencia en milisegundos
+        
+        // Si la fecha es futura (diff > 0), considerarla como nueva
+        // Si la fecha es pasada (diff < 0), verificar que sea menor a 24 horas
+        if (diff > 0) {
+            // Fecha futura - considerarla nueva
+            return true;
+        } else {
+            // Fecha pasada - verificar que sea menor a 24 horas
+            return Math.abs(diff) < NUEVO_BADGE_DURATION_MS;
+        }
     } catch (e) {
+        console.warn('⚠️ Error al procesar fecha:', e);
         return false;
     }
 }
 
 function badgeNuevo(row, fechaField) {
-    if (!esRegistroNuevo(row[fechaField])) return '';
-    return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
-}
-
-function badgeNuevo(row, fechaField) {
-    if (!esRegistroNuevo(row[fechaField])) return '';
+    // Si no se especifica un campo de fecha, intentar con varios campos comunes
+    if (!fechaField) {
+        const camposFecha = ['fecha_creacion', 'created_at', 'fechaCreacion', 'fecha_registro', 'creado_en'];
+        for (const campo of camposFecha) {
+            if (row[campo]) {
+                fechaField = campo;
+                break;
+            }
+        }
+        if (!fechaField) return ''; // No se encontró ningún campo de fecha
+    }
+    
+    const fecha = row[fechaField];
+    if (!esRegistroNuevo(fecha)) return '';
+    
     return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
 }
 
