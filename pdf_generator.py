@@ -318,6 +318,7 @@ class PDFGenerator:
             'remitente_ubigeo': datos_guia.get('remitente_ubigeo', '150101'),
             'telefono': EMPRESA['telefono'],
             'email': EMPRESA['email'],
+            'web': EMPRESA.get('web', ''), 
             'ruc_destinatario': datos_guia.get('ruc_destinatario', datos_guia.get('ruc', '')),
             'destinatario_nombre': datos_guia.get('destinatario_nombre', datos_guia.get('cliente', '')),
             'destinatario_direccion': datos_guia.get('destinatario_direccion', datos_guia.get('destino', '')),
@@ -419,45 +420,45 @@ class PDFGenerator:
     # REEMPLAZAR VARIABLES DEL TEMPLATE GUÍA
     # ============================================================
     def _reemplazar_variables_template_guia(self, template, datos):
-        """Reemplaza variables del template de guía"""
-        html = template
-        
-        logo_src = datos.get('logo_src', '')
-        html = html.replace('{{ logo_src }}', logo_src)
-        
-        variables = [
-            'ruc_remitente', 'remitente_nombre', 'remitente_direccion',
-            'remitente_ubigeo', 'telefono', 'email',
-            'ruc_destinatario', 'destinatario_nombre', 'destinatario_direccion',
-            'destinatario_ubigeo', 'serie', 'numero',
-            'fecha_emision', 'fecha_traslado', 'fecha_inicio_traslado',
-            'motivo_traslado', 'motivo_texto', 'modalidad_texto',
-            'peso_bruto_total', 'numero_bultos', 'unidad_peso_texto', 
-            'transportista_nombre', 'conductor_nombre', 'conductor_dni', 
-            'placa_vehiculo', 'licencia_conductor', 'nro_cotizacion', 'observaciones'
-        ]
-        
-        for var in variables:
-            value = datos.get(var, '')
-            html = html.replace(f"{{{{ {var} }}}}", str(value))
-        
-        qr = datos.get('qr_base64', '')
-        html = html.replace("{{ qr_base64 }}", qr)
-        
-        inicio_tbody = html.find('<tbody>')
-        fin_tbody = html.find('</tbody>')
-        if inicio_tbody >= 0 and fin_tbody > inicio_tbody:
-            inicio_for = html.find('{% for item in items %}', inicio_tbody)
-            fin_for = html.find('{% endfor %}', inicio_for)
-            if inicio_for >= 0 and fin_for > inicio_for:
-                parte_antes = html[:inicio_for]
-                parte_despues = html[fin_for + len('{% endfor %}'):]
-                html = parte_antes + datos.get('filas_productos', '') + parte_despues
-        
-        html = re.sub(r'{%.*?%}', '', html, flags=re.DOTALL)
-        html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
-        
-        return html
+    """Reemplaza variables del template de guía"""
+    html = template
+    
+    logo_src = datos.get('logo_src', '')
+    html = html.replace('{{ logo_src }}', logo_src)
+    
+    variables = [
+        'ruc_remitente', 'remitente_nombre', 'remitente_direccion',
+        'remitente_ubigeo', 'telefono', 'email', 'web',
+        'ruc_destinatario', 'destinatario_nombre', 'destinatario_direccion',
+        'destinatario_ubigeo', 'serie', 'numero',
+        'fecha_emision', 'fecha_traslado', 'fecha_inicio_traslado',
+        'motivo_traslado', 'motivo_texto', 'modalidad_texto',
+        'peso_bruto_total', 'numero_bultos', 'unidad_peso_texto', 
+        'transportista_nombre', 'conductor_nombre', 'conductor_dni', 
+        'placa_vehiculo', 'licencia_conductor', 'nro_cotizacion', 'observaciones'
+    ]
+    
+    for var in variables:
+        value = datos.get(var, '')
+        html = html.replace(f"{{{{ {var} }}}}", str(value))
+    
+    qr = datos.get('qr_base64', '')
+    html = html.replace("{{ qr_base64 }}", qr)
+    
+    inicio_tbody = html.find('<tbody>')
+    fin_tbody = html.find('</tbody>')
+    if inicio_tbody >= 0 and fin_tbody > inicio_tbody:
+        inicio_for = html.find('{% for item in items %}', inicio_tbody)
+        fin_for = html.find('{% endfor %}', inicio_for)
+        if inicio_for >= 0 and fin_for > inicio_for:
+            parte_antes = html[:inicio_for]
+            parte_despues = html[fin_for + len('{% endfor %}'):]
+            html = parte_antes + datos.get('filas_productos', '') + parte_despues
+    
+    html = re.sub(r'{%.*?%}', '', html, flags=re.DOTALL)
+    html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
+    
+    return html
 
     # ============================================================
     # GENERAR FACTURA / BOLETA (COMPROBANTE)
