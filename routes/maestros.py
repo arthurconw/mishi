@@ -151,7 +151,6 @@ def api_clientes_test():
             "error": str(e)
         }), 500
 
-
 @maestros_bp.route('/api/clientes/guardar', methods=['POST'])
 @login_required
 def api_clientes_guardar():
@@ -225,7 +224,7 @@ def api_clientes_guardar():
                 c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
             ))
 
-        # ✅ GUARDAR PUNTOS DE ENTREGA - CORREGIDO (9 placeholders para 9 columnas)
+        # Guardar puntos de entrega
         for p in data.get('puntos_entrega', []):
             if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
                 continue
@@ -267,10 +266,36 @@ def api_clientes_guardar():
 
         return jsonify({"success": False, "error": "No se pudo crear el cliente"})
 
+    except psycopg2.Error as e:
+        # 🔥 CAPTURA ESPECÍFICA PARA ERROR DE DUPLICADO
+        if e.pgcode == '23505':  # Código de error de PostgreSQL para violación de UNIQUE
+            error_msg = str(e).lower()
+            if 'numero_documento' in error_msg:
+                return jsonify({
+                    "success": False, 
+                    "error": "Este RUC ya está registrado en nuestra base de datos. No se puede volver a cargar."
+                })
+            return jsonify({
+                "success": False, 
+                "error": "Ya existe un registro con estos datos."
+            })
+        
+        # Otros errores de PostgreSQL
+        current_app.logger.error(f"❌ Error de BD guardando cliente: {e}")
+        traceback.print_exc()
+        return jsonify({
+            "success": False, 
+            "error": f"Error en la base de datos: {str(e)}"
+        }), 500
+        
     except Exception as e:
         current_app.logger.error(f"❌ Error guardando cliente: {e}")
         traceback.print_exc()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({
+            "success": False, 
+            "error": str(e)
+        }), 500
+
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required

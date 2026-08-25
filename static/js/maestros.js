@@ -148,8 +148,9 @@ let umEditId = null;
 
 
 // ============================================================
-// BADGE "NUEVO" CON EXPIRACIÓN DE 24 HORAS (persistido en localStorage)
+// BADGE "NUEVO" CON EXPIRACIÓN DE 24 HORAS
 // ============================================================
+
 const NUEVO_BADGE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas
 
 function esRegistroNuevo(fecha) {
@@ -161,6 +162,11 @@ function esRegistroNuevo(fecha) {
     } catch (e) {
         return false;
     }
+}
+
+function badgeNuevo(row, fechaField) {
+    if (!esRegistroNuevo(row[fechaField])) return '';
+    return ' <span style="display:inline-block;background:#F7FEE7;color:#3F6212;border:1px solid #A3E635;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle;">Nuevo</span>';
 }
 
 function badgeNuevo(row, fechaField) {
@@ -1220,10 +1226,8 @@ function mostrarAlertaClienteCreado(info) {
 }
 window.mostrarAlertaClienteCreado = mostrarAlertaClienteCreado;
 
+// En la función saveClient(), añade una pre-validación antes de guardar:
 
-// ============================================================
-// GUARDAR CLIENTE
-// ============================================================
 async function saveClient() {
     const contacts = getContacts();
     const points = getPoints();
@@ -1259,6 +1263,28 @@ async function saveClient() {
         return;
     }
 
+    // ✅ VERIFICAR DUPLICADO EN FRONTEND (OPCIONAL, PERO MEJORA UX)
+    const ruc = data.numero_documento;
+    if (ruc && ruc.length >= 8) {
+        try {
+            // Buscar si ya existe este RUC
+            const checkResponse = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
+            const checkResult = await checkResponse.json();
+            
+            if (checkResult.success && checkResult.data && checkResult.data.length > 0) {
+                // Verificar si alguno tiene exactamente el mismo RUC
+                const exists = checkResult.data.some(c => c.numero_documento === ruc || c.ruc === ruc);
+                if (exists) {
+                    showToast('❌ Este RUC ya está registrado en nuestra base de datos. No se puede volver a cargar.', 'error');
+                    return;
+                }
+            }
+        } catch (err) {
+            // Si falla la verificación, continuar (el backend capturará el error)
+            console.warn('⚠️ No se pudo verificar duplicado en frontend:', err);
+        }
+    }
+
     try {
         const url = clientEditId
             ? `/maestros/api/clientes/${clientEditId}`
@@ -1277,19 +1303,11 @@ async function saveClient() {
         const result = await response.json();
 
         if (result.success) {
-            showToast(
-                result.message || '✅ Cliente guardado correctamente',
-                'success'
-            );
-
-            
-
+            showToast(result.message || '✅ Cliente guardado correctamente', 'success');
             closeClientModal();
             await loadModuleData('clientes', true);
             renderModule('clientes');
 
-            // Solo mostrar la alerta detallada si es un cliente NUEVO
-            // (va después y en try/catch propio, para que si falla NO afecte el refresco de tabla)
             if (!clientEditId) {
                 try {
                     mostrarAlertaClienteCreado({
@@ -1303,24 +1321,16 @@ async function saveClient() {
                     console.error('⚠️ Error mostrando alerta de cliente creado:', alertErr);
                 }
             }
-
         } else {
-            showToast(
-                '❌ ' + (result.error || 'Error al guardar'),
-                'error'
-            );
+            // ✅ Mostrar el mensaje de error del backend (ya sea duplicado o cualquier otro)
+            showToast('❌ ' + (result.error || 'Error al guardar'), 'error');
         }
 
     } catch (error) {
         console.error('Error al guardar cliente:', error);
-
-        showToast(
-            '❌ Error de conexión al guardar el cliente',
-            'error'
-        );
+        showToast('❌ Error de conexión al guardar el cliente', 'error');
     }
 }
-
 
 
 // ============================================================
@@ -2733,10 +2743,7 @@ async function cargarClientesCompletos() {
 
 
 // ============================================================
-// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE (CORREGIDA)
-// ============================================================
-// ============================================================
-// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE (CON GOOGLE MAPS)
+// VISTA COMPLETA - TODOS LOS CAMPOS DEL CLIENTE (CON BADGE NUEVO)
 // ============================================================
 
 function renderClientesCompleta(list) {
@@ -2764,7 +2771,6 @@ function renderClientesCompleta(list) {
         { key: 'telefono_contacto', label: 'Teléfono Principal', width: '110px' },
         { key: 'email_contacto', label: 'Email Principal', width: '160px' },
         { key: 'contactos', label: 'Contactos', width: '200px' },
-        // ✅ PUNTOS DE ENTREGA CON GOOGLE MAPS
         { key: 'puntos_entrega', label: 'Puntos de Entrega', width: '280px' },
         { key: 'estado', label: 'Estado', width: '90px' },
         { key: 'activo', label: 'Activo', width: '70px' },
@@ -2780,7 +2786,10 @@ function renderClientesCompleta(list) {
     headersHtml += '<th style="width:160px; min-width:160px; text-align:center;">Acciones</th>';
     
     const rows = list.map((r, i) => {
-        let cells = `<td style="text-align:center;"><b>${i + 1}</b></td>`;
+        // ✅ BADGE NUEVO - Usa created_at
+        const badgeHtml = badgeNuevo(r, 'created_at');
+        
+        let cells = `<td style="text-align:center;"><b>${i + 1}</b>${badgeHtml}</td>`;
         allFields.forEach(f => {
             let value = r[f.key];
             
@@ -2808,7 +2817,6 @@ function renderClientesCompleta(list) {
                     value = '-';
                 }
             } else if (f.key === 'puntos_entrega') {
-                // ✅ Mostrar puntos de entrega CON GOOGLE MAPS
                 if (r.puntos_entrega && r.puntos_entrega.length > 0) {
                     value = r.puntos_entrega.map(p => {
                         let html = `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
@@ -2816,13 +2824,11 @@ function renderClientesCompleta(list) {
                             ${p.principal ? ' ⭐' : ''}
                             <br><small>${p.direccion || ''} ${p.telefono_contacto || p.telefono ? '| Tel: ' + (p.telefono_contacto || p.telefono) : ''}</small>`;
                         
-                        // ✅ Mostrar Google Maps como link clickeable
                         const mapsLink = p.google_maps || p.googleMaps;
                         if (mapsLink) {
                             html += `<br><a href="${mapsLink}" target="_blank" style="color:#2563EB;text-decoration:underline;font-size:10px;">📍 Ver en Google Maps</a>`;
                         }
                         
-                        // ✅ Mostrar instrucciones
                         if (p.instrucciones) {
                             html += `<br><span style="color:#2563EB;">📝 ${p.instrucciones}</span>`;
                         }
@@ -2877,9 +2883,8 @@ function renderClientesCompleta(list) {
     </div>`;
 }
 
-
 // ============================================================
-// VISTA COMPLETA - TODOS LOS CAMPOS DEL PROVEEDOR
+// VISTA COMPLETA - TODOS LOS CAMPOS DEL PROVEEDOR (CON BADGE NUEVO)
 // ============================================================
 
 function renderProveedoresCompleta(list) {
@@ -2917,19 +2922,22 @@ function renderProveedoresCompleta(list) {
     
     let headersHtml = '<th style="width:40px;">Item</th>';
     allFields.forEach(f => {
-        headersHtml += `<th style="width:${f.width || 'auto'};">${f.label}</th>`;
+        headersHtml += `<th style="width:${f.width || 'auto'};text-align:center;">${f.label}</th>`;
     });
-    headersHtml += '<th style="width:160px; min-width:160px; max-width; 160px; white-space:nowrap" >Acciones</th>';
+    headersHtml += '<th style="width:160px; min-width:160px; text-align:center;">Acciones</th>';
     
     const rows = list.map((r, i) => {
-        let cells = `<td><b>${i + 1}</b></td>`;
+        // ✅ BADGE NUEVO - Usa fecha_creacion
+        const badgeHtml = badgeNuevo(r, 'fecha_creacion');
+        
+        let cells = `<td style="text-align:center;"><b>${i + 1}</b>${badgeHtml}</td>`;
         allFields.forEach(f => {
             let value = r[f.key];
             
             if (value === undefined || value === null || value === '') {
                 value = '-';
             } else if (f.key === 'estado') {
-                value = bEstado(value); // 🔧 CAMBIO: antes tenía su propia lógica if/else con solo Activo/Inactivo, ahora usa bEstado() para soportar Observado/Bloqueado también
+                value = bEstado(value);
             } else if (f.key === 'activo') {
                 value = value === true || value === 'true' 
                     ? '<span class="badge b-ok">✅ Sí</span>' 
@@ -2939,7 +2947,7 @@ function renderProveedoresCompleta(list) {
             } else if (f.key === 'contactos') {
                 if (r.contactos && r.contactos.length > 0) {
                     value = r.contactos.map(c => 
-                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
                             <strong>${c.nombre_contacto || '-'}</strong>
                             ${c.cargo ? `<span style="color:#64748B;"> (${c.cargo})</span>` : ''}
                             ${c.principal ? ' ⭐' : ''}
@@ -2952,7 +2960,7 @@ function renderProveedoresCompleta(list) {
             } else if (f.key === 'puntos_entrega') {
                 if (r.puntos_entrega && r.puntos_entrega.length > 0) {
                     value = r.puntos_entrega.map(p => 
-                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;">
+                        `<div style="font-size:10px;padding:2px 0;border-bottom:1px solid #f0f0f0;text-align:left;">
                             <strong>${p.nombre_punto || '-'}</strong>
                             ${p.principal ? ' ⭐' : ''}
                             <br><small>${p.direccion || ''} ${p.telefono_contacto ? '| Tel: ' + p.telefono_contacto : ''}</small>
@@ -2965,16 +2973,16 @@ function renderProveedoresCompleta(list) {
                 value = value ? new Date(value).toLocaleDateString('es-PE') : '-';
             }
             
-            cells += `<td>${value}</td>`;
+            cells += `<td style="text-align:center;">${value}</td>`;
         });
         
-        // ✅ BOTÓN TACHO DE BASURA - USA TOGGLE
+        // Botones de acción
         const isActive = r.estado === 'Activo' || r.estado === 'activo' || r.activo === true;
         const estadoDisplay = isActive ? 'Desactivar' : 'Activar';
         const estadoClass = isActive ? 'action-delete' : 'action-activate';
         
         cells += `
-            <td>
+            <td style="text-align:center;">
                 <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                     <button class="action-btn action-view" data-view="proveedores|${r.id}" title="Ver">👁️</button>
                     <button class="action-btn action-edit" data-edit="proveedores|${r.id}" title="Editar">✏️</button>
@@ -2996,6 +3004,7 @@ function renderProveedoresCompleta(list) {
         </table>
     </div>`;
 }
+
 
 // ============================================================
 // ELIMINAR REGISTRO (DELETE REAL)
