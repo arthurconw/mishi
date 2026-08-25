@@ -4120,7 +4120,9 @@ def generar_pdf_guia_endpoint(guia_id):
             'tipo_documento': 'guia_remision',
             'serie': guia.get('serie', 'T001'),
             'numero': guia.get('numero', ''),
-            
+            'orden_compra_cliente': guia.get('orden_compra_cliente', ''),  # <--- IMPORTANTE
+    'factura': guia.get('factura', ''),                            # <--- IMPORTANTE
+    'nro_cotizacion': guia.get('documento_asociado', guia.get('cotizacion_numero', '')), 
             # ============================================================
             # REMITENTE (DATOS FIJOS)
             # ============================================================
