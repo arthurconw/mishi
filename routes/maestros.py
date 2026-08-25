@@ -700,6 +700,7 @@ def api_proveedores_listar():
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 @maestros_bp.route('/api/proveedores/guardar', methods=['POST'])
 @login_required
 def api_proveedores_guardar():
@@ -726,7 +727,6 @@ def api_proveedores_guardar():
             numero = 1
         codigo = f"PROV-{str(numero).zfill(4)}"
 
-        # ✅ INSERT CORREGIDO - 24 columnas, 24 placeholders
         query = """
             INSERT INTO proveedores (
                 codigo_proveedor, razon_social, ruc, razon_comercial,
@@ -746,7 +746,6 @@ def api_proveedores_guardar():
             RETURNING id, codigo_proveedor
         """
         
-        # ✅ 24 valores (los 23 campos + fecha_creacion con NOW())
         params = (
             codigo,                                    # codigo_proveedor
             data.get('razon_social'),                  # razon_social
@@ -777,7 +776,7 @@ def api_proveedores_guardar():
         result = cur.fetchone()
         proveedor_id = result[0]
 
-        # 2) INSERT contacto principal (solo si hay algo que guardar)
+        # 2) INSERT contacto principal
         if data.get('contacto') or data.get('telefono') or data.get('email'):
             cur.execute("""
                 INSERT INTO proveedores_contactos (
@@ -792,7 +791,7 @@ def api_proveedores_guardar():
                 data.get('email', '')
             ))
 
-        # 3) INSERT punto de recojo/entrega (solo si hay algo que guardar)
+        # 3) INSERT punto de recojo
         if data.get('puntoRecojo') or data.get('direccionRecojo'):
             cur.execute("""
                 INSERT INTO proveedores_puntos_entrega (
@@ -820,11 +819,109 @@ def api_proveedores_guardar():
             "message": f"Proveedor creado con código {result[1]}"
         })
 
+    except psycopg2.Error as e:
+        # 🔥 CAPTURAR ERROR DE PostgreSQL Y DETECTAR QUÉ CAMPO CAUSA EL PROBLEMA
+        current_app.logger.error(f"❌ Error de PostgreSQL: {e}")
+        
+        error_msg = str(e).lower()
+        campo_error = None
+        
+        # Mapeo de nombres de columna a nombres legibles
+        mapeo_campos = {
+            'codigo_proveedor': 'Código de proveedor',
+            'razon_social': 'Razón Social',
+            'ruc': 'RUC',
+            'razon_comercial': 'Razón Comercial',
+            'telefono': 'Teléfono',
+            'contacto': 'Contacto',
+            'email': 'Email',
+            'direccion': 'Dirección',
+            'condicion_pago': 'Condición de Pago',
+            'tiempo_credito': 'Línea de Crédito',
+            'lugar_recojo': 'Punto de Recojo',
+            'banco': 'Banco',
+            'numero_cuenta': 'N° Cuenta',
+            'cci': 'CCI',
+            'estado': 'Estado',
+            'ambito': 'Ámbito',
+            'observaciones': 'Observaciones',
+            'tipo': 'Tipo',
+            'tipo_doc': 'Tipo de Documento',
+            'tipo_cuenta': 'Tipo de Cuenta',
+            'moneda': 'Moneda',
+            'descuento': 'Descuento',
+            'nombre_contacto': 'Nombre de Contacto',
+            'cargo': 'Cargo',
+            'nombre_punto': 'Punto de Recojo',
+            'telefono_contacto': 'Teléfono de Contacto',
+            'responsable': 'Responsable',
+            'horario_atencion': 'Horario de Atención',
+            'instrucciones': 'Instrucciones'
+        }
+        
+        # Verificar si es error de "value too long"
+        if 'value too long' in error_msg or 'character varying' in error_msg:
+            # Intentar extraer el nombre de la columna del error
+            # Ejemplo: "value too long for type character varying(20)" no siempre dice la columna
+            # Pero podemos intentar detectar por el contexto
+            
+            # Revisar cada campo para ver cuál excede el límite
+            campos_a_revisar = {
+                'codigo_proveedor': 20,
+                'ruc': 20,
+                'telefono': 20,
+                'contacto': 20,
+                'email': 50,
+                'condicion_pago': 20,
+                'tiempo_credito': 20,
+                'lugar_recojo': 20,
+                'banco': 20,
+                'numero_cuenta': 20,
+                'cci': 20,
+                'estado': 20,
+                'ambito': 20,
+                'tipo': 20,
+                'tipo_doc': 10,
+                'tipo_cuenta': 20,
+                'moneda': 10,
+                'descuento': 20,
+                'nombre_contacto': 20,
+                'cargo': 20,
+                'nombre_punto': 20,
+                'telefono_contacto': 20,
+                'responsable': 20,
+                'horario_atencion': 20
+            }
+            
+            # Verificar cada campo en los datos recibidos
+            for campo, limite in campos_a_revisar.items():
+                valor = data.get(campo, '')
+                if valor and len(str(valor)) > limite:
+                    campo_error = mapeo_campos.get(campo, campo)
+                    break
+            
+            # Si no se detectó automáticamente, mostrar mensaje genérico
+            if campo_error:
+                return jsonify({
+                    "success": False,
+                    "error": f"El campo '{campo_error}' excede la longitud máxima permitida ({limite} caracteres). Por favor, reduce el texto."
+                })
+            else:
+                return jsonify({
+                    "success": False,
+                    "error": "Uno de los campos excede la longitud máxima permitida. Verifica que todos los campos tengan menos de 20 caracteres."
+                })
+        
+        # Si es otro error de PostgreSQL
+        return jsonify({
+            "success": False,
+            "error": f"Error en la base de datos: {str(e)}"
+        }), 500
+
     except Exception as e:
         current_app.logger.error(f"❌ Error guardando proveedor: {e}")
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['GET'])
 @login_required
@@ -915,18 +1012,16 @@ def api_proveedores_eliminar(id):
         return jsonify({"success": False, "error": str(e)}), 500
  
 
-
 @maestros_bp.route('/api/proveedores/<int:id>', methods=['PUT'])
 @login_required
 def api_proveedores_actualizar(id):
-    """Actualizar proveedor (EDITAR) - incluye contacto y punto de recojo"""
+    """Actualizar proveedor (EDITAR)"""
     try:
         data = request.get_json()
         from database import DATABASE_URL
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
-        # ✅ UPDATE CORREGIDO - 24 campos
         cur.execute("""
             UPDATE proveedores SET
                 razon_social = %s,
@@ -1033,6 +1128,82 @@ def api_proveedores_actualizar(id):
         conn.close()
 
         return jsonify({"success": True, "message": "Proveedor actualizado correctamente"})
+
+    except psycopg2.Error as e:
+        # 🔥 CAPTURAR ERROR DE PostgreSQL Y DETECTAR QUÉ CAMPO CAUSA EL PROBLEMA
+        current_app.logger.error(f"❌ Error de PostgreSQL: {e}")
+        
+        error_msg = str(e).lower()
+        campo_error = None
+        limite = 20
+        
+        # Mapeo de nombres de columna a nombres legibles
+        mapeo_campos = {
+            'codigo_proveedor': 'Código de proveedor',
+            'razon_social': 'Razón Social',
+            'ruc': 'RUC',
+            'razon_comercial': 'Razón Comercial',
+            'telefono': 'Teléfono',
+            'contacto': 'Contacto',
+            'email': 'Email',
+            'direccion': 'Dirección',
+            'condicion_pago': 'Condición de Pago',
+            'tiempo_credito': 'Línea de Crédito',
+            'lugar_recojo': 'Punto de Recojo',
+            'banco': 'Banco',
+            'numero_cuenta': 'N° Cuenta',
+            'cci': 'CCI',
+            'estado': 'Estado',
+            'ambito': 'Ámbito',
+            'observaciones': 'Observaciones',
+            'tipo': 'Tipo',
+            'tipo_doc': 'Tipo de Documento',
+            'tipo_cuenta': 'Tipo de Cuenta',
+            'moneda': 'Moneda',
+            'descuento': 'Descuento'
+        }
+        
+        if 'value too long' in error_msg or 'character varying' in error_msg:
+            # Verificar cada campo
+            campos_a_revisar = {
+                'ruc': 20,
+                'telefono': 20,
+                'contacto': 20,
+                'email': 50,
+                'condicion_pago': 20,
+                'tiempo_credito': 20,
+                'lugar_recojo': 20,
+                'banco': 20,
+                'numero_cuenta': 20,
+                'cci': 20,
+                'estado': 20,
+                'ambito': 20,
+                'tipo': 20,
+                'tipo_doc': 10,
+                'tipo_cuenta': 20,
+                'moneda': 10,
+                'descuento': 20
+            }
+            
+            for campo, lim in campos_a_revisar.items():
+                valor = data.get(campo, '')
+                if valor and len(str(valor)) > lim:
+                    campo_error = mapeo_campos.get(campo, campo)
+                    limite = lim
+                    break
+            
+            if campo_error:
+                return jsonify({
+                    "success": False,
+                    "error": f"El campo '{campo_error}' excede la longitud máxima permitida ({limite} caracteres). Por favor, reduce el texto."
+                })
+            else:
+                return jsonify({
+                    "success": False,
+                    "error": "Uno de los campos excede la longitud máxima permitida. Verifica que todos los campos tengan menos de 20 caracteres."
+                })
+        
+        return jsonify({"success": False, "error": str(e)}), 500
 
     except Exception as e:
         current_app.logger.error(f"❌ Error actualizando proveedor: {e}")
