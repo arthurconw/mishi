@@ -111,9 +111,10 @@ class PDFGenerator:
             traceback.print_exc()
             return None
 
-    def _obtener_template_guia(self):
-        """Retorna el template HTML de la guía como string (en memoria)"""
-        return """<!DOCTYPE html>
+
+def _obtener_template_guia(self):
+    """Retorna el template HTML de la guía como string (en memoria)"""
+    return """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -146,6 +147,10 @@ class PDFGenerator:
         .qr-container { text-align: center; margin: 8px 0 5px 0; padding: 6px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
         .qr-container img { width: 90px; height: 90px; }
         .footer { margin-top: 12px; text-align: center; font-size: 7.5px; color: #555; border-top: 1px solid #ddd; padding-top: 6px; }
+        .referencias-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 6px 0; }
+        .ref-item { text-align: center; }
+        .ref-item .ref-label { font-weight: bold; display: block; font-size: 7.5px; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+        .ref-item .ref-value { font-size: 9px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -154,14 +159,14 @@ class PDFGenerator:
             <div class="logo-container">
                 <img src="{{ logo_src }}" alt="Logo" style="max-height:60px;">
             </div>
-       <div class="info-texto">
-    <div class="nombre">{{ remitente_nombre }}</div>
-    <div class="contacto">
-        <span>Telf: {{ telefono }}</span><br>
-        <span>Email: {{ email }}</span><br>
-        <span>Web: {{ web }}</span>
-    </div>
-</div>
+            <div class="info-texto">
+                <div class="nombre">{{ remitente_nombre }}</div>
+                <div class="contacto">
+                    <span>Telf: {{ telefono }}</span><br>
+                    <span>Email: {{ email }}</span><br>
+                    <span>Web: {{ web }}</span>
+                </div>
+            </div>
         </div>
         <div class="recuadro-derecha">
             <div class="ruc">R.U.C. Nº {{ ruc_remitente }}</div>
@@ -212,43 +217,51 @@ class PDFGenerator:
     <div class="seccion">
         <div class="seccion-titulo">PRODUCTOS</div>
         <table class="products-table">
-    <thead>
-        <tr>
-            <th style="width:8%">ITEM</th>
-            <th style="width:15%">CODIGO</th>
-            <th style="width:40%">PRODUCTO</th>
-            <th style="width:15%">U/M</th>
-            <th style="width:15%">CANTIDAD</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in items %}
-        <tr>
-            <td>{{ item.item }}</td>
-            <td>{{ item.codigo }}</td>
-            <td class="descripcion">{{ item.descripcion }}</td>
-            <td>{{ item.unidad }}</td>
-            <td>{{ item.cantidad }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+            <thead>
+                <tr>
+                    <th style="width:8%">ITEM</th>
+                    <th style="width:15%">CODIGO</th>
+                    <th style="width:40%">PRODUCTO</th>
+                    <th style="width:15%">U/M</th>
+                    <th style="width:15%">CANTIDAD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.item }}</td>
+                    <td>{{ item.codigo }}</td>
+                    <td class="descripcion">{{ item.descripcion }}</td>
+                    <td>{{ item.unidad }}</td>
+                    <td>{{ item.cantidad }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     
-  <div class="seccion">
-    <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
-    <div class="referencias">
-        <div class="fila">
-            <span class="label">NRO ORDEN DE COMPRA:</span>
-            <span class="value">{{ orden_compra_cliente }}</span>
-            <span class="label" style="margin-left: 15px;">NRO DE FACTURA:</span>
-            <span class="value">{{ factura }}</span>
-            <span class="label" style="margin-left: 15px;">NRO DE COTIZACION:</span>
-            <span class="value">{{ nro_cotizacion }}</span>
+    <!-- ============================================================ -->
+    <!-- SECCIÓN DOCUMENTOS RELACIONADOS - CORREGIDA -->
+    <!-- ============================================================ -->
+    <div class="seccion">
+        <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
+        <div class="referencias">
+            <div class="referencias-grid">
+                <div class="ref-item">
+                    <span class="ref-label">NRO ORDEN DE COMPRA</span>
+                    <span class="ref-value">{{ orden_compra_cliente or '—' }}</span>
+                </div>
+                <div class="ref-item">
+                    <span class="ref-label">NRO DE FACTURA</span>
+                    <span class="ref-value">{{ factura or '—' }}</span>
+                </div>
+                <div class="ref-item">
+                    <span class="ref-label">NRO DE COTIZACION</span>
+                    <span class="ref-value">{{ nro_cotizacion or '—' }}</span>
+                </div>
+            </div>
         </div>
     </div>
-</div>
     
     <div class="observaciones">
         <div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div>
@@ -265,7 +278,6 @@ class PDFGenerator:
     </div>
 </body>
 </html>"""
-
 # pdf_generator.py - Función _mapear_datos_guia
 # pdf_generator.py - Función _mapear_datos_guia CORREGIDA
 
