@@ -416,7 +416,7 @@ class PDFGenerator:
 """
         return filas
 
-       def _reemplazar_variables_template_guia(self, template, datos):
+    def _reemplazar_variables_template_guia(self, template, datos):
         """Reemplaza variables del template de guía"""
         html = template
         
