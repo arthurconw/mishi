@@ -212,27 +212,28 @@ class PDFGenerator:
     <div class="seccion">
         <div class="seccion-titulo">PRODUCTOS</div>
         <table class="products-table">
-            <thead>
-                <tr>
-                    <th style="width:8%">ITEM</th>
-                    <th style="width:12%">CODIGO</th>
-                    <th style="width:30%">DESCRIPCION</th>
-                    <th style="width:10%">UM</th>
-                    <th style="width:12%">CANTIDAD</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr>
-                    <td>{{ item.item }}</td>
-                    <td>{{ item.codigo }}</td>
-                    <td class="descripcion">{{ item.descripcion }}</td>
-                    <td>{{ item.unidad }}</td>
-                    <td>{{ item.cantidad }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <thead>
+        <tr>
+            <th style="width:8%">ITEM</th>
+            <th style="width:15%">CODIGO</th>
+            <th style="width:40%">PRODUCTO</th>
+            <th style="width:15%">U/M</th>
+            <th style="width:15%">CANTIDAD</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.item }}</td>
+            <td>{{ item.codigo }}</td>
+            <td class="descripcion">{{ item.descripcion }}</td>
+            <td>{{ item.unidad }}</td>
+            <td>{{ item.cantidad }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
     </div>
     
   <div class="seccion">
@@ -298,9 +299,8 @@ class PDFGenerator:
                     'codigo': item.get('codigo', ''),
                     'descripcion': item.get('producto', item.get('descripcion', '')),
                     'unidad': item.get('um', 'NIU'),
-                    'cantidad': float(item.get('cantidad', 1)),
-                    'br': item.get('br', '')
-                })
+                    'cantidad': float(item.get('cantidad', 1))
+                     })
             elif isinstance(item, (list, tuple)):
                 items_formateados.append({
                     'item': idx,
@@ -416,7 +416,6 @@ class PDFGenerator:
                 <td>{prod.get('item', '')}</td>
                 <td>{prod.get('codigo', '')}</td>
                 <td class="descripcion">{prod.get('descripcion', '')}</td>
-                <td>{prod.get('br', '')}</td>
                 <td>{prod.get('unidad', 'NIU')}</td>
                 <td>{prod.get('cantidad', 0)}</td>
             </tr>
