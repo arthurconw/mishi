@@ -227,7 +227,6 @@ class PDFGenerator:
                     <td>{{ item.item }}</td>
                     <td>{{ item.codigo }}</td>
                     <td class="descripcion">{{ item.descripcion }}</td>
-                    <td>{{ item.br }}</td>
                     <td>{{ item.unidad }}</td>
                     <td>{{ item.cantidad }}</td>
                 </tr>
@@ -236,12 +235,19 @@ class PDFGenerator:
         </table>
     </div>
     
-    <div class="seccion">
-        <div class="seccion-titulo">REFERENCIAS</div>
-        <div class="referencias">
-            <div class="fila"><span class="label">NRO DE COTIZACION:</span><span class="value">{{ nro_cotizacion }}</span></div>
+  <div class="seccion">
+    <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
+    <div class="referencias">
+        <div class="fila">
+            <span class="label">NRO ORDEN DE COMPRA:</span>
+            <span class="value">{{ orden_compra_cliente }}</span>
+            <span class="label" style="margin-left: 15px;">NRO DE FACTURA:</span>
+            <span class="value">{{ factura }}</span>
+            <span class="label" style="margin-left: 15px;">NRO DE COTIZACION:</span>
+            <span class="value">{{ nro_cotizacion }}</span>
         </div>
     </div>
+</div>
     
     <div class="observaciones">
         <div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div>
@@ -322,6 +328,8 @@ class PDFGenerator:
             'destinatario_nombre': datos_guia.get('destinatario_nombre', datos_guia.get('cliente', '')),
             'destinatario_direccion': datos_guia.get('destinatario_direccion', datos_guia.get('destino', '')),
             'destinatario_ubigeo': datos_guia.get('destinatario_ubigeo', '150101'),
+             'orden_compra_cliente': datos_guia.get('orden_compra_cliente', ''),
+            'factura': datos_guia.get('factura', ''),
             'serie': datos_guia.get('serie', 'T001'),
             'numero': datos_guia.get('numero', ''),
             'fecha_emision': self._formatear_fecha(datos_guia.get('fecha_emision')),
