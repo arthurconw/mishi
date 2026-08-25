@@ -154,14 +154,14 @@ class PDFGenerator:
             <div class="logo-container">
                 <img src="{{ logo_src }}" alt="Logo" style="max-height:60px;">
             </div>
-            <div class="info-texto">
-                <div class="nombre">{{ remitente_nombre }}</div>
-                <div class="direccion">{{ remitente_direccion }}</div>
-                <div class="contacto">
-                    <span>Telf: {{ telefono }}</span>
-                    <span>Email: {{ email }}</span>
-                </div>
-            </div>
+       <div class="info-texto">
+    <div class="nombre">{{ remitente_nombre }}</div>
+    <div class="contacto">
+        <span>Telf: {{ telefono }}</span><br>
+        <span>Email: {{ email }}</span><br>
+        <span>Web: {{ web }}</span>
+    </div>
+</div>
         </div>
         <div class="recuadro-derecha">
             <div class="ruc">R.U.C. Nº {{ ruc_remitente }}</div>
@@ -266,13 +266,15 @@ class PDFGenerator:
     def _mapear_datos_guia(self, datos_guia):
         """Mapea los datos de la guía al formato esperado"""
         EMPRESA = {
-            'ruc': '20131369124',
-            'nombre': 'KCF CORPORACION S.A.C.',
-            'direccion': 'Av. Industrial 123, Lima, Perú',
-            'telefono': '999 932 051',
-            'email': 'ventas@kcfcorporacion.com'
-        }
-        
+    'ruc': '20602095704',  # ← Cambia si es diferente
+    'nombre': 'KCF CORPORACION E.I.R.L',  # ← Cambiado
+    'direccion': '',  # ← VACÍO para que no aparezca
+    'telefono': '999 932 051',
+    'email': 'ventas@kcfcorporacion.com',
+    'web': 'https://kcfcorporacion.com/'  # ← NUEVO campo
+}
+
+
         logo_base64 = self._obtener_logo_base64()
         logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
         
