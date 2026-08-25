@@ -4392,6 +4392,7 @@ async function marcarDespachado(id) {
                     destino: despacho.destino || '',
                     motivo_traslado: 'VENTA',
                     observaciones: `Guía generada automáticamente desde despacho ${despacho.numero}`,
+                     documento_asociado: despacho.cotizacion_numero || '',  
                     // 🔽 CAMBIO PRINCIPAL: fecha con hora actual
                     fecha_emision: fechaHoraISO,
                     fecha_traslado: fechaSolo,  // Solo fecha para el traslado

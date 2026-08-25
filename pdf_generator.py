@@ -194,7 +194,7 @@ class PDFGenerator:
     <div class="seccion">
         <div class="seccion-titulo">PRODUCTOS</div>
         <table class="products-table">
-            <thead><tr><th style="width:8%">ITEM</th><th style="width:15%">CODIGO</th><th style="width:40%">PRODUCTO</th><th style="width:15%">U/M</th><th style="width:15%">CANTIDAD</th></tr></thead>
+            <thead><tr><th style="width:8%">ITEM</th><th style="width:15%">CODIGO</th><th style="width:40%">PRODUCTO</th><th style="width:15%">UM</th><th style="width:15%">CANTIDAD</th></tr></thead>
             <tbody>{% for item in items %}<tr><td>{{ item.item }}</td><td>{{ item.codigo }}</td><td class="descripcion">{{ item.descripcion }}</td><td>{{ item.unidad }}</td><td>{{ item.cantidad }}</td></tr>{% endfor %}</tbody>
         </table>
     </div>
