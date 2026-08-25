@@ -164,13 +164,23 @@ class PDFGenerator:
             <div class="fila"><span class="label">NÚMERO DE BULTOS:</span><span class="value">{{ numero_bultos }}</span></div>
         </div>
     </div>
-    <div class="seccion">
-        <div class="seccion-titulo">DATOS DE RUTA</div>
-        <div class="datos-ruta">
-            <div class="fila"><span class="label">PUNTO DE PARTIDA:</span><span class="value">{{ remitente_direccion }}</span></div>
-            <div class="fila"><span class="label">PUNTO DE LLEGADA:</span><span class="value">{{ destinatario_direccion }}</span></div>
+   <div class="seccion">
+    <div class="seccion-titulo">DATOS DE RUTA</div>
+    <div class="datos-ruta">
+        <div class="fila">
+            <span class="label">PUNTO DE PARTIDA:</span>
+            <span class="value" style="white-space: pre-line; line-height: 1.6;">
+                {{ remitente_direccion }}
+            </span>
+        </div>
+        <div class="fila">
+            <span class="label">PUNTO DE LLEGADA:</span>
+            <span class="value" style="white-space: pre-line; line-height: 1.6;">
+                {{ destinatario_direccion }}
+            </span>
         </div>
     </div>
+</div>
     <div class="seccion">
         <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
         <div class="datos-transporte">
