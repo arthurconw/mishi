@@ -60,6 +60,7 @@ let guiasData = [];
 let comprobantesData = [];
 let notasData = [];
 let devolucionesData = [];
+let eliminadasData = []; 
 let currentModule = 'cotizaciones';
 let editingId = null;
 let quoteProducts = [];
@@ -4240,7 +4241,8 @@ async function reactivarCotizacion(id) {
     }
 }
 
-// En ventas.js - Reemplaza la función deleteCotizacion
+// ventas.js - Modificar deleteCotizacion
+
 async function deleteCotizacion(id) {
     const cotizacion = cotizacionesData.find(c => c.id === id);
     const numero = cotizacion?.numero || 'COT-XXXXXX';
@@ -4263,7 +4265,15 @@ async function deleteCotizacion(id) {
 
                 if (response.success) {
                     showToast('✅ Cotización anulada correctamente', 'success');
+                    
+                    // Recargar ambas listas
                     await loadCotizaciones();
+                    await loadEliminadas();  // 👈 NUEVO
+                    
+                    // Si estamos en la pestaña de eliminadas, recargar
+                    if (currentModule === 'eliminadas') {
+                        renderEliminadas();
+                    }
                 } else {
                     showToast('❌ Error: ' + (response.error || 'No se pudo eliminar'), 'error');
                 }
@@ -10512,6 +10522,150 @@ function validateByHellen() {
     );
 }
 
+
+
+
+// ventas.js - Después de loadDevoluciones()
+
+async function loadEliminadas() {
+    console.log('🔄 Cargando historial de eliminaciones...');
+    try {
+        const response = await apiFetch('/ventas/api/cotizaciones/eliminadas');
+        if (response.success) {
+            eliminadasData = response.data || [];
+            console.log(`✅ ${eliminadasData.length} registros de eliminaciones cargados`);
+            renderEliminadas();
+        } else {
+            showToast('Error al cargar historial de eliminaciones', 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error cargando eliminadas:', error);
+        showToast('Error al cargar historial de eliminaciones', 'error');
+    }
+}
+
+// ventas.js - Después de loadEliminadas()
+
+function renderEliminadas() {
+    const q = document.getElementById('eliminadasSearch')?.value?.toLowerCase() || '';
+    
+    const list = eliminadasData.filter(r => {
+        const searchStr = `${r.numero || ''} ${r.cliente || ''} ${r.ruc || ''} ${r.motivo || ''}`.toLowerCase();
+        return !q || searchStr.includes(q);
+    });
+    
+    const tbody = document.getElementById('eliminadasRows');
+    if (!tbody) return;
+    
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#94A3B8;padding:40px;">
+            🗑️ No hay cotizaciones eliminadas registradas
+        </td></tr>`;
+        const countEl = document.getElementById('eliminadasCount');
+        if (countEl) countEl.textContent = 'Mostrando 0 de 0 registros';
+        return;
+    }
+    
+    tbody.innerHTML = list.map((r, i) => {
+        return `
+        <tr>
+            <td>${i + 1}</td>
+            <td class="date-cell">${sd(r.fecha_eliminacion)}</td>
+            <td><b>${sd(r.numero)}</b></td>
+            <td class="left"><b>${sd(r.cliente)}</b></td>
+            <td>${sd(r.ruc)}</td>
+            <td><b>${money(r.total || 0)}</b></td>
+            <td class="left" style="max-width:300px; font-size:10px;">
+                <span style="background:#FEE2E2; padding:2px 10px; border-radius:4px; display:inline-block; color:#991B1B; font-weight:800;">
+                    ${esc(r.motivo || 'Sin motivo')}
+                </span>
+            </td>
+            <td>
+                <span style="background:#DBEAFE; padding:2px 10px; border-radius:4px; font-weight:800; color:#1D4ED8; font-size:10px; white-space:nowrap;">
+                    ${sd(r.usuario_elimino || 'Sistema')}
+                </span>
+            </td>
+            <td>${badgeStatus(r.estado)}</td>
+            <td>
+                <button onclick="verDetalleEliminada(${r.id})" 
+                        style="height:24px; padding:0 10px; font-size:9px; border-radius:4px; background:#F8FAFC; border:1px solid #E5E7EB; cursor:pointer; transition:all 0.2s;"
+                        onmouseover="this.style.background='#E2E8F0'"
+                        onmouseout="this.style.background='#F8FAFC'">
+                    👁️ Ver
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+    
+    const countEl = document.getElementById('eliminadasCount');
+    if (countEl) {
+        countEl.textContent = `Mostrando ${list.length} de ${eliminadasData.length} registros`;
+    }
+}
+
+
+// ventas.js - Después de renderEliminadas()
+
+function limpiarFiltrosEliminadas() {
+    const search = document.getElementById('eliminadasSearch');
+    if (search) search.value = '';
+    renderEliminadas();
+    showToast('🧹 Filtros limpiados', 'info');
+}
+
+function verDetalleEliminada(id) {
+    const registro = eliminadasData.find(r => r.id === id);
+    if (!registro) {
+        showToast('❌ Registro no encontrado', 'error');
+        return;
+    }
+    
+    // Mostrar modal con detalles usando showConfirmModal
+    showConfirmModal(
+        '🗑️ Detalle de eliminación',
+        `
+        <div style="text-align:left; font-size:13px; line-height:1.8;">
+            <p><strong>📄 Cotización:</strong> ${registro.numero || 'N/A'}</p>
+            <p><strong>🏢 Cliente:</strong> ${registro.cliente || 'N/A'}</p>
+            <p><strong>📋 RUC:</strong> ${registro.ruc || 'N/A'}</p>
+            <p><strong>💰 Total:</strong> ${money(registro.total || 0)}</p>
+            <p><strong>📅 Fecha eliminación:</strong> ${registro.fecha_eliminacion || 'N/A'}</p>
+            <p><strong>👤 Eliminado por:</strong> ${registro.usuario_elimino || 'Sistema'}</p>
+            <p><strong>📝 Motivo:</strong></p>
+            <div style="background:#FEF2F2; padding:10px 14px; border-radius:8px; border-left:4px solid #DC2626; color:#991B1B; font-weight:800; margin-top:4px;">
+                ${esc(registro.motivo || 'Sin motivo especificado')}
+            </div>
+        </div>
+        `,
+        '💡 Este registro es histórico y no se puede recuperar',
+        null,
+        '🔒 Cerrar'
+    );
+}
+
+// Función para exportar datos de eliminadas (opcional)
+function exportarEliminadasCSV() {
+    if (eliminadasData.length === 0) {
+        showToast('⚠️ No hay datos para exportar', 'warning');
+        return;
+    }
+    
+    // Crear contenido CSV
+    let csv = 'N° Cotización,Cliente,RUC,Total,Fecha Eliminación,Motivo,Eliminado por\n';
+    eliminadasData.forEach(r => {
+        csv += `${r.numero || ''},${r.cliente || ''},${r.ruc || ''},${r.total || 0},${r.fecha_eliminacion || ''},${r.motivo || ''},${r.usuario_elimino || ''}\n`;
+    });
+    
+    // Descargar
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `eliminadas_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    
+    showToast('✅ Exportación completada', 'success');
+}
 // ============================================================
 // MODALES DE CONFIRMACIÓN Y ÉXITO
 // ============================================================
@@ -14118,6 +14272,9 @@ window.initVentas = async function(tab) {
         case 'devoluciones':
             await loadDevoluciones();
             break;
+         case 'eliminadas': 
+            await loadEliminadas();
+            break;
         default:
             break;
     }
@@ -14466,6 +14623,12 @@ window.deleteNota = deleteNota;
 window.getDescripcionPrincipal = getDescripcionPrincipal;
 window.badgeNuevo = badgeNuevo;
 
+
+window.loadEliminadas = loadEliminadas;
+window.renderEliminadas = renderEliminadas;
+window.limpiarFiltrosEliminadas = limpiarFiltrosEliminadas;
+window.verDetalleEliminada = verDetalleEliminada;
+window.exportarEliminadasCSV = exportarEliminadasCSV;
 
 // ============================================================
 // 14. FUNCIONES DE FORMATO

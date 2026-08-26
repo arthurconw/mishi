@@ -2750,15 +2750,18 @@
 
 {% block content %}
 <!-- TABS -->
+<!-- TABS -->
 <div class="tabs" id="tabsRow">
-    <button class="tab-btn active" data-tab="cotizaciones"> Cotizaciones</button>
-    <button class="tab-btn" data-tab="pedido_compra">PC Pedido Compras</button>
-     <button class="tab-btn" data-tab="validacion"> Validación</button> 
+    <button class="tab-btn active" data-tab="cotizaciones">📋 Cotizaciones</button>
+    <button class="tab-btn" data-tab="pedido_compra">📋 PC Pedido Compras</button>
+    <button class="tab-btn" data-tab="validacion">✅ Validación</button> 
     <button class="tab-btn" data-tab="despachar">🚚 Entregas</button>
     <button class="tab-btn" data-tab="guias">📦 Guías Remisión</button>
     <button class="tab-btn" data-tab="comprobantes">🧾 Facturas</button>
     <button class="tab-btn" data-tab="notas_credito">📝 Notas Crédito</button>
     <button class="tab-btn" data-tab="devoluciones">🔄 Devoluciones</button>
+    <!-- 👇 AGREGA ESTA LÍNEA -->
+    <button class="tab-btn" data-tab="eliminadas">🗑️ Eliminadas</button>
 </div>
 
 <!-- COTIZACIONES -->
@@ -3182,6 +3185,54 @@
         </div>
     </div>
 </div>
+
+<!-- ============================================================ -->
+<!-- ELIMINADAS (PAPELERA) -->
+<!-- ============================================================ -->
+<div id="eliminadas" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">🗑️ Historial de Eliminaciones</div>
+                <div class="master-subtitle">Cotizaciones anuladas y motivos de eliminación</div>
+            </div>
+            <div class="search-box">
+                <input id="eliminadasSearch" placeholder="Buscar por cotización / cliente / motivo..." oninput="renderEliminadas()">
+            </div>
+            <div class="clean-actions">
+                <button class="btn btn-secondary" onclick="exportData('eliminadas')">📥 Exportar</button>
+                <button class="btn btn-secondary" onclick="limpiarFiltrosEliminadas()">🧹 Limpiar filtros</button>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th style="width:5%;">Item</th>
+                        <th style="width:15%;">Fecha Eliminación</th>
+                        <th style="width:12%;">N° Cotización</th>
+                        <th style="width:15%;">Cliente</th>
+                        <th style="width:10%;">RUC</th>
+                        <th style="width:10%;">Total</th>
+                        <th style="width:18%;">Motivo</th>
+                        <th style="width:10%;">Eliminado por</th>
+                        <th style="width:10%;">Estado</th>
+                        <th style="width:8%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="eliminadasRows"></tbody>
+            </table>
+        </div>
+        <div class="footer-table">
+            <span id="eliminadasCount">Mostrando 0 de 0 registros</span>
+            <span><b>📌 Registro histórico de cotizaciones anuladas</b></span>
+        </div>
+    </div>
+</div>
+
+
+
+
 <!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS -->
 <div class="modal-bg" id="productSelectorModal">
     <div class="modal-bg" id="productSelectorModal" style="z-index: 999999;"></div>
@@ -3265,7 +3316,8 @@
                 guias: document.getElementById('guias'),
                 comprobantes: document.getElementById('comprobantes'),
                 notas_credito: document.getElementById('notas_credito'),
-                devoluciones: document.getElementById('devoluciones')
+                devoluciones: document.getElementById('devoluciones'),
+                  eliminadas: document.getElementById('eliminadas') 
             };
             
             // Función para cargar módulo con verificación
