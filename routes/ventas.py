@@ -470,7 +470,7 @@ def actualizar_guia_db(guia_id, data):
                 motivo_traslado = %s,
                 documento_asociado = %s,
                 orden_compra_cliente = %s,
-                factura = %s
+                factura = %s,
                 peso_total = %s,
                 items_json = %s,
                 observaciones = %s,
@@ -5660,6 +5660,9 @@ def api_transportistas_buscar():
         print(f"❌ Error en api_transportistas_buscar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+# ventas.py - Agregar esta nueva ruta
+
 @ventas_bp.route('/api/cotizaciones/eliminadas', methods=['GET'])
 @login_required
 def api_cotizaciones_eliminadas():
@@ -5668,7 +5671,8 @@ def api_cotizaciones_eliminadas():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # PostgreSQL: usar ILIKE para búsqueda insensible a mayúsculas
+        # Aquí va tu consulta SQL para obtener las cotizaciones anuladas.
+        # La consulta que usaste para renderizar la tabla debe ir aquí.
         cursor.execute("""
             SELECT 
                 c.id,
@@ -5687,21 +5691,18 @@ def api_cotizaciones_eliminadas():
             WHERE c.estado = 'Anulada' 
                 AND c.motivo_eliminacion IS NOT NULL
             ORDER BY c.fecha_eliminacion DESC
-            LIMIT 1000
         """)
         
         eliminadas = cursor.fetchall()
         cursor.close()
         conn.close()
         
-        # Formatear fechas (PostgreSQL devuelve datetime objects)
+        # Formatear fechas para que sean legibles
         for item in eliminadas:
             if item.get('fecha_eliminacion'):
-                if hasattr(item['fecha_eliminacion'], 'strftime'):
-                    item['fecha_eliminacion'] = item['fecha_eliminacion'].strftime('%d/%m/%Y %H:%M')
+                item['fecha_eliminacion'] = item['fecha_eliminacion'].strftime('%d/%m/%Y %H:%M')
             if item.get('fecha'):
-                if hasattr(item['fecha'], 'strftime'):
-                    item['fecha'] = item['fecha'].strftime('%d/%m/%Y')
+                item['fecha'] = item['fecha'].strftime('%d/%m/%Y')
         
         return jsonify({
             'success': True,
@@ -5711,9 +5712,8 @@ def api_cotizaciones_eliminadas():
         
     except Exception as e:
         print(f"❌ Error obteniendo cotizaciones eliminadas: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/api/cotizaciones/<int:id>', methods=['DELETE'])
 @login_required
