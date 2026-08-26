@@ -5628,6 +5628,59 @@ def api_transportistas_guardar():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+
+@ventas_bp.route('/api/cotizaciones/eliminadas', methods=['GET'])
+@login_required
+def api_cotizaciones_eliminadas():
+    """Obtiene el historial de cotizaciones eliminadas/anuladas"""
+    try:
+        print("🔍 Consultando cotizaciones eliminadas...")
+        
+        # ✅ CON JOIN CON LA COLUMNA CORRECTA
+        query = """
+            SELECT 
+                ce.id,
+                ce.cotizacion_id_original,
+                ce.numero_cotizacion as numero,
+                ce.cliente_razon_social as cliente,
+                ce.cliente_ruc as ruc,
+                ce.motivo_eliminacion as motivo,
+                ce.eliminado_en as fecha_eliminacion,
+                ce.eliminado_por,
+                ce.total,
+                ce.estado_anterior as estado,
+                u.nombre_completo as usuario_elimino
+            FROM cotizaciones_eliminadas ce
+            LEFT JOIN usuarios u ON u.id = ce.eliminado_por
+            ORDER BY ce.eliminado_en DESC
+        """
+        
+        eliminadas = db_query(query)
+        
+        print(f"📊 {len(eliminadas)} cotizaciones eliminadas encontradas")
+        
+        # Formatear fechas
+        for item in eliminadas:
+            if item.get('fecha_eliminacion'):
+                if hasattr(item['fecha_eliminacion'], 'strftime'):
+                    item['fecha_eliminacion'] = item['fecha_eliminacion'].strftime('%d/%m/%Y %H:%M')
+            
+            # Si no tiene usuario, poner 'Sistema'
+            if not item.get('usuario_elimino'):
+                item['usuario_elimino'] = 'Sistema'
+        
+        return jsonify({
+            'success': True,
+            'data': eliminadas,
+            'total': len(eliminadas)
+        })
+        
+    except Exception as e:
+        print(f"❌ Error obteniendo cotizaciones eliminadas: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @ventas_bp.route('/ventas/api/transportistas/buscar', methods=['GET'])
 @login_required
 def api_transportistas_buscar():
@@ -5660,60 +5713,6 @@ def api_transportistas_buscar():
         print(f"❌ Error en api_transportistas_buscar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-@ventas_bp.route('/api/cotizaciones/eliminadas', methods=['GET'])
-@login_required
-def api_cotizaciones_eliminadas():
-    """Obtiene el historial de cotizaciones eliminadas/anuladas"""
-    try:
-        print("🔍 Consultando cotizaciones eliminadas...")
-        
-        # ✅ CONSULTA CON JOIN A CLIENTES
-        query = """
-            SELECT 
-                c.id,
-                c.numero_cotizacion as numero,
-                c.fecha_creacion as fecha,
-                c.estado,
-                c.motivo_eliminacion as motivo,
-                c.fecha_eliminacion,
-                c.eliminado_por,
-                cl.razon_social as cliente,
-                cl.numero_documento as ruc,
-                c.total,
-                u.nombre_usuario as usuario_elimino
-            FROM cotizaciones c
-            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
-            LEFT JOIN usuarios u ON u.id = c.eliminado_por
-            WHERE c.estado = 'Anulada' 
-                AND c.motivo_eliminacion IS NOT NULL
-            ORDER BY c.fecha_eliminacion DESC
-        """
-        
-        eliminadas = db_query(query)
-        
-        print(f"📊 {len(eliminadas)} cotizaciones eliminadas encontradas")
-        
-        # Formatear fechas
-        for item in eliminadas:
-            if item.get('fecha_eliminacion'):
-                if hasattr(item['fecha_eliminacion'], 'strftime'):
-                    item['fecha_eliminacion'] = item['fecha_eliminacion'].strftime('%d/%m/%Y %H:%M')
-            if item.get('fecha'):
-                if hasattr(item['fecha'], 'strftime'):
-                    item['fecha'] = item['fecha'].strftime('%d/%m/%Y')
-        
-        return jsonify({
-            'success': True,
-            'data': eliminadas,
-            'total': len(eliminadas)
-        })
-        
-    except Exception as e:
-        print(f"❌ Error obteniendo cotizaciones eliminadas: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 @ventas_bp.route('/api/cotizaciones/eliminadas/<int:id>', methods=['GET'])
 @login_required
