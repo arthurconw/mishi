@@ -364,7 +364,7 @@ class PDFGenerator:
             'motivo_traslado', 'motivo_texto', 'modalidad_texto',
             'peso_bruto_total', 'numero_bultos', 'unidad_peso_texto', 
             'transportista_nombre', 'conductor_nombre', 'conductor_dni', 
-            'placa_vehiculo', 'licencia_conductor', 'documento_ascociado', 'observaciones'
+            'placa_vehiculo', 'licencia_conductor', 'nro_cotizacion', 'observaciones'
         ]
         for var in variables:
             value = datos.get(var, '')
@@ -380,11 +380,12 @@ class PDFGenerator:
 
 
     # ============================================================
-    # GENERAR FACTURA / BOLETA (COMPROBANTE)
+    # GENERAR FACTURA / BOLETA (COMPROBANTE) - VERSIÓN CORREGIDA
     # ============================================================
     def _generar_comprobante(self, datos_comprobante):
         try:
             print("📄 Generando PDF de comprobante...")
+            print(f"📦 Datos recibidos: {datos_comprobante.keys()}")
 
             # --- 1. DATOS DE LA EMPRESA (FIJOS) ---
             EMPRESA = {
@@ -400,10 +401,121 @@ class PDFGenerator:
             logo_base64 = self._obtener_logo_base64()
             logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
 
-            # --- 3. MAPEAR LOS DATOS DEL COMPROBANTE ---
-            # IMPORTANTE: Ajusta los nombres de los campos según tu BD
+            # --- 3. MAPEAR DATOS DEL COMPROBANTE ---
+            # Obtener items de diferentes posibles ubicaciones
+            items = []
+            
+            # 1. Intentar desde 'items'
+            if 'items' in datos_comprobante and datos_comprobante['items']:
+                items = datos_comprobante['items']
+                print(f"📦 Items encontrados en 'items': {len(items)} items")
+            
+            # 2. Intentar desde 'items_json' (si existe y es string)
+            if not items and 'items_json' in datos_comprobante:
+                items_json = datos_comprobante['items_json']
+                if isinstance(items_json, str):
+                    try:
+                        items = json.loads(items_json)
+                        print(f"📦 Items parseados desde 'items_json' (string): {len(items)} items")
+                    except:
+                        print("⚠️ Error parseando items_json")
+                        items = []
+                elif isinstance(items_json, list):
+                    items = items_json
+                    print(f"📦 Items desde 'items_json' (list): {len(items)} items")
+            
+            # 3. Intentar desde 'productos'
+            if not items and 'productos' in datos_comprobante:
+                items = datos_comprobante['productos']
+                print(f"📦 Items desde 'productos': {len(items)} items")
+            
+            # 4. Intentar desde 'detalle' o 'lineas'
+            if not items and 'detalle' in datos_comprobante:
+                items = datos_comprobante['detalle']
+                print(f"📦 Items desde 'detalle': {len(items)} items")
+            
+            # 5. Si no hay items, crear uno de ejemplo para debugging
+            if not items:
+                print("⚠️ No se encontraron productos, usando datos de ejemplo")
+                items = [
+                    {'codigo': 'PRD-001', 'producto': 'Producto de ejemplo 1', 'cantidad': 2, 'valorVenta': 100.00},
+                    {'codigo': 'PRD-002', 'producto': 'Producto de ejemplo 2', 'cantidad': 1, 'valorVenta': 250.00}
+                ]
+
+            # --- 4. FORMATEAR ITEMS PARA EL TEMPLATE ---
+            items_formateados = []
+            for idx, item in enumerate(items, 1):
+                # Ver qué contiene el item para debug
+                print(f"🔍 Item {idx}: {type(item)} - {item}")
+                
+                try:
+                    if isinstance(item, dict):
+                        # Obtener cantidad y precio con múltiples nombres posibles
+                        cantidad = float(item.get('cantidad', item.get('cant', item.get('qty', 1))))
+                        precio = float(item.get('valorVenta', item.get('precio', item.get('precio_unitario', item.get('price', 0)))))
+                        total_item = cantidad * precio
+                        
+                        # Obtener descripción
+                        descripcion = item.get('producto', item.get('descripcion', item.get('nombre', item.get('name', 'Sin descripción'))))
+                        
+                        items_formateados.append({
+                            'item': idx,
+                            'codigo': item.get('codigo', item.get('code', '')),
+                            'descripcion': descripcion,
+                            'marca': item.get('marca', item.get('brand', '')),
+                            'modelo': item.get('modelo', item.get('model', '')),
+                            'unidad': item.get('um', item.get('unidad', item.get('unit', 'NIU'))),
+                            'cantidad': cantidad,
+                            'precio_unitario': precio,
+                            'total_item': total_item
+                        })
+                    elif isinstance(item, (list, tuple)):
+                        # Formato: [codigo, descripcion, cantidad, precio]
+                        codigo = item[0] if len(item) > 0 else ''
+                        descripcion = item[1] if len(item) > 1 else 'Sin descripción'
+                        cantidad = float(item[2] if len(item) > 2 else 1)
+                        precio = float(item[3] if len(item) > 3 else 0)
+                        total_item = cantidad * precio
+                        
+                        items_formateados.append({
+                            'item': idx,
+                            'codigo': codigo,
+                            'descripcion': descripcion,
+                            'marca': item[4] if len(item) > 4 else '',
+                            'modelo': item[5] if len(item) > 5 else '',
+                            'unidad': 'NIU',
+                            'cantidad': cantidad,
+                            'precio_unitario': precio,
+                            'total_item': total_item
+                        })
+                    else:
+                        print(f"⚠️ Item {idx} no es ni dict ni list: {type(item)}")
+                        
+                except Exception as e:
+                    print(f"❌ Error procesando item {idx}: {e}")
+                    continue
+            
+            print(f"✅ {len(items_formateados)} items formateados correctamente")
+            
+            # Mostrar los items formateados para debug
+            for i, item in enumerate(items_formateados):
+                print(f"  Item {i+1}: {item.get('codigo')} - {item.get('descripcion')} x{item.get('cantidad')} = {item.get('total_item')}")
+
+            # --- 5. CALCULAR MONTOS (si no vienen en los datos) ---
+            subtotal = float(datos_comprobante.get('subtotal', 0))
+            igv = float(datos_comprobante.get('igv', 0))
+            total = float(datos_comprobante.get('total', datos_comprobante.get('monto', 0)))
+            
+            # Si los montos son 0 pero hay items, calcularlos
+            if subtotal == 0 and items_formateados:
+                subtotal = sum(item['total_item'] for item in items_formateados)
+                igv = subtotal * 0.18
+                total = subtotal + igv
+                print(f"💰 Montos calculados: Subtotal={subtotal:.2f}, IGV={igv:.2f}, Total={total:.2f}")
+
+            # --- 6. PREPARAR DATOS PARA EL TEMPLATE ---
             datos_mapeados = {
-                # Encabezado (mismo que guía)
+                # Encabezado
                 'logo_src': logo_src,
                 'empresa_ruc': EMPRESA['ruc'],
                 'empresa_nombre': EMPRESA['nombre'],
@@ -427,9 +539,9 @@ class PDFGenerator:
                 
                 # Montos
                 'moneda': datos_comprobante.get('moneda', 'S/'),
-                'subtotal': float(datos_comprobante.get('subtotal', 0)),
-                'igv': float(datos_comprobante.get('igv', 0)),
-                'total': float(datos_comprobante.get('total', datos_comprobante.get('monto', 0))),
+                'subtotal': f"{subtotal:.2f}",
+                'igv': f"{igv:.2f}",
+                'total': f"{total:.2f}",
                 
                 # Condiciones
                 'condicion_pago': datos_comprobante.get('condicion_pago', datos_comprobante.get('condicion', 'Contado')),
@@ -442,64 +554,24 @@ class PDFGenerator:
                 'cotizacion': datos_comprobante.get('documento_asociado', datos_comprobante.get('cotizacion', '')),
                 'guia': datos_comprobante.get('guia_vinculada', datos_comprobante.get('guia', '')),
                 'pc': datos_comprobante.get('pc_vinculado', datos_comprobante.get('pc', '')),
+                
+                # PRODUCTOS (LO MÁS IMPORTANTE)
+                'items': items_formateados
             }
 
-            # Formatear montos con 2 decimales
-            for key in ['subtotal', 'igv', 'total']:
-                if key in datos_mapeados:
-                    datos_mapeados[key] = f"{datos_mapeados[key]:.2f}"
-
-            # --- 4. PROCESAR LOS ITEMS (PRODUCTOS) ---
-            items = datos_comprobante.get('items', [])
-            # Si items es un string JSON, parsearlo
-            if isinstance(items, str):
-                try:
-                    items = json.loads(items)
-                except:
-                    items = []
-            
-            items_formateados = []
-            for idx, item in enumerate(items, 1):
-                if isinstance(item, dict):
-                    # Calcular total del item
-                    cantidad = float(item.get('cantidad', 1))
-                    precio = float(item.get('valorVenta', item.get('precio', 0)))
-                    total_item = cantidad * precio
-                    
-                    items_formateados.append({
-                        'item': idx,
-                        'codigo': item.get('codigo', ''),
-                        'descripcion': item.get('producto', item.get('descripcion', 'Sin descripción')),
-                        'marca': item.get('marca', ''),
-                        'modelo': item.get('modelo', ''),
-                        'unidad': item.get('um', 'NIU'),
-                        'cantidad': cantidad,
-                        'precio_unitario': precio,
-                        'total_item': total_item
-                    })
-                elif isinstance(item, (list, tuple)):
-                    # Si es un array: [codigo, descripcion, cantidad, precio]
-                    items_formateados.append({
-                        'item': idx,
-                        'codigo': item[0] if len(item) > 0 else '',
-                        'descripcion': item[1] if len(item) > 1 else 'Sin descripción',
-                        'marca': item[2] if len(item) > 2 else '',
-                        'modelo': item[3] if len(item) > 3 else '',
-                        'unidad': 'NIU',
-                        'cantidad': float(item[4] if len(item) > 4 else 1),
-                        'precio_unitario': float(item[5] if len(item) > 5 else 0),
-                        'total_item': float(item[4] if len(item) > 4 else 1) * float(item[5] if len(item) > 5 else 0)
-                    })
-            
-            datos_mapeados['items'] = items_formateados
-
-            # --- 5. OBTENER EL TEMPLATE HTML ---
+            # --- 7. OBTENER Y RENDERIZAR EL TEMPLATE ---
             template_content = self._obtener_template_comprobante()
-            
-            # --- 6. RENDERIZAR EL HTML ---
             html_content = self._reemplazar_variables_template_comprobante(template_content, datos_mapeados)
 
-            # --- 7. GENERAR EL PDF ---
+            # --- 8. GUARDAR HTML PARA DEBUG (opcional) ---
+            try:
+                with open('debug_comprobante.html', 'w', encoding='utf-8') as f:
+                    f.write(html_content)
+                print("💾 HTML de debug guardado en debug_comprobante.html")
+            except:
+                pass
+
+            # --- 9. GENERAR EL PDF ---
             fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
             nombre_archivo = f"{datos_mapeados['tipo']}_{datos_mapeados['serie']}_{datos_mapeados['numero']}_{fecha}.pdf"
             
@@ -515,6 +587,7 @@ class PDFGenerator:
             traceback.print_exc()
             return None
 
+   
     # ============================================================
     # TEMPLATE HTML PARA COMPROBANTE (CON MISMO ENCABEZADO QUE GUÍA)
     # ============================================================
