@@ -5668,6 +5668,7 @@ def api_cotizaciones_eliminadas():
     try:
         print("🔍 Consultando cotizaciones eliminadas...")
         
+        # ✅ CONSULTA CON JOIN A CLIENTES
         query = """
             SELECT 
                 c.id,
@@ -5677,11 +5678,12 @@ def api_cotizaciones_eliminadas():
                 c.motivo_eliminacion as motivo,
                 c.fecha_eliminacion,
                 c.eliminado_por,
-                c.cliente_razon_social as cliente,
-                c.cliente_ruc as ruc,
+                cl.razon_social as cliente,
+                cl.numero_documento as ruc,
                 c.total,
                 u.nombre_usuario as usuario_elimino
             FROM cotizaciones c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
             LEFT JOIN usuarios u ON u.id = c.eliminado_por
             WHERE c.estado = 'Anulada' 
                 AND c.motivo_eliminacion IS NOT NULL
@@ -5712,7 +5714,6 @@ def api_cotizaciones_eliminadas():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/api/cotizaciones/eliminadas/<int:id>', methods=['GET'])
 @login_required
