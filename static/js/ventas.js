@@ -10530,7 +10530,7 @@ function validateByHellen() {
 async function loadEliminadas() {
     console.log('🔄 Cargando historial de eliminaciones...');
     try {
-        const response = await apiFetch('/ventas/api/cotizaciones/eliminadas');
+        const response = await apiFetch('/api/cotizaciones/eliminadas');
         if (response.success) {
             eliminadasData = response.data || [];
             console.log(`✅ ${eliminadasData.length} registros de eliminaciones cargados`);
