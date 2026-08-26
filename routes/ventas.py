@@ -4269,6 +4269,7 @@ def preview_pdf_guia(guia_id):
                 modalidad_transporte, placa_vehiculo, conductor_dni,
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
+                orden_compra_cliente, factura,
                 peso_total, items_json, observaciones, estado_sunat,
                 creado_por, created_at, updated_at
             FROM guias_remision
@@ -4384,6 +4385,8 @@ def preparar_datos_guia_pdf(guia):
         'numero_bultos': int(guia.get('numero_bultos', 1)),
         'unidad_peso': guia.get('unidad_peso_bruto', 'KGM'),
         'documento_asociado': guia.get('documento_asociado', ''),
+        'orden_compra_cliente' : guia.get('orden_compra_cliente',''),
+        'factura' : guia.get('factura',''),
         'observaciones': guia.get('observaciones', ''),
         'items': items_formateados
     }
