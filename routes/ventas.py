@@ -5661,10 +5661,6 @@ def api_transportistas_buscar():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ============================================================
-# COTIZACIONES ELIMINADAS - RUTAS CORREGIDAS
-# ============================================================
-
 @ventas_bp.route('/api/cotizaciones/eliminadas', methods=['GET'])
 @login_required
 def api_cotizaciones_eliminadas():
@@ -5672,7 +5668,6 @@ def api_cotizaciones_eliminadas():
     try:
         print("🔍 Consultando cotizaciones eliminadas...")
         
-        # 🔽 USAR db_query EN VEZ DE get_db_connection
         query = """
             SELECT 
                 c.id,
@@ -5714,87 +5709,6 @@ def api_cotizaciones_eliminadas():
         
     except Exception as e:
         print(f"❌ Error obteniendo cotizaciones eliminadas: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@ventas_bp.route('/api/cotizaciones/<int:id>', methods=['DELETE'])
-@login_required
-def api_eliminar_cotizacion(id):
-    """Elimina (anula) una cotización con motivo"""
-    try:
-        data = request.get_json() or {}
-        motivo = data.get('motivo', 'Sin motivo especificado')
-        usuario_id = session.get('usuario_id', session.get('user_id', 1))
-        usuario_nombre = session.get('nombre_usuario', session.get('usuario', 'Sistema'))
-        
-        print(f"🗑️ Eliminando cotización ID: {id}")
-        print(f"📝 Motivo: {motivo}")
-        print(f"👤 Usuario: {usuario_nombre} (ID: {usuario_id})")
-        
-        # 1. Verificar si la cotización existe
-        check_query = "SELECT * FROM cotizaciones WHERE id = %s"
-        cotizacion = db_query(check_query, (id,))
-        
-        if not cotizacion:
-            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
-        
-        cot = cotizacion[0]
-        
-        # Verificar que no esté ya anulada
-        if cot.get('estado') == 'Anulada':
-            return jsonify({'success': False, 'error': 'Esta cotización ya fue anulada'}), 400
-        
-        # 2. Actualizar la cotización a estado "Anulada" y guardar motivo
-        update_query = """
-            UPDATE cotizaciones 
-            SET 
-                estado = 'Anulada',
-                motivo_eliminacion = %s,
-                fecha_eliminacion = NOW(),
-                eliminado_por = %s
-            WHERE id = %s
-            RETURNING id, estado, motivo_eliminacion, fecha_eliminacion
-        """
-        
-        result = db_query(update_query, (motivo, usuario_id, id))
-        
-        print(f"✅ Resultado UPDATE: {result}")
-        
-        # 3. Registrar en log de auditoría (opcional)
-        try:
-            log_query = """
-                INSERT INTO logs_auditoria (tabla, registro_id, accion, usuario_id, detalles, fecha)
-                VALUES (%s, %s, %s, %s, %s, NOW())
-            """
-            db_execute(log_query, (
-                'cotizaciones',
-                id,
-                'ANULACION',
-                usuario_id,
-                json.dumps({
-                    'motivo': motivo,
-                    'usuario': usuario_nombre,
-                    'numero_cotizacion': cot.get('numero_cotizacion')
-                })
-            ))
-        except Exception as log_error:
-            print(f"⚠️ Error registrando log: {log_error}")
-        
-        return jsonify({
-            'success': True,
-            'message': 'Cotización anulada correctamente',
-            'data': {
-                'id': id,
-                'motivo': motivo,
-                'fecha_eliminacion': datetime.now().strftime('%d/%m/%Y %H:%M'),
-                'usuario': usuario_nombre
-            }
-        })
-        
-    except Exception as e:
-        print(f"❌ Error eliminando cotización: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -5846,138 +5760,4 @@ def api_ver_eliminada(id):
         print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@ventas_bp.route('/api/cotizaciones/<int:id>', methods=['DELETE'])
-@login_required
-def api_eliminar_cotizacion(id):
-    """Elimina (anula) una cotización con motivo"""
-    try:
-        data = request.get_json() or {}
-        motivo = data.get('motivo', 'Sin motivo especificado')
-        usuario_id = session.get('user_id', 1)
-        usuario_nombre = session.get('nombre_usuario', 'Sistema')
-        
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        # Verificar si la cotización existe
-        cursor.execute("SELECT * FROM cotizaciones WHERE id = %s", (id,))
-        cotizacion = cursor.fetchone()
-        
-        if not cotizacion:
-            cursor.close()
-            conn.close()
-            return jsonify({'success': False, 'error': 'Cotización no encontrada'}), 404
-        
-        # Verificar que no esté ya anulada
-        if cotizacion.get('estado') == 'Anulada':
-            cursor.close()
-            conn.close()
-            return jsonify({'success': False, 'error': 'Esta cotización ya fue anulada'}), 400
-        
-        # Actualizar la cotización a estado "Anulada" y guardar motivo
-        # PostgreSQL usa NOW() o CURRENT_TIMESTAMP
-        cursor.execute("""
-            UPDATE cotizaciones 
-            SET 
-                estado = 'Anulada',
-                motivo_eliminacion = %s,
-                fecha_eliminacion = CURRENT_TIMESTAMP,
-                eliminado_por = %s
-            WHERE id = %s
-        """, (motivo, usuario_id, id))
-        
-        conn.commit()
-        
-        # Registrar en un log de auditoría
-        cursor.execute("""
-            INSERT INTO logs_auditoria (tabla, registro_id, accion, usuario_id, detalles, fecha)
-            VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
-        """, (
-            'cotizaciones', 
-            id, 
-            'ANULACION', 
-            usuario_id, 
-            json.dumps({
-                'motivo': motivo,
-                'usuario': usuario_nombre,
-                'numero_cotizacion': cotizacion.get('numero_cotizacion')
-            })
-        ))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Cotización anulada correctamente',
-            'data': {
-                'id': id,
-                'motivo': motivo,
-                'fecha_eliminacion': datetime.now().strftime('%d/%m/%Y %H:%M'),
-                'usuario': usuario_nombre
-            }
-        })
-        
-    except Exception as e:
-        print(f"❌ Error eliminando cotización: {e}")
-        import traceback
-        traceback.print_exc()
-        if conn:
-            conn.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@ventas_bp.route('/api/cotizaciones/eliminadas/<int:id>', methods=['GET'])
-@login_required
-def api_ver_eliminada(id):
-    """Obtiene el detalle de una cotización eliminada"""
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        cursor.execute("""
-            SELECT 
-                c.id,
-                c.numero_cotizacion as numero,
-                c.fecha_creacion as fecha,
-                c.estado,
-                c.motivo_eliminacion as motivo,
-                c.fecha_eliminacion,
-                c.eliminado_por,
-                c.cliente_razon_social as cliente,
-                c.cliente_ruc as ruc,
-                c.cliente_direccion as direccion,
-                c.cliente_contacto as contacto,
-                c.cliente_telefono as telefono,
-                c.cliente_email as email,
-                c.condicion_pago,
-                c.tiempo_entrega,
-                c.validez_oferta,
-                c.subtotal,
-                c.igv,
-                c.total,
-                c.productos,
-                u.nombre_usuario as usuario_elimino
-            FROM cotizaciones c
-            LEFT JOIN usuarios u ON u.id = c.eliminado_por
-            WHERE c.id = %s AND c.estado = 'Anulada'
-        """, (id,))
-        
-        registro = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        
-        if not registro:
-            return jsonify({'success': False, 'error': 'Registro no encontrado'}), 404
-        
-        return jsonify({
-            'success': True,
-            'data': registro
-        })
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
