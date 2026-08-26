@@ -4901,9 +4901,7 @@ async function openComprobanteModalWithData(id, cotizacion) {
     if (!pedidosData || pedidosData.length === 0) {
         await loadPedidos();
     }
-    if (!comprobantesData || comprobantesData.length === 0) {
-        await loadComprobantes();
-    }
+    
     
     const cotOptions = cotizacionesData.map(q => 
         `<option value="${q.numero}" ${q.numero === cotizacion.numero_cotizacion ? 'selected' : ''}>${q.numero} - ${q.razon || 'Sin cliente'}</option>`
@@ -10250,6 +10248,10 @@ function openNotaCreditoModal(id = null) {
     
     const formContainer = document.getElementById('notaCreditoForm');
     if (!formContainer) return;
+
+    if (!comprobantesData || comprobantesData.length === 0) {
+        await loadComprobantes();
+    }
     
     const compOptions = comprobantesData.map(c => 
         `<option value="${c.serie}-${c.numero}" data-comp-id="${c.id}">${c.serie}-${c.numero} - ${c.cliente || 'Sin cliente'}</option>`
