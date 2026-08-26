@@ -10245,15 +10245,17 @@ function openNotaCreditoModal(id = null) {
     const isEdit = id !== null;
     const title = isEdit ? 'Editar nota de crédito' : 'Nueva nota de crédito';
     document.getElementById('notaCreditoModalTitle').textContent = title;
-    
+
     const formContainer = document.getElementById('notaCreditoForm');
     if (!formContainer) return;
 
-    
-    
-    const compOptions = comprobantesData.map(c => 
-        `<option value="${c.serie}-${c.numero}" data-comp-id="${c.id}">${c.serie}-${c.numero} - ${c.cliente || 'Sin cliente'}</option>`
-    ).join('');
+    // 🔽 Asegurar que comprobantesData esté cargado
+    const render = () => {
+        console.log('📦 comprobantesData:', JSON.stringify(comprobantesData.slice(0,3), null, 2));
+        const compOptions = (comprobantesData || []).map(c => {
+            const nombreCliente = c.cliente || c.cliente_nombre || c.razon_social || c.razon || 'Sin cliente';
+            return `<option value="${c.serie}-${c.numero}" data-comp-id="${c.id}">${c.serie}-${c.numero} - ${nombreCliente}</option>`;
+        }).join('');
     
     formContainer.innerHTML = `
         <div class="ficha-section">
@@ -10311,9 +10313,13 @@ function openNotaCreditoModal(id = null) {
     `;
     
     document.getElementById('notaCreditoModal').classList.add('show');
+        if (isEdit) setTimeout(() => cargarNotaCreditoParaEditar(id), 50);
+    };
 
-    if (isEdit) {
-        setTimeout(() => cargarNotaCreditoParaEditar(id), 50);
+    if (!comprobantesData || comprobantesData.length === 0) {
+        loadComprobantes().then(render);
+    } else {
+        render();
     }
 }
 
@@ -10339,9 +10345,9 @@ function cargarDatosComprobanteAfectado(valorSeleccionado) {
         if (el) el.value = value ?? '';
     };
 
-    setValue('notaCliente', comp.cliente);      // 🔧 antes: comp.cliente_nombre
-    setValue('notaRuc', comp.ruc);              // 🔧 antes: comp.cliente_numero_doc
-    setValue('notaMonto', comp.monto);          // 🔧 antes: comp.total
+    setValue('notaCliente', comp.cliente || comp.cliente_nombre || comp.razon_social || '');
+    setValue('notaRuc', comp.ruc || comp.cliente_numero_doc || '');
+    setValue('notaMonto', comp.monto || comp.total || 0);
 
     showToast(`✅ Datos de ${comp.serie}-${comp.numero} cargados`, 'success');
 }
