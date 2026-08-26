@@ -364,7 +364,7 @@ class PDFGenerator:
             'motivo_traslado', 'motivo_texto', 'modalidad_texto',
             'peso_bruto_total', 'numero_bultos', 'unidad_peso_texto', 
             'transportista_nombre', 'conductor_nombre', 'conductor_dni', 
-            'placa_vehiculo', 'licencia_conductor', 'nro_cotizacion', 'observaciones'
+            'placa_vehiculo', 'licencia_conductor', 'documento_ascociado', 'observaciones'
         ]
         for var in variables:
             value = datos.get(var, '')
