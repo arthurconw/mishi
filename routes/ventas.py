@@ -402,6 +402,7 @@ def guardar_guia_db(data):
                 modalidad_transporte, placa_vehiculo, conductor_dni,
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
+                orden_compra_cliente, factura,
                 peso_total, items_json, observaciones, estado_sunat,
                 creado_por
             ) VALUES (
@@ -432,6 +433,8 @@ def guardar_guia_db(data):
             data.get('transportista_nombre'),
             data.get('motivo_traslado', 'VENTA'),
             data.get('documento_asociado'),
+            data.get('orden_compra_cliente'),
+            data.get('factura'),
             float(data.get('peso_total', 0)),
             data.get('items_json'),
             data.get('observaciones'),
@@ -1808,6 +1811,7 @@ def api_guias_guardar():
                 modalidad_transporte, placa_vehiculo, conductor_dni,
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
+                orden_compra_cliente, factura,
                 peso_total, items_json, observaciones, estado_sunat,
                 creado_por, created_at
             ) VALUES (
@@ -1845,6 +1849,8 @@ def api_guias_guardar():
             data.get('transportista_nombre', ''),
             data.get('motivo_traslado', '01'),
             data.get('documento_asociado', ''),
+            data.get('orden_compra_cliente',''),
+            data.get('factura',''),
             float(data.get('peso_total', 0)),
             items_json,
             data.get('observaciones', ''),
@@ -4016,6 +4022,7 @@ def generar_pdf_guia_endpoint(guia_id):
                 modalidad_transporte, placa_vehiculo, conductor_dni,
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
+                orden_compra_cliente, factura,
                 peso_total, items_json, observaciones, estado_sunat,
                 creado_por, created_at, updated_at
             FROM guias_remision
@@ -4175,6 +4182,8 @@ def generar_pdf_guia_endpoint(guia_id):
             'unidad_peso': guia.get('unidad_peso_bruto', 'KGM'),
             'orden_compra_cliente': guia.get('orden_compra_cliente', ''),
             'documento_asociado': guia.get('documento_asociado', ''),
+            'orden_compra_cliente': guia.get('orden_compra_cliente',''),
+            'factura': guia.get('factura',''),
             'observaciones': guia.get('observaciones', ''),
             
             # ============================================================

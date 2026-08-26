@@ -1,6 +1,7 @@
 # pdf_generator.py - VERSIÓN COMPLETA CORREGIDA
 
 import os
+from jinja2 import Template
 from weasyprint import HTML
 from datetime import datetime
 import json
@@ -348,9 +349,11 @@ class PDFGenerator:
         return filas
 
     def _reemplazar_variables_template_guia(self, template, datos):
-        html = template
-        logo_src = datos.get('logo_src', '')
-        html = html.replace('{{ logo_src }}', logo_src)
+        try:
+            return Template(template).render(**datos)
+        except Exception as e:
+            print(f"❌ Error renderizando template Jinja2 de guía: {e}")
+            return template
         
         variables = [
             'ruc_remitente', 'remitente_nombre', 'remitente_direccion',

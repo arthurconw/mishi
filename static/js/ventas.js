@@ -3033,6 +3033,8 @@ async function saveGuia(estado) {
 
             motivo_traslado: document.getElementById('guiaMotivo')?.value || 'VENTA',
             documento_asociado: document.getElementById('guiaCotizacion')?.value || '',
+            orden_compra_cliente: document.getElementById('guiaOrdenCompra')?.value || '',
+            factura: document.getElementById('guiaFactura')?.value || '',
             peso_total: parseFloat(document.getElementById('guiaPeso')?.value || 0),
             observaciones: document.getElementById('guiaObservaciones')?.value || '',
             items: productos
