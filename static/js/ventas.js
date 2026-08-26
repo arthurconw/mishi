@@ -10249,7 +10249,7 @@ function openNotaCreditoModal(id = null) {
     if (!formContainer) return;
     
     const compOptions = comprobantesData.map(c => 
-        `<option value="${c.serie}-${c.numero}" data-comp-id="${c.id}">${c.serie}-${c.numero} - ${c.cliente_nombre || 'Sin cliente'}</option>`
+        `<option value="${c.serie}-${c.numero}" data-comp-id="${c.id}">${c.serie}-${c.numero} - ${c.cliente || 'Sin cliente'}</option>`
     ).join('');
     
     formContainer.innerHTML = `
