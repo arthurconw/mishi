@@ -338,6 +338,7 @@ def obtener_guias_db():
                 modalidad_transporte, placa_vehiculo, conductor_dni,
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
+                orden_compra_cliente, factura,
                 peso_total, items_json, observaciones, estado_sunat,
                 cdr_response, sunat_response, creado_por, created_at, updated_at
             FROM guias_remision
@@ -360,6 +361,7 @@ def obtener_guia_por_id_db(guia_id):
                 modalidad_transporte, placa_vehiculo, conductor_dni,
                 conductor_nombre, licencia_conductor, transportista_ruc,
                 transportista_nombre, motivo_traslado, documento_asociado,
+                orden_compra_cliente, factura,
                 peso_total, items_json, observaciones, estado_sunat,
                 cdr_response, sunat_response, creado_por
             FROM guias_remision
@@ -407,7 +409,7 @@ def guardar_guia_db(data):
                 creado_por
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s
             )
             RETURNING id, numero
         """
@@ -467,6 +469,8 @@ def actualizar_guia_db(guia_id, data):
                 transportista_nombre = %s,
                 motivo_traslado = %s,
                 documento_asociado = %s,
+                orden_compra_cliente = %s,
+                factura = %s
                 peso_total = %s,
                 items_json = %s,
                 observaciones = %s,
@@ -489,6 +493,8 @@ def actualizar_guia_db(guia_id, data):
             data.get('transportista_nombre'),
             data.get('motivo_traslado', 'VENTA'),
             data.get('documento_asociado'),
+            data.get('orden_compra_cliente'),
+            data.get('factura'),
             float(data.get('peso_total', 0)),
             data.get('items_json'),
             data.get('observaciones'),
