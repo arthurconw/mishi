@@ -4901,6 +4901,9 @@ async function openComprobanteModalWithData(id, cotizacion) {
     if (!pedidosData || pedidosData.length === 0) {
         await loadPedidos();
     }
+    if (!comprobantesData || comprobantesData.length === 0) {
+        await loadComprobantes();
+    }
     
     const cotOptions = cotizacionesData.map(q => 
         `<option value="${q.numero}" ${q.numero === cotizacion.numero_cotizacion ? 'selected' : ''}>${q.numero} - ${q.razon || 'Sin cliente'}</option>`
