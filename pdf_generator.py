@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN COMPLETA CORREGIDA CON QR PARA FACTURAS
+# pdf_generator.py - VERSIÓN COMPLETA CORREGIDA CON QR Y DOCUMENTOS RELACIONADOS EN FACTURAS
 
 import os
 from jinja2 import Template
@@ -348,7 +348,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return ""
 
     # ============================================================
-    # NUEVO: GENERAR QR PARA COMPROBANTE (FACTURA/BOLETA)
+    # GENERAR QR PARA COMPROBANTE (FACTURA/BOLETA)
     # ============================================================
     def _generar_qr_comprobante(self, datos_comprobante):
         """Genera un código QR para el comprobante (factura/boleta)"""
@@ -356,7 +356,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             import qrcode
             from io import BytesIO
             
-            # Datos para el QR
             qr_data = {
                 'tipo': datos_comprobante.get('tipo_comprobante', datos_comprobante.get('tipo', 'Factura')),
                 'serie': datos_comprobante.get('serie', ''),
@@ -403,7 +402,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return template
 
     # ============================================================
-    # GENERAR FACTURA / BOLETA (COMPROBANTE) - CON QR
+    # GENERAR FACTURA / BOLETA (COMPROBANTE) - CON QR Y DOCUMENTOS RELACIONADOS
     # ============================================================
     def _generar_comprobante(self, datos_comprobante):
         try:
@@ -427,12 +426,10 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             # --- 3. MAPEAR DATOS DEL COMPROBANTE ---
             items = []
             
-            # 1. Intentar desde 'items'
             if 'items' in datos_comprobante and datos_comprobante['items']:
                 items = datos_comprobante['items']
                 print(f"📦 Items encontrados en 'items': {len(items)} items")
             
-            # 2. Intentar desde 'items_json' (si existe y es string)
             if not items and 'items_json' in datos_comprobante:
                 items_json = datos_comprobante['items_json']
                 if isinstance(items_json, str):
@@ -446,17 +443,14 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                     items = items_json
                     print(f"📦 Items desde 'items_json' (list): {len(items)} items")
             
-            # 3. Intentar desde 'productos'
             if not items and 'productos' in datos_comprobante:
                 items = datos_comprobante['productos']
                 print(f"📦 Items desde 'productos': {len(items)} items")
             
-            # 4. Intentar desde 'detalle' o 'lineas'
             if not items and 'detalle' in datos_comprobante:
                 items = datos_comprobante['detalle']
                 print(f"📦 Items desde 'detalle': {len(items)} items")
             
-            # 5. Si no hay items, crear uno de ejemplo para debugging
             if not items:
                 print("⚠️ No se encontraron productos, usando datos de ejemplo")
                 items = [
@@ -528,7 +522,13 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             qr_base64 = self._generar_qr_comprobante(datos_comprobante)
             print(f"📱 QR generado: {'Sí' if qr_base64 else 'No'}")
 
-            # --- 7. PREPARAR DATOS PARA EL TEMPLATE ---
+            # --- 7. OBTENER DOCUMENTOS RELACIONADOS ---
+            # Igual que en la guía, buscamos los documentos relacionados
+            orden_compra_cliente = datos_comprobante.get('orden_compra_cliente', '')
+            factura_relacionada = datos_comprobante.get('factura_relacionada', '')
+            nro_cotizacion = datos_comprobante.get('documento_asociado', datos_comprobante.get('cotizacion', ''))
+
+            # --- 8. PREPARAR DATOS PARA EL TEMPLATE ---
             datos_mapeados = {
                 # Encabezado
                 'logo_src': logo_src,
@@ -565,10 +565,12 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 # Observaciones
                 'observaciones': datos_comprobante.get('observaciones', ''),
                 
-                # Documentos relacionados
-                'cotizacion': datos_comprobante.get('documento_asociado', datos_comprobante.get('cotizacion', '')),
-                'guia': datos_comprobante.get('guia_vinculada', datos_comprobante.get('guia', '')),
-                'pc': datos_comprobante.get('pc_vinculado', datos_comprobante.get('pc', '')),
+                # ============================================================
+                # DOCUMENTOS RELACIONADOS - IGUAL QUE EN LA GUÍA
+                # ============================================================
+                'orden_compra_cliente': orden_compra_cliente or '—',
+                'factura_relacionada': factura_relacionada or '—',
+                'nro_cotizacion': nro_cotizacion or '—',
                 
                 # PRODUCTOS
                 'items': items_formateados,
@@ -577,11 +579,11 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'qr_base64': qr_base64
             }
 
-            # --- 8. OBTENER Y RENDERIZAR EL TEMPLATE ---
+            # --- 9. OBTENER Y RENDERIZAR EL TEMPLATE ---
             template_content = self._obtener_template_comprobante()
             html_content = self._reemplazar_variables_template_comprobante(template_content, datos_mapeados)
 
-            # --- 9. GUARDAR HTML PARA DEBUG (opcional) ---
+            # --- 10. GUARDAR HTML PARA DEBUG ---
             try:
                 with open('debug_comprobante.html', 'w', encoding='utf-8') as f:
                     f.write(html_content)
@@ -589,7 +591,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             except:
                 pass
 
-            # --- 10. GENERAR EL PDF ---
+            # --- 11. GENERAR EL PDF ---
             fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
             nombre_archivo = f"{datos_mapeados['tipo']}_{datos_mapeados['serie']}_{datos_mapeados['numero']}_{fecha}.pdf"
             
@@ -606,7 +608,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return None
 
     # ============================================================
-    # TEMPLATE HTML PARA COMPROBANTE (CON QR)
+    # TEMPLATE HTML PARA COMPROBANTE (CON QR Y DOCUMENTOS RELACIONADOS)
     # ============================================================
     def _obtener_template_comprobante(self):
         return """<!DOCTYPE html>
@@ -767,6 +769,39 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         .totales-box .linea .value-total {
             font-weight: bold;
         }
+        
+        /* ============================================================
+           DOCUMENTOS RELACIONADOS - IGUAL QUE EN LA GUÍA
+           ============================================================ */
+        .referencias {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 6px 12px;
+            margin-bottom: 6px;
+            background: #f9f9f9;
+        }
+        .referencias-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            padding: 6px 0;
+        }
+        .ref-item {
+            text-align: center;
+        }
+        .ref-item .ref-label {
+            font-weight: bold;
+            display: block;
+            font-size: 7.5px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .ref-item .ref-value {
+            font-size: 9px;
+            font-weight: 600;
+        }
+        
         .qr-container {
             text-align: center;
             margin: 8px 0 5px 0;
@@ -856,20 +891,25 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         </div>
     </div>
 
-    <!-- DOCUMENTOS RELACIONADOS -->
+    <!-- ============================================================
+         DOCUMENTOS RELACIONADOS - IGUAL QUE EN LA GUÍA
+         ============================================================ -->
     <div class="seccion">
         <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
-        <div class="info-cliente" style="background:#f9f9f9; padding:4px 12px;">
-            <div class="documentos-relacionados">
-                {% if cotizacion %}
-                <div class="doc-item"><span class="doc-label">Cotización:</span> {{ cotizacion }}</div>
-                {% endif %}
-                {% if guia %}
-                <div class="doc-item"><span class="doc-label">Guía:</span> {{ guia }}</div>
-                {% endif %}
-                {% if pc %}
-                <div class="doc-item"><span class="doc-label">PC:</span> {{ pc }}</div>
-                {% endif %}
+        <div class="referencias">
+            <div class="referencias-grid">
+                <div class="ref-item">
+                    <span class="ref-label">NRO ORDEN DE COMPRA</span>
+                    <span class="ref-value">{{ orden_compra_cliente or '—' }}</span>
+                </div>
+                <div class="ref-item">
+                    <span class="ref-label">NRO DE FACTURA</span>
+                    <span class="ref-value">{{ factura_relacionada or '—' }}</span>
+                </div>
+                <div class="ref-item">
+                    <span class="ref-label">NRO DE COTIZACION</span>
+                    <span class="ref-value">{{ nro_cotizacion or '—' }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -955,7 +995,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return Template(template).render(**datos)
         except Exception as e:
             print(f"❌ Error renderizando template Jinja2 de comprobante: {e}")
-            # Fallback: reemplazo manual
             html = template
             
             variables = {
@@ -982,16 +1021,15 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'condicion_pago': datos.get('condicion_pago', 'Contado'),
                 'estado': datos.get('estado', 'Borrador'),
                 'observaciones': datos.get('observaciones', ''),
-                'cotizacion': datos.get('cotizacion', ''),
-                'guia': datos.get('guia', ''),
-                'pc': datos.get('pc', ''),
+                'orden_compra_cliente': datos.get('orden_compra_cliente', '—'),
+                'factura_relacionada': datos.get('factura_relacionada', '—'),
+                'nro_cotizacion': datos.get('nro_cotizacion', '—'),
                 'qr_base64': datos.get('qr_base64', ''),
             }
             
             for key, value in variables.items():
                 html = html.replace(f"{{{{ {key} }}}}", str(value))
             
-            # Procesar items manualmente
             items_html = ""
             for item in datos.get('items', []):
                 items_html += f"""
