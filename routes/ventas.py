@@ -3833,7 +3833,15 @@ def api_cotizaciones_generar_pdf(id):
         .total-line span:first-child { white-space: nowrap; }
         .total-line .numero-formateado { font-weight: 500; white-space: nowrap; }
         .total-final { border-top: 2px solid #D32F2F; padding-top: 5px; margin-top: 5px; font-weight: bold; font-size: 11px; color: #D32F2F; }
-        .seccion-importante { margin: 8px 0; padding: 5px 10px; background: #FFF8E1; border: 1px solid #FFC107; border-radius: 4px; font-size: 7.5px; color: #856404; }
+      .seccion-importante { 
+    margin: 8px 0; 
+    padding: 5px 10px; 
+    background: transparent;   /* ← FONDO TRANSPARENTE */
+    border: none;              /* ← SIN BORDE */
+    border-radius: 4px; 
+    font-size: 7.5px; 
+    color: #333;               /* ← TEXTO MÁS OSCURO */
+}
         .seccion-importante strong { color: #D32F2F; }
         .cuentas-bancarias { margin-top: 10px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #D32F2F; border-radius: 6px; font-size: 7.5px; }
         .cuentas-bancarias h3 { color: #D32F2F; border-bottom: 1px solid #D32F2F; padding-bottom: 3px; font-size: 9px; margin-top: 0; margin-bottom: 6px; }
