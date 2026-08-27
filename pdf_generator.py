@@ -522,11 +522,15 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             qr_base64 = self._generar_qr_comprobante(datos_comprobante)
             print(f"📱 QR generado: {'Sí' if qr_base64 else 'No'}")
 
-            # --- 7. OBTENER DOCUMENTOS RELACIONADOS ---
-            # Igual que en la guía, buscamos los documentos relacionados
+            # ============================================================
+            # --- 7. OBTENER DOCUMENTOS RELACIONADOS - IGUAL QUE EN LA GUÍA ---
+            # ============================================================
+            # Estos son los mismos campos que se usan en la guía
             orden_compra_cliente = datos_comprobante.get('orden_compra_cliente', '')
-            factura_relacionada = datos_comprobante.get('factura_relacionada', '')
-            nro_cotizacion = datos_comprobante.get('documento_asociado', datos_comprobante.get('cotizacion', ''))
+            factura_relacionada = datos_comprobante.get('factura', '')  # ← CAMBIADO: usar 'factura' igual que en guía
+            nro_cotizacion = datos_comprobante.get('nro_cotizacion', datos_comprobante.get('documento_asociado', datos_comprobante.get('cotizacion', '')))
+
+            print(f"📋 Documentos relacionados - OC: {orden_compra_cliente}, Factura: {factura_relacionada}, Cotización: {nro_cotizacion}")
 
             # --- 8. PREPARAR DATOS PARA EL TEMPLATE ---
             datos_mapeados = {
@@ -569,7 +573,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 # DOCUMENTOS RELACIONADOS - IGUAL QUE EN LA GUÍA
                 # ============================================================
                 'orden_compra_cliente': orden_compra_cliente or '—',
-                'factura_relacionada': factura_relacionada or '—',
+                'factura_relacionada': factura_relacionada or '—',  # ← CAMBIADO: ahora usa 'factura_relacionada'
                 'nro_cotizacion': nro_cotizacion or '—',
                 
                 # PRODUCTOS
