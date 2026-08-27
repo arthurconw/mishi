@@ -523,14 +523,40 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             print(f"📱 QR generado: {'Sí' if qr_base64 else 'No'}")
 
             # ============================================================
-            # --- 7. OBTENER DOCUMENTOS RELACIONADOS - IGUAL QUE EN LA GUÍA ---
+            # --- 7. OBTENER DOCUMENTOS RELACIONADOS - BUSCANDO EN MÚLTIPLES NOMBRES ---
             # ============================================================
-            # Estos son los mismos campos que se usan en la guía
-            orden_compra_cliente = datos_comprobante.get('orden_compra_cliente', '')
-            factura_relacionada = datos_comprobante.get('factura', '')  # ← CAMBIADO: usar 'factura' igual que en guía
-            nro_cotizacion = datos_comprobante.get('nro_cotizacion', datos_comprobante.get('documento_asociado', datos_comprobante.get('cotizacion', '')))
+            # Orden de compra - buscar en varios nombres posibles
+            orden_compra_cliente = (
+                datos_comprobante.get('orden_compra_cliente', '') or
+                datos_comprobante.get('orden_compra', '') or
+                datos_comprobante.get('oc_cliente', '') or
+                datos_comprobante.get('oc', '') or
+                datos_comprobante.get('nro_orden_compra', '')
+            )
+            
+            # Factura relacionada - buscar en varios nombres posibles
+            factura_relacionada = (
+                datos_comprobante.get('factura', '') or
+                datos_comprobante.get('factura_relacionada', '') or
+                datos_comprobante.get('factura_vinculada', '') or
+                datos_comprobante.get('comprobante_asociado', '') or
+                datos_comprobante.get('nro_factura', '')
+            )
+            
+            # Cotización relacionada - buscar en varios nombres posibles
+            nro_cotizacion = (
+                datos_comprobante.get('nro_cotizacion', '') or
+                datos_comprobante.get('cotizacion', '') or
+                datos_comprobante.get('cotizacion_numero', '') or
+                datos_comprobante.get('numero_cotizacion', '') or
+                datos_comprobante.get('documento_asociado', '') or
+                datos_comprobante.get('cotizacion_asociada', '')
+            )
 
-            print(f"📋 Documentos relacionados - OC: {orden_compra_cliente}, Factura: {factura_relacionada}, Cotización: {nro_cotizacion}")
+            print(f"📋 Documentos relacionados encontrados:")
+            print(f"   - OC: '{orden_compra_cliente}'")
+            print(f"   - Factura: '{factura_relacionada}'")
+            print(f"   - Cotización: '{nro_cotizacion}'")
 
             # --- 8. PREPARAR DATOS PARA EL TEMPLATE ---
             datos_mapeados = {
@@ -570,10 +596,10 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'observaciones': datos_comprobante.get('observaciones', ''),
                 
                 # ============================================================
-                # DOCUMENTOS RELACIONADOS - IGUAL QUE EN LA GUÍA
+                # DOCUMENTOS RELACIONADOS - CON LOS VALORES ENCONTRADOS
                 # ============================================================
                 'orden_compra_cliente': orden_compra_cliente or '—',
-                'factura_relacionada': factura_relacionada or '—',  # ← CAMBIADO: ahora usa 'factura_relacionada'
+                'factura_relacionada': factura_relacionada or '—',
                 'nro_cotizacion': nro_cotizacion or '—',
                 
                 # PRODUCTOS
