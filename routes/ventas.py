@@ -4931,17 +4931,14 @@ def api_cotizaciones_preview_pdf(id):
     try:
         print(f"📄 Generando vista previa PDF para cotización ID: {id}")
         
-        # Reutilizar la misma lógica que genera_pdf pero sin forzar descarga
         from datetime import datetime
-        import tempfile
         from flask import send_file, render_template_string
         from weasyprint import HTML
         
         # ============================================================
-        # FUNCIÓN PARA OBTENER LOGO EN BASE64 - MÚLTIPLES RUTAS
+        # FUNCIÓN PARA OBTENER LOGO EN BASE64
         # ============================================================
         def obtener_logo_base64_para_pdf():
-            """Busca el logo en múltiples rutas y lo devuelve en base64"""
             import base64
             import os
             
@@ -4976,7 +4973,7 @@ def api_cotizaciones_preview_pdf(id):
             print("❌ No se encontró el logo en ninguna ruta")
             return None
         
-        # 1. Obtener cabecera de la cotización
+        # 1. Obtener cabecera
         query_cabecera = """
             SELECT 
                 c.id, c.numero_cotizacion, c.codigo_cotizacion,
@@ -5059,9 +5056,6 @@ def api_cotizaciones_preview_pdf(id):
         fecha_actual = datetime.now().strftime('%d/%m/%Y')
         hora_actual = datetime.now().strftime('%H:%M')
         
-        # ============================================================
-        # OBTENER LOGO CON LA NUEVA FUNCIÓN
-        # ============================================================
         logo_base64 = obtener_logo_base64_para_pdf()
         print(f"📷 Logo cargado: {'Sí' if logo_base64 else 'No'}")
         
@@ -5093,7 +5087,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML CORREGIDO
+        # 4. Template HTML CON TONOS ROJOS MÁS SUAVES
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5105,65 +5099,71 @@ def api_cotizaciones_preview_pdf(id):
             margin: 1.2cm;
         }
         * { text-rendering: optimizeLegibility; margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; font-size: 10px; color: #1a1a1a; line-height: 1.3; background: white; }
+        body { 
+            font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; 
+            font-size: 10px; 
+            color: #1a1a1a; 
+            line-height: 1.3; 
+            background: white; 
+        }
         
         /* ============================================================
-           HEADER - LOGO IZQUIERDA, INFO CENTRO, COTIZACIÓN DERECHA
+           COLORES SUAVES
+           ============================================================ */
+        .color-rojo { color: #C62828; }
+        .color-rojo-claro { color: #E57373; }
+        .bg-rojo-claro { background: #FFF5F5; }
+        .border-rojo-claro { border-color: #E57373; }
+        .border-rojo { border-color: #C62828; }
+        
+        /* ============================================================
+           HEADER
            ============================================================ */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 12px;
-            border-bottom: 2px solid #D32F2F;
+            border-bottom: 2px solid #C62828;
             padding-bottom: 10px;
         }
-        .logo-section {
-            flex: 1;
+        .logo-section { flex: 1; }
+        .logo { max-width: 140px; }
+        .logo img { width: 100%; display: block; }
+        .empresa-info { flex: 2; text-align: center; }
+        .empresa-info h1 { 
+            color: #C62828; 
+            margin: 0 0 3px 0; 
+            font-size: 18px; 
+            font-weight: bold; 
         }
-        .logo {
-            max-width: 140px;
+        .empresa-info .slogan { 
+            font-size: 9px; 
+            color: #666; 
+            letter-spacing: 1px; 
         }
-        .logo img {
-            width: 100%;
-            display: block;
-        }
-        .empresa-info {
-            flex: 2;
-            text-align: center;
-        }
-        .empresa-info h1 {
-            color: #D32F2F;
-            margin: 0 0 3px 0;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .empresa-info .slogan {
-            font-size: 9px;
-            color: #666;
-            letter-spacing: 1px;
-        }
-        .empresa-info .ruc-text {
-            font-size: 8px;
-            color: #666;
-            font-weight: bold;
-            margin-top: 2px;
+        .empresa-info .ruc-text { 
+            font-size: 8px; 
+            color: #888; 
+            font-weight: bold; 
+            margin-top: 2px; 
         }
         
         /* ============================================================
-           COTIZACIÓN INFO - NÚMERO EN UNA SOLA LÍNEA
+           COTIZACIÓN INFO
            ============================================================ */
         .cotizacion-info {
             flex: 1;
             text-align: right;
-            background: #f8f9fa;
+            background: #FFF5F5;
             padding: 6px 10px;
             border-radius: 6px;
+            border: 1px solid #E57373;
         }
         .cotizacion-info .numero-linea {
             font-size: 11px;
             font-weight: bold;
-            color: #D32F2F;
+            color: #C62828;
             white-space: nowrap;
         }
         .cotizacion-info .fecha, 
@@ -5174,19 +5174,83 @@ def api_cotizaciones_preview_pdf(id):
         }
         
         /* ============================================================
-           RESTO DEL ESTILO
+           SECCIONES CLIENTE Y CONDICIONES
            ============================================================ */
         .layout-principal { display: flex; gap: 15px; margin-bottom: 12px; }
-        .seccion-cliente, .seccion-condiciones { flex: 1; background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border: 1px solid #D32F2F; }
-        .seccion-cliente h3, .seccion-condiciones h3 { color: #D32F2F; border-bottom: 1px solid #D32F2F; padding-bottom: 3px; font-size: 10px; margin-top: 0; margin-bottom: 6px; font-weight: bold; }
-        .info-line, .condicion-line { display: flex; margin-bottom: 3px; font-size: 8.5px; }
-        .info-label, .condicion-label { width: 90px; font-weight: bold; }
+        .seccion-cliente, .seccion-condiciones { 
+            flex: 1; 
+            background: #FFF5F5; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            border: 1px solid #E57373; 
+        }
+        .seccion-cliente h3, .seccion-condiciones h3 { 
+            color: #C62828; 
+            border-bottom: 1px solid #E57373; 
+            padding-bottom: 3px; 
+            font-size: 10px; 
+            margin-top: 0; 
+            margin-bottom: 6px; 
+            font-weight: bold; 
+        }
+        .info-line, .condicion-line { 
+            display: flex; 
+            margin-bottom: 3px; 
+            font-size: 8.5px; 
+        }
+        .info-label, .condicion-label { 
+            width: 90px; 
+            font-weight: bold; 
+            color: #555;
+        }
         .info-value, .condicion-value { flex: 1; }
-        .texto-introductorio { margin: 10px 0; padding: 8px 15px; background: #FFF8E1; border-left: 4px solid #D32F2F; font-size: 9px; line-height: 1.4; text-align: justify; }
-        .texto-introductorio .saludo { font-size: 10px; font-weight: bold; margin-bottom: 5px; }
-        .tabla-productos { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 8.2px; }
-        .tabla-productos th { background: #D32F2F; color: white; padding: 6px 4px; border: 1px solid #B71C1C; font-weight: bold; text-align: center; vertical-align: middle; }
-        .tabla-productos td { padding: 5px 4px; border: 1px solid #ddd; vertical-align: middle; }
+        
+        /* ============================================================
+           TEXTO INTRODUCTORIO
+           ============================================================ */
+        .texto-introductorio { 
+            margin: 10px 0; 
+            padding: 8px 15px; 
+            background: #FFF8F0; 
+            border-left: 4px solid #C62828; 
+            font-size: 9px; 
+            line-height: 1.4; 
+            text-align: justify; 
+        }
+        .texto-introductorio .saludo { 
+            font-size: 10px; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            color: #C62828;
+        }
+        
+        /* ============================================================
+           TABLA DE PRODUCTOS
+           ============================================================ */
+        .tabla-productos { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 10px 0; 
+            font-size: 8.2px; 
+        }
+        .tabla-productos th { 
+            background: #C62828; 
+            color: white; 
+            padding: 6px 4px; 
+            border: 1px solid #A52A2A; 
+            font-weight: bold; 
+            text-align: center; 
+            vertical-align: middle; 
+        }
+        .tabla-productos td { 
+            padding: 5px 4px; 
+            border: 1px solid #ddd; 
+            vertical-align: middle; 
+        }
+        .tabla-productos tr:nth-child(even) td {
+            background: #FFF9F9;
+        }
+        
         .col-item { text-align: center; width: 35px; }
         .col-codigo { text-align: left; width: 70px; }
         .col-descripcion { text-align: left; }
@@ -5195,14 +5259,60 @@ def api_cotizaciones_preview_pdf(id):
         .col-unidad-medida { text-align: center; width: 55px; }
         .col-cantidad { text-align: center; width: 45px; }
         .col-valor-unitario { text-align: right; width: 85px; }
-        .col-valor-total { text-align: right; width: 90px; background: #FFF8E1; font-weight: bold; }
-        .numero-formateado { text-align: right; font-family: 'Courier New', monospace; font-weight: 500; }
+        .col-valor-total { 
+            text-align: right; 
+            width: 90px; 
+            background: #FFF0E0; 
+            font-weight: bold; 
+            color: #C62828;
+        }
+        
+        .numero-formateado { 
+            text-align: right; 
+            font-family: 'Courier New', monospace; 
+            font-weight: 500; 
+        }
         .text-center { text-align: center; }
-        .seccion-totales { width: 280px; margin-left: auto; margin-right: 0; margin-top: 8px; margin-bottom: 12px; border: 1px solid #D32F2F; padding: 8px 12px; border-radius: 6px; background: #f8f9fa; }
-        .total-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 9px; gap: 8px; }
-        .total-line span:first-child { white-space: nowrap; }
-        .total-line .numero-formateado { font-weight: 500; white-space: nowrap; }
-        .total-final { border-top: 2px solid #D32F2F; padding-top: 5px; margin-top: 5px; font-weight: bold; font-size: 11px; color: #D32F2F; }
+        
+        /* ============================================================
+           TOTALES
+           ============================================================ */
+        .seccion-totales { 
+            width: 280px; 
+            margin-left: auto; 
+            margin-right: 0; 
+            margin-top: 8px; 
+            margin-bottom: 12px; 
+            border: 1px solid #E57373; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            background: #FFF5F5; 
+        }
+        .total-line { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 5px; 
+            font-size: 9px; 
+            gap: 8px; 
+        }
+        .total-line span:first-child { white-space: nowrap; color: #555; }
+        .total-line .numero-formateado { 
+            font-weight: 500; 
+            white-space: nowrap; 
+        }
+        .total-final { 
+            border-top: 2px solid #C62828; 
+            padding-top: 5px; 
+            margin-top: 5px; 
+            font-weight: bold; 
+            font-size: 11px; 
+            color: #C62828; 
+        }
+        
+        /* ============================================================
+           IMPORTANTE
+           ============================================================ */
         .seccion-importante { 
             margin: 8px 0; 
             padding: 5px 10px; 
@@ -5210,29 +5320,91 @@ def api_cotizaciones_preview_pdf(id):
             border: none;
             border-radius: 4px; 
             font-size: 7.5px; 
-            color: #333;
+            color: #555; 
         }
-        .seccion-importante strong { color: #D32F2F; }
-        .cuentas-bancarias { margin-top: 10px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #D32F2F; border-radius: 6px; font-size: 7.5px; }
-        .cuentas-bancarias h3 { color: #D32F2F; border-bottom: 1px solid #D32F2F; padding-bottom: 3px; font-size: 9px; margin-top: 0; margin-bottom: 6px; }
+        .seccion-importante strong { color: #C62828; }
+        
+        /* ============================================================
+           CUENTAS BANCARIAS
+           ============================================================ */
+        .cuentas-bancarias { 
+            margin-top: 10px; 
+            padding: 8px 12px; 
+            background: #FFF5F5; 
+            border: 1px solid #E57373; 
+            border-radius: 6px; 
+            font-size: 7.5px; 
+        }
+        .cuentas-bancarias h3 { 
+            color: #C62828; 
+            border-bottom: 1px solid #E57373; 
+            padding-bottom: 3px; 
+            font-size: 9px; 
+            margin-top: 0; 
+            margin-bottom: 6px; 
+        }
         .cuenta-line { margin-bottom: 2px; }
-        .seccion-aclaratoria { margin-top: 12px; padding: 8px 16px; background: #eef2f5; border-radius: 8px; font-size: 8.5px; text-align: left; border-left: 4px solid #D32F2F; border-right: 1px solid #ccc; font-style: normal; line-height: 1.4; }
-        .seccion-aclaratoria .titulo { font-weight: bold; font-size: 9px; margin-bottom: 4px; font-style: normal; color: #b85c00; text-align: left; }
-        .seccion-aclaratoria .web-link { color: #D32F2F; text-decoration: none; font-weight: bold; }
-        .seccion-contacto { margin-top: 14px; border-top: 2px solid #D32F2F; padding-top: 12px; text-align: left; font-size: 8.5px; }
-        .contacto-nombre { font-size: 10.5px; font-weight: bold; color: #D32F2F; margin-bottom: 4px; }
+        
+        /* ============================================================
+           NOTA ACLARATORIA
+           ============================================================ */
+        .seccion-aclaratoria { 
+            margin-top: 12px; 
+            padding: 8px 16px; 
+            background: #FFF8F0; 
+            border-radius: 8px; 
+            font-size: 8.5px; 
+            text-align: left; 
+            border-left: 4px solid #C62828; 
+            border-right: 1px solid #F0E0D0; 
+            font-style: normal; 
+            line-height: 1.4; 
+        }
+        .seccion-aclaratoria .titulo { 
+            font-weight: bold; 
+            font-size: 9px; 
+            margin-bottom: 4px; 
+            font-style: normal; 
+            color: #A0522D; 
+            text-align: left; 
+        }
+        .seccion-aclaratoria .web-link { 
+            color: #C62828; 
+            text-decoration: none; 
+            font-weight: bold; 
+        }
+        
+        /* ============================================================
+           CONTACTO
+           ============================================================ */
+        .seccion-contacto { 
+            margin-top: 14px; 
+            border-top: 2px solid #C62828; 
+            padding-top: 12px; 
+            text-align: left; 
+            font-size: 8.5px; 
+        }
+        .contacto-nombre { 
+            font-size: 10.5px; 
+            font-weight: bold; 
+            color: #C62828; 
+            margin-bottom: 4px; 
+        }
         .contacto-line { margin-bottom: 2px; }
-        .web-link { color: #D32F2F; text-decoration: none; }
+        .web-link { color: #C62828; text-decoration: none; }
         .fw-bold { font-weight: bold; }
-        .bg-warning { background: #FFF8E1; }
-        .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { page-break-inside: avoid; break-inside: avoid; }
+        .bg-warning { background: #FFF0E0; }
+        
+        /* Evitar saltos de página */
+        .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { 
+            page-break-inside: avoid; 
+            break-inside: avoid; 
+        }
         .tabla-productos { page-break-inside: avoid; }
     </style>
 </head>
 <body>
-    <!-- ============================================================
-         HEADER
-         ============================================================ -->
+    <!-- HEADER -->
     <div class="header">
         <div class="logo-section">
             {% if logo_base64 %}
@@ -5253,9 +5425,7 @@ def api_cotizaciones_preview_pdf(id):
         </div>
     </div>
 
-    <!-- ============================================================
-         CLIENTE Y CONDICIONES
-         ============================================================ -->
+    <!-- CLIENTE Y CONDICIONES -->
     <div class="layout-principal">
         <div class="seccion-cliente">
             <h3>INFORMACIÓN DEL CLIENTE</h3>
@@ -5279,17 +5449,13 @@ def api_cotizaciones_preview_pdf(id):
         </div>
     </div>
 
-    <!-- ============================================================
-         TEXTO INTRODUCTORIO
-         ============================================================ -->
+    <!-- TEXTO INTRODUCTORIO -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
     </div>
 
-    <!-- ============================================================
-         TABLA DE PRODUCTOS
-         ============================================================ -->
+    <!-- TABLA DE PRODUCTOS -->
     <table class="tabla-productos">
         <thead>
             <tr>
@@ -5325,16 +5491,12 @@ def api_cotizaciones_preview_pdf(id):
         </tbody>
     </table>
 
-    <!-- ============================================================
-         IMPORTANTE
-         ============================================================ -->
+    <!-- IMPORTANTE -->
     <div class="seccion-importante">
         <strong>Importante:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
     </div>
 
-    <!-- ============================================================
-         TOTALES
-         ============================================================ -->
+    <!-- TOTALES -->
     <div class="seccion-totales">
         <div class="total-line"><span>Subtotal (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
         {% if hay_descuentos %}
@@ -5345,9 +5507,7 @@ def api_cotizaciones_preview_pdf(id):
         <div class="total-line total-final"><span><strong>TOTAL A PAGAR:</strong></span><span class="numero-formateado"><strong>S/ {{ "%.2f"|format(summary_total_venta|default(0)) }}</strong></span></div>
     </div>
 
-    <!-- ============================================================
-         CUENTAS BANCARIAS
-         ============================================================ -->
+    <!-- CUENTAS BANCARIAS -->
     <div class="cuentas-bancarias">
         <h3>CUENTAS BANCARIAS</h3>
         <div class="cuenta-line"><strong>BCP SOLES:</strong> 191-1889375-0-94 | N. 1911889375094</div>
@@ -5356,9 +5516,7 @@ def api_cotizaciones_preview_pdf(id):
         <div class="cuenta-line"><strong>BBVA DÓLARES:</strong> 0011-0335-01-00019134 | N. 00110335100019134</div>
     </div>
 
-    <!-- ============================================================
-         NOTA ACLARATORIA
-         ============================================================ -->
+    <!-- NOTA ACLARATORIA -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 Nota Aclaratoria</div>
         La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
@@ -5367,9 +5525,7 @@ def api_cotizaciones_preview_pdf(id):
         <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a>
     </div>
 
-    <!-- ============================================================
-         CONTACTO
-         ============================================================ -->
+    <!-- CONTACTO -->
     <div class="seccion-contacto">
         <div class="contacto-nombre">Cordialmente,</div>
         <div class="contacto-nombre">HELLEN BLAS PRINCIPE</div>
@@ -5393,7 +5549,6 @@ def api_cotizaciones_preview_pdf(id):
         
         nombre_archivo = f"cotizacion_{c.get('codigo_cotizacion', 'sin_numero')}_{datetime.now().strftime('%Y%m%d')}.pdf"
         
-        # 6. Devolver el PDF para mostrar en el navegador (NO descarga)
         return send_file(
             pdf_buffer,
             as_attachment=False,
