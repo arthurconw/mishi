@@ -3633,19 +3633,58 @@ def api_cotizaciones_duplicar(id):
         return jsonify({'success': False, 'error': str(e)}), 500
     
 
-
 # ============================================================
-# GENERAR PDF DE COTIZACIÓN
+# GENERAR PDF DE COTIZACIÓN (DESCARGA)
 # ============================================================
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/pdf', methods=['GET'])
 @login_required
 def api_cotizaciones_generar_pdf(id):
-    """Genera el PDF de una cotización"""
+    """Genera el PDF de una cotización para descarga"""
     try:
         print(f"📄 Generando PDF para cotización ID: {id}")
         
-        # Obtener la cotización completa con sus productos
         from datetime import datetime
+        from flask import render_template_string, send_file
+        from weasyprint import HTML
+        import tempfile
+        import base64
+        import os
+        
+        # ============================================================
+        # FUNCIÓN PARA OBTENER LOGO EN BASE64 - MÚLTIPLES RUTAS
+        # ============================================================
+        def obtener_logo_base64_para_pdf():
+            """Busca el logo en múltiples rutas y lo devuelve en base64"""
+            posibles_rutas = [
+                os.path.join('templates', 'pdf', 'logo-kcf.png'),
+                os.path.join('templates', 'logo-kcf.png'),
+                os.path.join('static', 'img', 'logo-kcf.png'),
+                os.path.join('static', 'logo-kcf.png'),
+                'logo-kcf.png',
+                os.path.join('app', 'static', 'img', 'logo-kcf.png'),
+                os.path.join('app', 'static', 'logo-kcf.png'),
+                os.path.join('static', 'images', 'logo-kcf.png'),
+                os.path.join('templates', 'cotizacion_oc', 'logo-kcf.png'),
+                os.path.join('..', 'static', 'img', 'logo-kcf.png'),
+                os.path.join('..', 'static', 'logo-kcf.png'),
+            ]
+            
+            for logo_path in posibles_rutas:
+                if os.path.exists(logo_path):
+                    try:
+                        with open(logo_path, 'rb') as f:
+                            logo_data = f.read()
+                            logo_base64 = base64.b64encode(logo_data).decode('utf-8')
+                            print(f"✅ Logo cargado desde: {logo_path}")
+                            return logo_base64
+                    except Exception as e:
+                        print(f"⚠️ Error leyendo {logo_path}: {e}")
+                        continue
+                else:
+                    print(f"🔍 Logo no encontrado: {logo_path}")
+            
+            print("❌ No se encontró el logo en ninguna ruta")
+            return None
         
         # 1. Obtener cabecera de la cotización
         query_cabecera = """
@@ -3738,16 +3777,8 @@ def api_cotizaciones_generar_pdf(id):
         hora_actual = datetime.now().strftime('%H:%M')
         
         # Obtener logo en base64
-        import base64
-        import os
-        logo_base64 = None
-        logo_path = 'logo-kcf.png'
-        if os.path.exists(logo_path):
-            try:
-                with open(logo_path, 'rb') as f:
-                    logo_base64 = base64.b64encode(f.read()).decode('utf-8')
-            except:
-                pass
+        logo_base64 = obtener_logo_base64_para_pdf()
+        print(f"📷 Logo cargado: {'Sí' if logo_base64 else 'No'}")
         
         # 4. Preparar datos para el template
         datos_pdf = {
@@ -3780,43 +3811,180 @@ def api_cotizaciones_generar_pdf(id):
         
         print(f"📊 Datos preparados: {len(productos_list)} productos, Total: {total}")
         
-        # 5. Generar PDF usando el template
-        from flask import render_template_string
-        
-        # Cargar el template HTML (lo tienes en el archivo)
+        # 5. Template HTML CORREGIDO (igual que el de vista previa)
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Cotización - KCF CORPORACION</title>
+    <title>Cotización - KCF CORPORACION E.I.R.L</title>
     <style>
         @page {
             size: A4;
             margin: 1.2cm;
         }
         * { text-rendering: optimizeLegibility; margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; font-size: 10px; color: #1a1a1a; line-height: 1.3; background: white; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 2px solid #D32F2F; padding-bottom: 10px; }
+        body { 
+            font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; 
+            font-size: 10px; 
+            color: #1a1a1a; 
+            line-height: 1.3; 
+            background: white; 
+        }
+        
+        /* ============================================================
+           COLORES ROJOS SUAVES
+           ============================================================ */
+        :root {
+            --rojo-suave: #D46060;
+            --rojo-mas-claro: #E88383;
+            --rojo-claro: #F0C0C0;
+            --rojo-fondo: #FEF8F8;
+            --rojo-borde: #F0D0D0;
+        }
+        .color-rojo { color: var(--rojo-suave); }
+        .color-rojo-claro { color: var(--rojo-mas-claro); }
+        .bg-rojo-claro { background: var(--rojo-fondo); }
+        .border-rojo-claro { border-color: var(--rojo-borde); }
+        .border-rojo { border-color: var(--rojo-suave); }
+        
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--rojo-suave);
+            padding-bottom: 10px;
+        }
         .logo-section { flex: 1; }
         .logo { max-width: 140px; }
         .logo img { width: 100%; display: block; }
         .empresa-info { flex: 2; text-align: center; }
-        .empresa-info h1 { color: #D32F2F; margin: 0 0 3px 0; font-size: 18px; font-weight: bold; }
-        .empresa-info .slogan { font-size: 9px; color: #666; letter-spacing: 1px; }
-        .cotizacion-info { flex: 1; text-align: right; background: #f8f9fa; padding: 6px 10px; border-radius: 6px; }
-        .numero-cotizacion { font-size: 11px; font-weight: bold; color: #D32F2F; }
-        .fecha, .hora { font-size: 8px; margin-top: 2px; color: #666; }
+        .empresa-info h1 { 
+            color: var(--rojo-suave); 
+            margin: 0 0 3px 0; 
+            font-size: 18px; 
+            font-weight: bold; 
+        }
+        .empresa-info .slogan { 
+            font-size: 9px; 
+            color: #888; 
+            letter-spacing: 1px; 
+        }
+        .empresa-info .ruc-text { 
+            font-size: 8px; 
+            color: #999; 
+            font-weight: bold; 
+            margin-top: 2px; 
+        }
+        
+        /* ============================================================
+           COTIZACIÓN INFO
+           ============================================================ */
+        .cotizacion-info {
+            flex: 1;
+            text-align: right;
+            background: var(--rojo-fondo);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--rojo-borde);
+        }
+        .cotizacion-info .numero-linea {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--rojo-suave);
+            white-space: nowrap;
+        }
+        .cotizacion-info .fecha, 
+        .cotizacion-info .hora {
+            font-size: 8px;
+            margin-top: 2px;
+            color: #888;
+        }
+        
+        /* ============================================================
+           SECCIONES CLIENTE Y CONDICIONES
+           ============================================================ */
         .layout-principal { display: flex; gap: 15px; margin-bottom: 12px; }
-        .seccion-cliente, .seccion-condiciones { flex: 1; background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border: 1px solid #D32F2F; }
-        .seccion-cliente h3, .seccion-condiciones h3 { color: #D32F2F; border-bottom: 1px solid #D32F2F; padding-bottom: 3px; font-size: 10px; margin-top: 0; margin-bottom: 6px; font-weight: bold; }
-        .info-line, .condicion-line { display: flex; margin-bottom: 3px; font-size: 8.5px; }
-        .info-label, .condicion-label { width: 90px; font-weight: bold; }
+        .seccion-cliente, .seccion-condiciones { 
+            flex: 1; 
+            background: var(--rojo-fondo); 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            border: 1px solid var(--rojo-borde); 
+        }
+        .seccion-cliente h3, .seccion-condiciones h3 { 
+            color: var(--rojo-suave); 
+            border-bottom: 1px solid var(--rojo-borde); 
+            padding-bottom: 3px; 
+            font-size: 10px; 
+            margin-top: 0; 
+            margin-bottom: 6px; 
+            font-weight: bold; 
+        }
+        .info-line, .condicion-line { 
+            display: flex; 
+            margin-bottom: 3px; 
+            font-size: 8.5px; 
+        }
+        .info-label, .condicion-label { 
+            width: 90px; 
+            font-weight: bold; 
+            color: #666;
+        }
         .info-value, .condicion-value { flex: 1; }
-        .texto-introductorio { margin: 10px 0; padding: 8px 15px; background: #FFF8E1; border-left: 4px solid #D32F2F; font-size: 9px; line-height: 1.4; text-align: justify; }
-        .texto-introductorio .saludo { font-size: 10px; font-weight: bold; margin-bottom: 5px; }
-        .tabla-productos { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 8.2px; }
-        .tabla-productos th { background: #D32F2F; color: white; padding: 6px 4px; border: 1px solid #B71C1C; font-weight: bold; text-align: center; vertical-align: middle; }
-        .tabla-productos td { padding: 5px 4px; border: 1px solid #ddd; vertical-align: middle; }
+        
+        /* ============================================================
+           TEXTO INTRODUCTORIO
+           ============================================================ */
+        .texto-introductorio { 
+            margin: 10px 0; 
+            padding: 8px 15px; 
+            background: #FFFBF5; 
+            border-left: 4px solid var(--rojo-suave); 
+            font-size: 9px; 
+            line-height: 1.4; 
+            text-align: justify; 
+        }
+        .texto-introductorio .saludo { 
+            font-size: 10px; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            color: var(--rojo-suave);
+        }
+        
+        /* ============================================================
+           TABLA DE PRODUCTOS
+           ============================================================ */
+        .tabla-productos { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 10px 0; 
+            font-size: 8.2px; 
+        }
+        .tabla-productos th { 
+            background: var(--rojo-suave); 
+            color: white; 
+            padding: 6px 4px; 
+            border: 1px solid var(--rojo-mas-claro); 
+            font-weight: bold; 
+            text-align: center; 
+            vertical-align: middle; 
+        }
+        .tabla-productos td { 
+            padding: 5px 4px; 
+            border: 1px solid #eee; 
+            vertical-align: middle; 
+        }
+        .tabla-productos tr:nth-child(even) td {
+            background: #FDFAFA;
+        }
+        .tabla-productos tr:hover td {
+            background: #F8F0F0;
+        }
+        
         .col-item { text-align: center; width: 35px; }
         .col-codigo { text-align: left; width: 70px; }
         .col-descripcion { text-align: left; }
@@ -3825,41 +3993,180 @@ def api_cotizaciones_generar_pdf(id):
         .col-unidad-medida { text-align: center; width: 55px; }
         .col-cantidad { text-align: center; width: 45px; }
         .col-valor-unitario { text-align: right; width: 85px; }
-        .col-valor-total { text-align: right; width: 90px; background: #FFF8E1; font-weight: bold; }
-        .numero-formateado { text-align: right; font-family: 'Courier New', monospace; font-weight: 500; }
+        .col-valor-total { 
+            text-align: right; 
+            width: 90px; 
+            background: #FFF5F0; 
+            font-weight: bold; 
+            color: var(--rojo-suave);
+        }
+        
+        .numero-formateado { 
+            text-align: right; 
+            font-family: 'Courier New', monospace; 
+            font-weight: 500; 
+        }
         .text-center { text-align: center; }
-        .seccion-totales { width: 280px; margin-left: auto; margin-right: 0; margin-top: 8px; margin-bottom: 12px; border: 1px solid #D32F2F; padding: 8px 12px; border-radius: 6px; background: #f8f9fa; }
-        .total-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 9px; gap: 8px; }
-        .total-line span:first-child { white-space: nowrap; }
-        .total-line .numero-formateado { font-weight: 500; white-space: nowrap; }
-        .total-final { border-top: 2px solid #D32F2F; padding-top: 5px; margin-top: 5px; font-weight: bold; font-size: 11px; color: #D32F2F; }
-      .seccion-importante { 
-    margin: 8px 0; 
-    padding: 5px 10px; 
-    background: transparent;   /* ← FONDO TRANSPARENTE */
-    border: none;              /* ← SIN BORDE */
-    border-radius: 4px; 
-    font-size: 7.5px; 
-    color: #333;               /* ← TEXTO MÁS OSCURO */
-}
-        .seccion-importante strong { color: #D32F2F; }
-        .cuentas-bancarias { margin-top: 10px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #D32F2F; border-radius: 6px; font-size: 7.5px; }
-        .cuentas-bancarias h3 { color: #D32F2F; border-bottom: 1px solid #D32F2F; padding-bottom: 3px; font-size: 9px; margin-top: 0; margin-bottom: 6px; }
-        .cuenta-line { margin-bottom: 2px; }
-        .seccion-aclaratoria { margin-top: 12px; padding: 8px 16px; background: #eef2f5; border-radius: 8px; font-size: 8.5px; text-align: left; border-left: 4px solid #D32F2F; border-right: 1px solid #ccc; font-style: normal; line-height: 1.4; }
-        .seccion-aclaratoria .titulo { font-weight: bold; font-size: 9px; margin-bottom: 4px; font-style: normal; color: #b85c00; text-align: left; }
-        .seccion-aclaratoria .web-link { color: #D32F2F; text-decoration: none; font-weight: bold; }
-        .seccion-contacto { margin-top: 14px; border-top: 2px solid #D32F2F; padding-top: 12px; text-align: left; font-size: 8.5px; }
-        .contacto-nombre { font-size: 10.5px; font-weight: bold; color: #D32F2F; margin-bottom: 4px; }
+        
+        /* ============================================================
+           TOTALES
+           ============================================================ */
+        .seccion-totales { 
+            width: 280px; 
+            margin-left: auto; 
+            margin-right: 0; 
+            margin-top: 8px; 
+            margin-bottom: 12px; 
+            border: 1px solid var(--rojo-borde); 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            background: var(--rojo-fondo); 
+        }
+        .total-line { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 5px; 
+            font-size: 9px; 
+            gap: 8px; 
+        }
+        .total-line span:first-child { white-space: nowrap; color: #666; }
+        .total-line .numero-formateado { 
+            font-weight: 500; 
+            white-space: nowrap; 
+        }
+        .total-final { 
+            border-top: 2px solid var(--rojo-suave); 
+            padding-top: 5px; 
+            margin-top: 5px; 
+            font-weight: bold; 
+            font-size: 11px; 
+            color: var(--rojo-suave); 
+        }
+        
+        /* ============================================================
+           IMPORTANTE
+           ============================================================ */
+        .seccion-importante { 
+            margin: 8px 0; 
+            padding: 5px 10px; 
+            background: transparent;
+            border: none;
+            border-radius: 4px; 
+            font-size: 7.5px; 
+            color: #666; 
+        }
+        .seccion-importante strong { color: var(--rojo-suave); }
+        
+        /* ============================================================
+           CUENTAS BANCARIAS - SOLO BBVA CON TEXTO EN NEGRO FUERTE
+           ============================================================ */
+        .cuentas-bancarias { 
+            margin-top: 10px; 
+            padding: 8px 12px; 
+            background: var(--rojo-fondo); 
+            border: 1px solid var(--rojo-borde); 
+            border-radius: 6px; 
+            font-size: 7.5px; 
+        }
+        .cuentas-bancarias h3 { 
+            color: var(--rojo-suave); 
+            border-bottom: 1px solid var(--rojo-borde); 
+            padding-bottom: 3px; 
+            font-size: 9px; 
+            margin-top: 0; 
+            margin-bottom: 6px; 
+            font-weight: bold; 
+        }
+        .cuenta-line { 
+            padding: 4px 0; 
+            font-size: 8.5px;
+        }
+        .cuenta-line .banco { 
+            font-weight: 900; 
+            color: #000000; 
+            font-size: 9px; 
+        }
+        .cuenta-line .tipo { 
+            font-size: 8.5px; 
+            color: #333333; 
+            font-weight: 600;
+        }
+        .cuenta-line .numero { 
+            font-size: 8.5px; 
+            color: #222222; 
+            font-weight: 700; 
+        }
+        .cuenta-line .cci { 
+            font-size: 8.5px; 
+            color: #222222; 
+            font-weight: 600; 
+        }
+        .cuenta-line .separador {
+            color: #444444;
+            font-weight: 300;
+        }
+        
+        /* ============================================================
+           NOTA ACLARATORIA
+           ============================================================ */
+        .seccion-aclaratoria { 
+            margin-top: 12px; 
+            padding: 8px 16px; 
+            background: #FFFBF5; 
+            border-radius: 8px; 
+            font-size: 8.5px; 
+            text-align: left; 
+            border-left: 4px solid var(--rojo-suave); 
+            border-right: 1px solid #F0EAE0; 
+            font-style: normal; 
+            line-height: 1.4; 
+        }
+        .seccion-aclaratoria .titulo { 
+            font-weight: bold; 
+            font-size: 9px; 
+            margin-bottom: 4px; 
+            font-style: normal; 
+            color: #A08060; 
+            text-align: left; 
+        }
+        .seccion-aclaratoria .web-link { 
+            color: var(--rojo-suave); 
+            text-decoration: none; 
+            font-weight: bold; 
+        }
+        
+        /* ============================================================
+           CONTACTO
+           ============================================================ */
+        .seccion-contacto { 
+            margin-top: 14px; 
+            border-top: 2px solid var(--rojo-suave); 
+            padding-top: 12px; 
+            text-align: left; 
+            font-size: 8.5px; 
+        }
+        .contacto-nombre { 
+            font-size: 10.5px; 
+            font-weight: bold; 
+            color: var(--rojo-suave); 
+            margin-bottom: 4px; 
+        }
         .contacto-line { margin-bottom: 2px; }
-        .web-link { color: #D32F2F; text-decoration: none; }
+        .web-link { color: var(--rojo-suave); text-decoration: none; }
         .fw-bold { font-weight: bold; }
-        .bg-warning { background: #FFF8E1; }
-        .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { page-break-inside: avoid; break-inside: avoid; }
+        .bg-warning { background: #FFF5F0; }
+        
+        /* Evitar saltos de página */
+        .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { 
+            page-break-inside: avoid; 
+            break-inside: avoid; 
+        }
         .tabla-productos { page-break-inside: avoid; }
     </style>
 </head>
 <body>
+    <!-- HEADER -->
     <div class="header">
         <div class="logo-section">
             {% if logo_base64 %}
@@ -3869,15 +4176,18 @@ def api_cotizaciones_generar_pdf(id):
             {% endif %}
         </div>
         <div class="empresa-info">
-            <h1>KCF CORPORACION</h1>
-            <div class="slogan">Soluciones industriales y comerciales</div>
+            <h1>KCF CORPORACION E.I.R.L</h1>
+            <div class="slogan">Soluciones integrales en abastecimientos</div>
+            <div class="ruc-text">RUC: 20602095704</div>
         </div>
         <div class="cotizacion-info">
-            <div class="numero-cotizacion"><strong>COTIZACIÓN N°:</strong> {{ codigo_cotizacion }}</div>
+            <div class="numero-linea"><strong>COTIZACIÓN N°:</strong> {{ codigo_cotizacion }}</div>
             <div class="fecha"><strong>Fecha:</strong> {{ fecha_actual }}</div>
             <div class="hora"><strong>Hora:</strong> {{ hora_actual|default('00:00') }}</div>
         </div>
     </div>
+
+    <!-- CLIENTE Y CONDICIONES -->
     <div class="layout-principal">
         <div class="seccion-cliente">
             <h3>INFORMACIÓN DEL CLIENTE</h3>
@@ -3900,10 +4210,14 @@ def api_cotizaciones_generar_pdf(id):
             <div class="condicion-line"><span class="condicion-label">Validez Oferta:</span><span class="condicion-value">{{ validez_oferta }}</span></div>
         </div>
     </div>
+
+    <!-- TEXTO INTRODUCTORIO -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
     </div>
+
+    <!-- TABLA DE PRODUCTOS -->
     <table class="tabla-productos">
         <thead>
             <tr>
@@ -3938,9 +4252,13 @@ def api_cotizaciones_generar_pdf(id):
             {% endif %}
         </tbody>
     </table>
+
+    <!-- IMPORTANTE -->
     <div class="seccion-importante">
         <strong>Importante:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
     </div>
+
+    <!-- TOTALES -->
     <div class="seccion-totales">
         <div class="total-line"><span>Subtotal (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
         {% if hay_descuentos %}
@@ -3950,13 +4268,20 @@ def api_cotizaciones_generar_pdf(id):
         <div class="total-line"><span>IGV (18%):</span><span class="numero-formateado">S/ {{ "%.2f"|format(summary_igv|default(0)) }}</span></div>
         <div class="total-line total-final"><span><strong>TOTAL A PAGAR:</strong></span><span class="numero-formateado"><strong>S/ {{ "%.2f"|format(summary_total_venta|default(0)) }}</strong></span></div>
     </div>
+
+    <!-- CUENTAS BANCARIAS - SOLO BBVA CON TEXTO EN NEGRO FUERTE -->
     <div class="cuentas-bancarias">
         <h3>CUENTAS BANCARIAS</h3>
-        <div class="cuenta-line"><strong>BCP SOLES:</strong> 191-1889375-0-94 | N. 1911889375094</div>
-        <div class="cuenta-line"><strong>BCP DÓLARES:</strong> 191-1881449-1-53 | N. 1911881449153</div>
-        <div class="cuenta-line"><strong>BBVA SOLES:</strong> 0011-0335-01-00019126 | N. 00110335100019126</div>
-        <div class="cuenta-line"><strong>BBVA DÓLARES:</strong> 0011-0335-01-00019134 | N. 00110335100019134</div>
+        <div class="cuenta-line">
+            <span class="banco">BBVA</span>
+            <span class="tipo">| Cuenta de ahorro empresa</span><br>
+            <span class="numero">Cuenta: 00110319160100022197</span>
+            <span class="separador">|</span>
+            <span class="cci">CCI: 011-319-000100022197-16</span>
+        </div>
     </div>
+
+    <!-- NOTA ACLARATORIA -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 Nota Aclaratoria</div>
         La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
@@ -3964,6 +4289,8 @@ def api_cotizaciones_generar_pdf(id):
         Para más información visítanos en 
         <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a>
     </div>
+
+    <!-- CONTACTO -->
     <div class="seccion-contacto">
         <div class="contacto-nombre">Cordialmente,</div>
         <div class="contacto-nombre">HELLEN BLAS PRINCIPE</div>
@@ -3973,6 +4300,7 @@ def api_cotizaciones_generar_pdf(id):
         <div class="contacto-line">✉ Ventas@kcfcorporacion.com</div>
         <div class="contacto-line">🌐 www.kcfcorporacion.com</div>
     </div>
+
 </body>
 </html>'''
         
@@ -3980,10 +4308,6 @@ def api_cotizaciones_generar_pdf(id):
         html_content = render_template_string(template_html, **datos_pdf)
         
         # 6. Generar el PDF con WeasyPrint
-        from weasyprint import HTML
-        import tempfile
-        
-        # Crear un archivo temporal para el PDF
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             pdf_path = tmp_file.name
         
@@ -3993,8 +4317,6 @@ def api_cotizaciones_generar_pdf(id):
         print(f"✅ PDF generado: {pdf_path}")
         
         # 7. Devolver el PDF como descarga
-        from flask import send_file
-        
         nombre_archivo = f"cotizacion_{c.get('codigo_cotizacion', 'sin_numero')}_{datetime.now().strftime('%Y%m%d')}.pdf"
         
         return send_file(
@@ -4009,7 +4331,6 @@ def api_cotizaciones_generar_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # routes.py - Agregar esta función al final
 
@@ -5539,16 +5860,19 @@ def api_cotizaciones_preview_pdf(id):
         <div class="total-line total-final"><span><strong>TOTAL A PAGAR:</strong></span><span class="numero-formateado"><strong>S/ {{ "%.2f"|format(summary_total_venta|default(0)) }}</strong></span></div>
     </div>
 
-    <!-- CUENTAS BANCARIAS - SOLO BBVA -->
-    <div class="cuentas-bancarias">
-        <h3>CUENTAS BANCARIAS</h3>
-        <div class="cuenta-line">
-            <span class="banco">BBVA</span>
-            <span class="tipo">| Cuenta de ahorro empresa</span><br>
-            <span class="numero">Cuenta: 00110319160100022197</span>
-            <span class="cci">| CCI: 011-319-000100022197-16</span>
-        </div>
+<!-- CUENTAS BANCARIAS - SOLO BBVA -->
+<div class="cuentas-bancarias">
+    <h3 style="color: #D46060; border-bottom: 1px solid #F0D0D0; padding-bottom: 3px; font-size: 9px; margin-top: 0; margin-bottom: 6px; font-weight: bold;">CUENTAS BANCARIAS</h3>
+    <div class="cuenta-line" style="padding: 4px 0; font-size: 8.5px;">
+        <span style="font-weight: 900; color: #000000;">BBVA</span>
+        <span style="color: #333333; font-weight: 600;">| Cuenta de ahorro empresa</span><br>
+        <span style="font-weight: 700; color: #000000;">Cuenta:</span>
+        <span style="font-weight: 600; color: #222222;">00110319160100022197</span>
+        <span style="color: #444444;"> | </span>
+        <span style="font-weight: 700; color: #000000;">CCI:</span>
+        <span style="font-weight: 600; color: #222222;">011-319-000100022197-16</span>
     </div>
+</div>
 
     <!-- NOTA ACLARATORIA -->
     <div class="seccion-aclaratoria">
