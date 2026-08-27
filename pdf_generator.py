@@ -1507,11 +1507,12 @@ def _obtener_template_cotizacion(self):
             </div>
         </div>
         <div class="recuadro-derecha">
-            <div class="ruc">R.U.C. Nº {{ empresa_ruc }}</div>
-            <div class="titulo">{{ tipo }}</div>
-            <div class="numero">{{ serie }}-{{ numero }}</div>
-        </div>
+    <div class="ruc">R.U.C. Nº {{ empresa_ruc }}</div>
+    <div class="titulo-linea">
+        <span class="titulo-label">{{ tipo }} N°:</span>
+        <span class="numero">{{ serie }}-{{ numero }}</span>
     </div>
+</div>
 
     <!-- ============================================================
          DATOS DEL CLIENTE
