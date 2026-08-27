@@ -1079,15 +1079,16 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
 
 
 # ============================================================
-# GENERAR COTIZACIÓN - CON LOGO A LA IZQUIERDA Y RECUADRO DERECHA
+# GENERAR COTIZACIÓN - CON LOGO A LA IZQUIERDA (CORREGIDO)
 # ============================================================
 def _generar_cotizacion(self, datos):
     try:
         print("📄 Generando PDF de cotización...")
         
-        # Obtener logo
+        # 🔽 OBTENER LOGO - ESTO ES LO QUE FALTABA 🔽
         logo_base64 = self._obtener_logo_base64()
         logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
+        print(f"📷 Logo cargado: {'Sí' if logo_base64 else 'No'}")
         
         # Datos de la empresa (fijos)
         EMPRESA = {
@@ -1145,9 +1146,9 @@ def _generar_cotizacion(self, datos):
             igv = subtotal * 0.18
             total = subtotal + igv
         
-        # Preparar datos para el template
+        # 🔽 VERIFICAR QUE EL LOGO SE PASE AL TEMPLATE 🔽
         datos_template = {
-            'logo_src': logo_src,
+            'logo_src': logo_src,  # ← ESTO ES CRÍTICO
             'empresa_ruc': EMPRESA['ruc'],
             'empresa_nombre': EMPRESA['nombre'],
             'empresa_direccion': EMPRESA['direccion'],
@@ -1176,6 +1177,8 @@ def _generar_cotizacion(self, datos):
             'items': items_formateados,
             'qr_base64': self._generar_qr_cotizacion(datos)
         }
+        
+        print(f"📷 Logo en datos_template: {'Sí' if datos_template.get('logo_src') else 'No'}")
         
         # Obtener template
         template_content = self._obtener_template_cotizacion()
@@ -1210,6 +1213,7 @@ def _generar_cotizacion(self, datos):
         import traceback
         traceback.print_exc()
         return None
+
 
 # ============================================================
 # TEMPLATE PARA COTIZACIÓN - CON LOGO Y RECUADRO (IGUAL QUE GUÍA)
