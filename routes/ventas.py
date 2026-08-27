@@ -4937,6 +4937,45 @@ def api_cotizaciones_preview_pdf(id):
         from flask import send_file, render_template_string
         from weasyprint import HTML
         
+        # ============================================================
+        # FUNCIÓN PARA OBTENER LOGO EN BASE64 - MÚLTIPLES RUTAS
+        # ============================================================
+        def obtener_logo_base64_para_pdf():
+            """Busca el logo en múltiples rutas y lo devuelve en base64"""
+            import base64
+            import os
+            
+            posibles_rutas = [
+                os.path.join('templates', 'pdf', 'logo-kcf.png'),
+                os.path.join('templates', 'logo-kcf.png'),
+                os.path.join('static', 'img', 'logo-kcf.png'),
+                os.path.join('static', 'logo-kcf.png'),
+                'logo-kcf.png',
+                os.path.join('app', 'static', 'img', 'logo-kcf.png'),
+                os.path.join('app', 'static', 'logo-kcf.png'),
+                os.path.join('static', 'images', 'logo-kcf.png'),
+                os.path.join('templates', 'cotizacion_oc', 'logo-kcf.png'),
+                os.path.join('..', 'static', 'img', 'logo-kcf.png'),
+                os.path.join('..', 'static', 'logo-kcf.png'),
+            ]
+            
+            for logo_path in posibles_rutas:
+                if os.path.exists(logo_path):
+                    try:
+                        with open(logo_path, 'rb') as f:
+                            logo_data = f.read()
+                            logo_base64 = base64.b64encode(logo_data).decode('utf-8')
+                            print(f"✅ Logo cargado desde: {logo_path}")
+                            return logo_base64
+                    except Exception as e:
+                        print(f"⚠️ Error leyendo {logo_path}: {e}")
+                        continue
+                else:
+                    print(f"🔍 Logo no encontrado: {logo_path}")
+            
+            print("❌ No se encontró el logo en ninguna ruta")
+            return None
+        
         # 1. Obtener cabecera de la cotización
         query_cabecera = """
             SELECT 
@@ -5020,16 +5059,11 @@ def api_cotizaciones_preview_pdf(id):
         fecha_actual = datetime.now().strftime('%d/%m/%Y')
         hora_actual = datetime.now().strftime('%H:%M')
         
-        # Logo
-        import base64, os
-        logo_base64 = None
-        logo_path = 'logo-kcf.png'
-        if os.path.exists(logo_path):
-            try:
-                with open(logo_path, 'rb') as f:
-                    logo_base64 = base64.b64encode(f.read()).decode('utf-8')
-            except:
-                pass
+        # ============================================================
+        # OBTENER LOGO CON LA NUEVA FUNCIÓN
+        # ============================================================
+        logo_base64 = obtener_logo_base64_para_pdf()
+        print(f"📷 Logo cargado: {'Sí' if logo_base64 else 'No'}")
         
         datos_pdf = {
             'codigo_cotizacion': c.get('codigo_cotizacion') or c.get('numero_cotizacion', 'COT-000001'),
@@ -5109,7 +5143,15 @@ def api_cotizaciones_preview_pdf(id):
         .total-line span:first-child { white-space: nowrap; }
         .total-line .numero-formateado { font-weight: 500; white-space: nowrap; }
         .total-final { border-top: 2px solid #D32F2F; padding-top: 5px; margin-top: 5px; font-weight: bold; font-size: 11px; color: #D32F2F; }
-        .seccion-importante { margin: 8px 0; padding: 5px 10px; background: #FFF8E1; border: 1px solid #FFC107; border-radius: 4px; font-size: 7.5px; color: #856404; }
+      .seccion-importante { 
+        margin: 8px 0; 
+        padding: 5px 10px; 
+        background: transparent;   /* ← FONDO TRANSPARENTE */
+        border: none;              /* ← SIN BORDE */
+        border-radius: 4px; 
+        font-size: 7.5px; 
+        color: #333;               /* ← TEXTO MÁS OSCURO */
+    }
         .seccion-importante strong { color: #D32F2F; }
         .cuentas-bancarias { margin-top: 10px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #D32F2F; border-radius: 6px; font-size: 7.5px; }
         .cuentas-bancarias h3 { color: #D32F2F; border-bottom: 1px solid #D32F2F; padding-bottom: 3px; font-size: 9px; margin-top: 0; margin-bottom: 6px; }
@@ -5267,7 +5309,8 @@ def api_cotizaciones_preview_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-    
+
+
 @ventas_bp.route('/ventas/api/pedido-compra/<int:id>', methods=['DELETE'])
 @login_required
 def api_pedido_compra_eliminar(id):
