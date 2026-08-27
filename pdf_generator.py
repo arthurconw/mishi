@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN COMPLETA CORREGIDA CON QR Y DOCUMENTOS RELACIONADOS EN FACTURAS
+# pdf_generator.py - VERSIÓN CORREGIDA - FACTURAS USAN MISMOS CAMPOS QUE GUÍAS
 
 import os
 from jinja2 import Template
@@ -15,7 +15,7 @@ class PDFGenerator:
         self.logo_base64 = None
 
     # ============================================================
-    # OBTENER LOGO EN BASE64 - CON RUTA templates/pdf/logo-kcf.png
+    # OBTENER LOGO EN BASE64
     # ============================================================
     def _obtener_logo_base64(self):
         if self.logo_base64:
@@ -407,7 +407,16 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     def _generar_comprobante(self, datos_comprobante):
         try:
             print("📄 Generando PDF de comprobante...")
-            print(f"📦 Datos recibidos: {datos_comprobante.keys()}")
+            print(f"📦 Datos recibidos (keys): {list(datos_comprobante.keys())}")
+            
+            # --- DEBUG: Imprimir TODOS los campos para ver qué está llegando ---
+            print("🔍 TODOS LOS CAMPOS RECIBIDOS:")
+            for key, value in datos_comprobante.items():
+                if key in ['items', 'items_json', 'productos', 'detalle']:
+                    print(f"   {key}: (array con {len(value) if value else 0} items)")
+                else:
+                    print(f"   {key}: {value}")
+            print("=" * 60)
 
             # --- 1. DATOS DE LA EMPRESA (FIJOS) ---
             EMPRESA = {
@@ -523,40 +532,23 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             print(f"📱 QR generado: {'Sí' if qr_base64 else 'No'}")
 
             # ============================================================
-            # --- 7. OBTENER DOCUMENTOS RELACIONADOS - BUSCANDO EN MÚLTIPLES NOMBRES ---
+            # --- 7. OBTENER DOCUMENTOS RELACIONADOS - IGUAL QUE EN LA GUÍA ---
             # ============================================================
-            # Orden de compra - buscar en varios nombres posibles
-            orden_compra_cliente = (
-                datos_comprobante.get('orden_compra_cliente', '') or
-                datos_comprobante.get('orden_compra', '') or
-                datos_comprobante.get('oc_cliente', '') or
-                datos_comprobante.get('oc', '') or
-                datos_comprobante.get('nro_orden_compra', '')
-            )
-            
-            # Factura relacionada - buscar en varios nombres posibles
-            factura_relacionada = (
-                datos_comprobante.get('factura', '') or
-                datos_comprobante.get('factura_relacionada', '') or
-                datos_comprobante.get('factura_vinculada', '') or
-                datos_comprobante.get('comprobante_asociado', '') or
-                datos_comprobante.get('nro_factura', '')
-            )
-            
-            # Cotización relacionada - buscar en varios nombres posibles
-            nro_cotizacion = (
-                datos_comprobante.get('nro_cotizacion', '') or
-                datos_comprobante.get('cotizacion', '') or
-                datos_comprobante.get('cotizacion_numero', '') or
-                datos_comprobante.get('numero_cotizacion', '') or
-                datos_comprobante.get('documento_asociado', '') or
-                datos_comprobante.get('cotizacion_asociada', '')
-            )
+            # Usamos EXACTAMENTE los mismos nombres de campo que la guía
+            orden_compra_cliente = datos_comprobante.get('orden_compra_cliente', '')
+            factura = datos_comprobante.get('factura', '')
+            nro_cotizacion = datos_comprobante.get('nro_cotizacion', '')
 
-            print(f"📋 Documentos relacionados encontrados:")
-            print(f"   - OC: '{orden_compra_cliente}'")
-            print(f"   - Factura: '{factura_relacionada}'")
-            print(f"   - Cotización: '{nro_cotizacion}'")
+            # Si no viene en 'nro_cotizacion', buscar en otros nombres comunes
+            if not nro_cotizacion:
+                nro_cotizacion = (
+                    datos_comprobante.get('documento_asociado', '') or
+                    datos_comprobante.get('cotizacion', '') or
+                    datos_comprobante.get('cotizacion_numero', '') or
+                    datos_comprobante.get('numero_cotizacion', '')
+                )
+
+            print(f"📋 Documentos relacionados - OC: '{orden_compra_cliente}', Factura: '{factura}', Cotización: '{nro_cotizacion}'")
 
             # --- 8. PREPARAR DATOS PARA EL TEMPLATE ---
             datos_mapeados = {
@@ -596,10 +588,10 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'observaciones': datos_comprobante.get('observaciones', ''),
                 
                 # ============================================================
-                # DOCUMENTOS RELACIONADOS - CON LOS VALORES ENCONTRADOS
+                # DOCUMENTOS RELACIONADOS - MISMO NOMBRE QUE LA GUÍA
                 # ============================================================
                 'orden_compra_cliente': orden_compra_cliente or '—',
-                'factura_relacionada': factura_relacionada or '—',
+                'factura': factura or '—',  # ← MISMO NOMBRE QUE EN LA GUÍA
                 'nro_cotizacion': nro_cotizacion or '—',
                 
                 # PRODUCTOS
@@ -934,7 +926,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 </div>
                 <div class="ref-item">
                     <span class="ref-label">NRO DE FACTURA</span>
-                    <span class="ref-value">{{ factura_relacionada or '—' }}</span>
+                    <span class="ref-value">{{ factura or '—' }}</span>
                 </div>
                 <div class="ref-item">
                     <span class="ref-label">NRO DE COTIZACION</span>
@@ -1052,7 +1044,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'estado': datos.get('estado', 'Borrador'),
                 'observaciones': datos.get('observaciones', ''),
                 'orden_compra_cliente': datos.get('orden_compra_cliente', '—'),
-                'factura_relacionada': datos.get('factura_relacionada', '—'),
+                'factura': datos.get('factura', '—'),  # ← MISMO NOMBRE QUE LA GUÍA
                 'nro_cotizacion': datos.get('nro_cotizacion', '—'),
                 'qr_base64': datos.get('qr_base64', ''),
             }
