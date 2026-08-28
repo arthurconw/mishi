@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN CORREGIDA - FACTURAS USAN MISMOS CAMPOS QUE GUÍAS
+# pdf_generator.py - VERSIÓN CORREGIDA
 
 import os
 from jinja2 import Template
@@ -47,23 +47,20 @@ class PDFGenerator:
         return None
 
     # ============================================================
-# MÉTODO PRINCIPAL - ACTUALIZADO
-# ============================================================
-def generar_pdf_universal(self, datos):
-    print(f"📄 Generando PDF universal...")
-    tipo = datos.get('tipo_documento', '')
-    
-    if tipo == 'guia_remision' or ('serie' in datos and 'numero' in datos and 'destinatario_nombre' in datos):
-        return self._generar_guia_remision(datos)
-    elif tipo in ['factura', 'boleta', 'comprobante']:
-        return self._generar_comprobante(datos)
-    elif tipo == 'cotizacion' or 'numero_cotizacion' in datos or 'cliente_nombre' in datos:
-        # 🔽 AHORA USA EL NUEVO MÉTODO CON LOGO
-        return self._generar_cotizacion(datos)
-    else:
-        # Por defecto, intentar generar cotización
-        return self._generar_cotizacion(datos)
-
+    # ✅ MÉTODO PRINCIPAL - CORREGIDO (con indentación correcta)
+    # ============================================================
+    def generar_pdf_universal(self, datos):
+        print(f"📄 Generando PDF universal...")
+        tipo = datos.get('tipo_documento', '')
+        
+        if tipo == 'guia_remision' or ('serie' in datos and 'numero' in datos and 'destinatario_nombre' in datos):
+            return self._generar_guia_remision(datos)
+        elif tipo in ['factura', 'boleta', 'comprobante']:
+            return self._generar_comprobante(datos)
+        elif tipo == 'cotizacion' or 'numero_cotizacion' in datos or 'cliente_nombre' in datos:
+            return self._generar_cotizacion(datos)
+        else:
+            return self._generar_cotizacion(datos)
 
     # ============================================================
     # GENERAR GUÍA DE REMISIÓN
@@ -87,7 +84,7 @@ def generar_pdf_universal(self, datos):
             print(f"✅ PDF generado: {pdf_file}")
             return pdf_file
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"❌ Error en _generar_guia_remision: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -350,47 +347,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         except:
             return ""
 
-    # ============================================================
-    # GENERAR QR PARA COMPROBANTE (FACTURA/BOLETA)
-    # ============================================================
-    def _generar_qr_comprobante(self, datos_comprobante):
-        """Genera un código QR para el comprobante (factura/boleta)"""
-        try:
-            import qrcode
-            from io import BytesIO
-            
-            qr_data = {
-                'tipo': datos_comprobante.get('tipo_comprobante', datos_comprobante.get('tipo', 'Factura')),
-                'serie': datos_comprobante.get('serie', ''),
-                'numero': datos_comprobante.get('numero', ''),
-                'ruc_emisor': '20602095704',
-                'ruc_cliente': datos_comprobante.get('cliente_numero_doc', datos_comprobante.get('ruc', '')),
-                'fecha_emision': self._formatear_fecha(datos_comprobante.get('fecha_emision', datos_comprobante.get('fecha'))),
-                'total': str(datos_comprobante.get('total', datos_comprobante.get('monto', 0)))
-            }
-            
-            qr = qrcode.QRCode(
-                version=2,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=4,
-                border=2
-            )
-            qr.add_data(json.dumps(qr_data))
-            qr.make(fit=True)
-            
-            img = qr.make_image(fill_color="black", back_color="white")
-            buffered = BytesIO()
-            img.save(buffered, format="PNG")
-            img_base64 = base64.b64encode(buffered.getvalue()).decode()
-            
-            return f"data:image/png;base64,{img_base64}"
-        except ImportError:
-            print("⚠️ qrcode no instalado, QR no generado")
-            return ""
-        except Exception as e:
-            print(f"⚠️ Error generando QR: {e}")
-            return ""
-
     def _generar_filas_productos_guia(self, productos):
         filas = ""
         for prod in productos:
@@ -403,7 +359,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         except Exception as e:
             print(f"❌ Error renderizando template Jinja2 de guía: {e}")
             return template
-
+        
     # ============================================================
     # GENERAR FACTURA / BOLETA (COMPROBANTE) - CON QR Y DOCUMENTOS RELACIONADOS
     # ============================================================
