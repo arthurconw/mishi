@@ -745,14 +745,54 @@ def obtener_pc_db():
         print(f"❌ Error en obtener_pc_db: {e}")
         return []
 
+
 def guardar_pc_db(data):
     """Guarda o actualiza un pedido de compra"""
     try:
         print("📝 Guardando PC en BD...")
         
+        from datetime import datetime
+        
+        # ============================================================
+        # 🔽 PROCESAR FECHA CORRECTAMENTE - SIN CONVERSIONES
+        # ============================================================
+        fecha = data.get('fecha')
+        
+        # Si la fecha viene como objeto datetime, convertir a string
+        if isinstance(fecha, datetime):
+            fecha = fecha.strftime('%Y-%m-%d %H:%M:%S')
+            print(f"📅 Fecha era datetime, convertida a string: {fecha}")
+        
+        # Si la fecha es un string, usarla tal cual
+        if isinstance(fecha, str):
+            # Si tiene 'T', reemplazar por espacio (formato ISO)
+            if 'T' in fecha:
+                fecha = fecha.replace('T', ' ')
+                # Si termina con Z o tiene zona horaria, quitarlo
+                if 'Z' in fecha:
+                    fecha = fecha.replace('Z', '')
+                if '+' in fecha:
+                    fecha = fecha.split('+')[0]
+                if '-' in fecha and len(fecha.split('-')) > 3:
+                    # Si tiene zona horaria con + o -
+                    partes = fecha.split('+')
+                    if len(partes) > 1:
+                        fecha = partes[0]
+            print(f"📅 Fecha recibida como string (sin modificar): {fecha}")
+        
+        # Si no hay fecha, usar ahora
+        if not fecha:
+            ahora = datetime.now()
+            fecha = ahora.strftime('%Y-%m-%d %H:%M:%S')
+            print(f"📅 Fecha generada automáticamente: {fecha}")
+        
+        print(f"📅 FECHA FINAL A GUARDAR: {fecha}")
+        
         items_json = json.dumps(data.get('items', []))
         
-        # Validaciones
+        # ============================================================
+        # VALIDACIONES
+        # ============================================================
         valida_precios = data.get('valida_precios', False)
         valida_cantidades = data.get('valida_cantidades', False)
         valida_stock = data.get('valida_stock', False)
@@ -827,12 +867,12 @@ def guardar_pc_db(data):
             
             params = (
                 data.get('numero'),
-                data.get('fecha') or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                fecha,  # ← USAR LA FECHA PROCESADA
                 estado,
                 data.get('cliente') or '',
                 data.get('ruc') or '',
                 float(data.get('monto', 0)),
-                data.get('cotizacion_id'),  # Puede ser None
+                data.get('cotizacion_id'),
                 data.get('cotizacion_numero') or '',
                 data.get('correo_origen') or data.get('medio') or '',
                 data.get('fecha_recepcion') or data.get('fecha'),
@@ -868,7 +908,6 @@ def guardar_pc_db(data):
         # ============================================================
         print("➕ Insertando nuevo PC...")
         
-        # Asegurar que todos los valores sean válidos (no None)
         cotizacion_id = data.get('cotizacion_id')
         if cotizacion_id is None or cotizacion_id == '':
             cotizacion_id = None
@@ -896,12 +935,12 @@ def guardar_pc_db(data):
         
         params = (
             data.get('numero'),
-           data.get('fecha') or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            fecha,  # ← USAR LA FECHA PROCESADA
             estado,
             data.get('cliente') or '',
             data.get('ruc') or '',
             float(data.get('monto', 0)),
-            cotizacion_id,  # Puede ser None
+            cotizacion_id,
             data.get('cotizacion_numero') or '',
             data.get('correo_origen') or data.get('medio') or '',
             data.get('fecha_recepcion') or data.get('fecha'),
@@ -937,7 +976,6 @@ def guardar_pc_db(data):
         import traceback
         traceback.print_exc()
         raise
-
 
 def obtener_despachos_db():
     """Obtiene todos los despachos con sus items"""

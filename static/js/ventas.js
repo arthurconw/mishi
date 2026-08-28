@@ -737,25 +737,29 @@ function renderPedidos() {
         let matchFecha = true;
         if (fechaInicio || fechaFin) {
             let fechaPC = r.fecha || r.created_at || '';
-            let fechaObj = null;
+            let fechaStr = '';
             try {
                 if (typeof fechaPC === 'string') {
-                    fechaObj = new Date(fechaPC);
-                    if (fechaPC.includes('/')) {
-                        const partes = fechaPC.split(/[\/\s:]/);
-                        if (partes.length >= 3) {
-                            fechaObj = new Date(partes[2], partes[1] - 1, partes[0]);
+                    // Si la fecha tiene formato YYYY-MM-DD HH:MM:SS, extraer solo la fecha
+                    if (fechaPC.includes(' ')) {
+                        fechaStr = fechaPC.split(' ')[0];
+                    } else if (fechaPC.includes('T')) {
+                        fechaStr = fechaPC.split('T')[0];
+                    } else if (fechaPC.includes('/')) {
+                        // Si viene en formato DD/MM/YYYY
+                        const partes = fechaPC.split('/');
+                        if (partes.length === 3) {
+                            fechaStr = `${partes[2]}-${partes[1]}-${partes[0]}`;
                         }
+                    } else {
+                        fechaStr = fechaPC;
                     }
-                } else if (fechaPC instanceof Date) {
-                    fechaObj = fechaPC;
                 }
             } catch (e) {
-                fechaObj = null;
+                fechaStr = '';
             }
             
-            if (fechaObj && !isNaN(fechaObj.getTime())) {
-                const fechaStr = fechaObj.toISOString().split('T')[0];
+            if (fechaStr) {
                 if (fechaInicio && fechaFin) {
                     matchFecha = fechaStr >= fechaInicio && fechaStr <= fechaFin;
                 } else if (fechaInicio) {
@@ -776,6 +780,65 @@ function renderPedidos() {
     const tbody = document.getElementById('pcRows');
     const thead = document.getElementById('pedidosTableHead');
     if (!tbody || !thead) return;
+    
+    // ============================================================
+    // 🔽 FUNCIÓN PARA FORMATEAR FECHA SIN CONVERTIR ZONA HORARIA
+    // ============================================================
+    function formatearFechaSinZona(fechaStr) {
+        if (!fechaStr) return '-';
+        
+        // Si ya está en formato DD/MM/YYYY HH:MM, devolverlo
+        if (typeof fechaStr === 'string' && fechaStr.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/)) {
+            return fechaStr;
+        }
+        
+        try {
+            // Si es string con formato YYYY-MM-DD HH:MM:SS
+            if (typeof fechaStr === 'string' && fechaStr.includes(' ') && fechaStr.includes('-')) {
+                const partes = fechaStr.split(' ');
+                if (partes.length === 2) {
+                    const fechaPartes = partes[0].split('-');
+                    const horaPartes = partes[1].split(':');
+                    if (fechaPartes.length === 3 && horaPartes.length >= 2) {
+                        const dia = fechaPartes[2];
+                        const mes = fechaPartes[1];
+                        const anio = fechaPartes[0];
+                        const horas = horaPartes[0];
+                        const minutos = horaPartes[1];
+                        return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+                    }
+                }
+            }
+            
+            // Si es string con formato YYYY-MM-DDTHH:MM:SS
+            if (typeof fechaStr === 'string' && fechaStr.includes('T')) {
+                const partes = fechaStr.split('T');
+                if (partes.length === 2) {
+                    const fechaPartes = partes[0].split('-');
+                    const horaPartes = partes[1].split(':');
+                    if (fechaPartes.length === 3 && horaPartes.length >= 2) {
+                        const dia = fechaPartes[2];
+                        const mes = fechaPartes[1];
+                        const anio = fechaPartes[0];
+                        const horas = horaPartes[0];
+                        const minutos = horaPartes[1];
+                        return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+                    }
+                }
+            }
+            
+            // Si es solo fecha YYYY-MM-DD
+            if (typeof fechaStr === 'string' && fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const partes = fechaStr.split('-');
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+            
+            // Fallback: devolver el string original
+            return String(fechaStr);
+        } catch (e) {
+            return String(fechaStr);
+        }
+    }
     
     // ============================================================
     // VISTA PRINCIPAL - Columnas resumidas
@@ -816,10 +879,13 @@ function renderPedidos() {
                 ? '<span class="badge b-draft">🔴 PC observado</span>' 
                 : '<span class="badge b-ok">🟢 PC conforme</span>';
             
+            // 🔽 USAR formatearFechaSinZona en lugar de formatearFecha
+            const fechaDisplay = formatearFechaSinZona(r.fecha || r.created_at);
+            
             return `
             <tr>
                 <td>${i + 1}</td>
-                <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
+                <td class="date-cell">${fechaDisplay}</td>
                 <td>${estadoBadge}</td>
                 <td><b>${r.numero || '-'}</b>${badgeNuevo(r, 'created_at')}</td>
                 <td>${r.cotizacion_numero || '-'}</td>
@@ -881,11 +947,10 @@ function renderPedidos() {
         const estadoBadge = esObservado 
             ? '<span class="badge b-draft">🔴 PC observado</span>' 
             : '<span class="badge b-ok">🟢 PC conforme</span>';
-        // El menú solo debe mostrar "Eliminar" si NO está anulado
+        
         const menuHtml = esAnulado 
-    ? `<button class="kebab" onclick="showPedidoMenu(event, ${r.id})" disabled style="opacity:0.5;cursor:not-allowed;">⋮</button>`
-    : `<button class="kebab" onclick="showPedidoMenu(event, ${r.id})">⋮</button>`;
-
+            ? `<button class="kebab" onclick="showPedidoMenu(event, ${r.id})" disabled style="opacity:0.5;cursor:not-allowed;">⋮</button>`
+            : `<button class="kebab" onclick="showPedidoMenu(event, ${r.id})">⋮</button>`;
 
         // Construir string de validaciones
         const validaciones = [];
@@ -902,10 +967,13 @@ function renderPedidos() {
             ? validaciones.join('<br>') 
             : 'Sin validaciones';
         
+        // 🔽 USAR formatearFechaSinZona en lugar de formatearFecha
+        const fechaDisplay = formatearFechaSinZona(r.fecha || r.created_at);
+        
         return `
         <tr>
             <td>${i + 1}</td>
-            <td class="date-cell">${formatearFecha(r.fecha || r.created_at)}</td>
+            <td class="date-cell">${fechaDisplay}</td>
             <td>${estadoBadge}</td>
             <td><b>${r.numero || '-'}</b></td>
             <td>${r.cotizacion_numero || '-'}</td>
@@ -922,7 +990,7 @@ function renderPedidos() {
             <td class="left" style="font-size:9px;">${r.observaciones || '-'}</td>
             <td style="font-size:8px; text-align:left;">${validacionesHtml}</td>
             <td>
-                <button class="kebab" onclick="showPedidoMenu(event, ${r.id})">⋮</button>
+                ${menuHtml}
             </td>
         </tr>`;
     }).join('');
@@ -933,9 +1001,6 @@ function renderPedidos() {
         countEl.textContent = `Mostrando ${list.length} de ${pedidosData.length} pedidos`;
     }
 }
-
-
-
 // ============================================================
 // VISTAS DE COTIZACIONES - PRINCIPAL / COMPLETA
 // ============================================================
