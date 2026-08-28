@@ -378,19 +378,33 @@ def guardar_guia_db(data):
     try:
         from datetime import datetime
         
+        # ============================================================
+        # 🔽 OBTENER FECHA Y HORA ACTUAL (igual que en facturas)
+        # ============================================================
+        ahora = datetime.now()
+        
         # Asegurar que fecha_emision tenga hora correcta
         fecha_emision = data.get('fecha_emision')
         if fecha_emision:
             # Si viene sin hora (solo fecha), agregar hora actual
             if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
-                ahora = datetime.now()
-                fecha_emision = f"{fecha_emision}T{ahora.strftime('%H:%M:%S')}"
+                # Usar isoformat() como en facturas
+                fecha_emision = datetime(
+                    int(fecha_emision[0:4]),
+                    int(fecha_emision[5:7]),
+                    int(fecha_emision[8:10]),
+                    ahora.hour,
+                    ahora.minute,
+                    ahora.second
+                ).isoformat()
+            else:
+                fecha_emision = fecha_emision
         else:
-            # Si no viene, usar ahora mismo
-            fecha_emision = datetime.now().isoformat()
+            # Si no viene, usar ahora mismo con isoformat()
+            fecha_emision = ahora.isoformat()
         
         # Fecha traslado (puede ser solo fecha)
-        fecha_traslado = data.get('fecha_traslado') or datetime.now().date().isoformat()
+        fecha_traslado = data.get('fecha_traslado') or ahora.date().isoformat()
         
         print(f"📅 Fecha emisión guardando: {fecha_emision}")
         print(f"📅 Fecha traslado guardando: {fecha_traslado}")
@@ -416,7 +430,7 @@ def guardar_guia_db(data):
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,  # ← CON HORA CORRECTA
+            fecha_emision,  # ← CON HORA CORRECTA (isoformat)
             fecha_traslado,
             data.get('ruc_remitente'),
             data.get('remitente_nombre'),
@@ -448,8 +462,6 @@ def guardar_guia_db(data):
     except Exception as e:
         print(f"❌ Error en guardar_guia_db: {e}")
         raise
-
-
 
 def actualizar_guia_db(guia_id, data):
     """Actualiza una guía existente"""
@@ -1782,28 +1794,41 @@ def api_guias_guardar():
         # ============================================================
         ORIGEN_FIJO = {
             'ruc': '20602095704',
-             'nombre': 'KCF CORPORACION E.I.R.L',
+            'nombre': 'KCF CORPORACION E.I.R.L',
             'direccion': 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
             'ubigeo': '150139'
         }
         
         # ============================================================
-        # OBTENER FECHA CON HORA CORRECTA
+        # 🔽 OBTENER FECHA Y HORA ACTUAL (igual que en facturas)
         # ============================================================
         ahora = datetime.now()
         
-        # Fecha de emisión
-        fecha_emision_raw = data.get('fecha_emision')
-        if fecha_emision_raw:
-            if isinstance(fecha_emision_raw, str) and 'T' not in fecha_emision_raw and ' ' not in fecha_emision_raw:
-                fecha_emision = f"{fecha_emision_raw}T{ahora.strftime('%H:%M:%S')}"
+        # Fecha de emisión - usando isoformat() como en facturas
+        fecha_emision = data.get('fecha_emision')
+        if fecha_emision:
+            # Si viene sin hora (solo fecha), agregar hora actual
+            if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
+                # Usar isoformat() como en facturas
+                fecha_emision = datetime(
+                    int(fecha_emision[0:4]),
+                    int(fecha_emision[5:7]),
+                    int(fecha_emision[8:10]),
+                    ahora.hour,
+                    ahora.minute,
+                    ahora.second
+                ).isoformat()
             else:
-                fecha_emision = fecha_emision_raw
+                fecha_emision = fecha_emision
         else:
+            # Si no viene, usar ahora mismo con isoformat()
             fecha_emision = ahora.isoformat()
         
-        # Fecha de traslado
+        # Fecha de traslado (solo fecha)
         fecha_traslado = data.get('fecha_traslado') or data.get('fecha_emision') or ahora.date().isoformat()
+        
+        print(f"📅 Fecha emisión guardando: {fecha_emision}")
+        print(f"📅 Fecha traslado guardando: {fecha_traslado}")
         
         # ============================================================
         # CONSULTA CON SOLO LAS COLUMNAS QUE EXISTEN EN LA TABLA
@@ -1836,7 +1861,7 @@ def api_guias_guardar():
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,
+            fecha_emision,  # ← CON HORA CORRECTA (isoformat)
             fecha_traslado,
             data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],
             data.get('remitente_nombre') or ORIGEN_FIJO['nombre'],
@@ -1868,21 +1893,17 @@ def api_guias_guardar():
         print(f"📊 Items: {len(data.get('items', []))} productos")
         
         # ============================================================
-        # 🔽 CORRECCIÓN: db_query devuelve una lista de tuplas/diccionarios
+        # EJECUTAR CONSULTA
         # ============================================================
         result = db_query(query, params)
         
-        # Verificar que result no esté vacío
         if result and len(result) > 0:
-            # result[0] es el primer registro (diccionario o tupla)
             row = result[0]
             
-            # Si es un diccionario, acceder por clave
             if isinstance(row, dict):
                 guia_id = row.get('id')
                 guia_numero = row.get('numero')
             else:
-                # Si es una tupla, acceder por índice
                 guia_id = row[0] if len(row) > 0 else None
                 guia_numero = row[1] if len(row) > 1 else None
             
