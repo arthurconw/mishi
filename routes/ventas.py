@@ -829,7 +829,7 @@ def guardar_pc_db(data):
             
             params = (
                 data.get('numero'),
-                data.get('fecha') or datetime.now().isoformat(),
+                data.get('fecha') or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 estado,
                 data.get('cliente') or '',
                 data.get('ruc') or '',
@@ -898,7 +898,7 @@ def guardar_pc_db(data):
         
         params = (
             data.get('numero'),
-            data.get('fecha') or datetime.now().isoformat(),
+           data.get('fecha') or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             estado,
             data.get('cliente') or '',
             data.get('ruc') or '',
@@ -990,7 +990,7 @@ def guardar_despacho_db(data):
         """
         params = (
             data.get('numero'),
-            data.get('fecha') or datetime.now().isoformat(),
+            data.get('fecha') or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             data.get('fecha_despacho'),
             data.get('estado', 'Pendiente despacho'),
             data.get('pc_id'),
@@ -1049,7 +1049,7 @@ def guardar_devolucion_db(data):
         """
         params = (
             data.get('numero'),
-            data.get('fecha') or datetime.now().isoformat(),
+           data.get('fecha') or datetime.now().strftime('%Y-%m-%d %H:%M:%S') ,
             data.get('estado', 'Pendiente'),
             data.get('ruc'),
             data.get('cliente'),
@@ -2582,9 +2582,9 @@ def api_pedido_compra_guardar():
             data['numero'] = f"PC-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp()).split('.')[0][-4:]}"
         
         # Fecha si no tiene
-        if not data.get('fecha'):
-            from datetime import datetime
-            data['fecha'] = datetime.now().isoformat()
+       
+            if not data.get('fecha'):
+             data['fecha'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         # ============================================================
         # GUARDAR EL PC (INSERT O UPDATE)
@@ -2813,9 +2813,8 @@ def api_despachos_guardar():
             data['numero'] = f"DESP-{now.strftime('%Y%m%d')}-{str(now.timestamp()).split('.')[0][-4:]}"
         
         # Fecha si no tiene
-        if not data.get('fecha'):
-            from datetime import datetime
-            data['fecha'] = datetime.now().isoformat()
+            if not data.get('fecha'):
+                data['fecha'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         # ============================================================
         # PROCESAR FECHA DESPACHO CON HORA
