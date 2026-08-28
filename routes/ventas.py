@@ -377,38 +377,33 @@ def guardar_guia_db(data):
     """Guarda una nueva guía con fecha y hora correcta"""
     try:
         from datetime import datetime
-        import pytz  # ← IMPORTANTE
         
         # ============================================================
-        # 🔽 OBTENER HORA DE PERÚ (UTC-5)
+        # 🔽 USAR datetime.now().isoformat() IGUAL QUE EN FACTURAS
         # ============================================================
-        zona_peru = pytz.timezone('America/Lima')
-        ahora_peru = datetime.now(zona_peru)
+        ahora = datetime.now()
         
-        # Asegurar que fecha_emision tenga hora correcta
         fecha_emision = data.get('fecha_emision')
         if fecha_emision:
             if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
-                # Si viene solo fecha, agregar hora de Perú
+                # Si viene solo fecha, construir con hora actual
                 fecha_emision = datetime(
                     int(fecha_emision[0:4]),
                     int(fecha_emision[5:7]),
                     int(fecha_emision[8:10]),
-                    ahora_peru.hour,
-                    ahora_peru.minute,
-                    ahora_peru.second
+                    ahora.hour,
+                    ahora.minute,
+                    ahora.second
                 ).isoformat()
             else:
                 fecha_emision = fecha_emision
         else:
-            # Usar hora de Perú
-            fecha_emision = ahora_peru.isoformat()
+            # Usar isoformat() como en facturas
+            fecha_emision = ahora.isoformat()
         
-        # Fecha traslado
-        fecha_traslado = data.get('fecha_traslado') or ahora_peru.date().isoformat()
+        fecha_traslado = data.get('fecha_traslado') or ahora.date().isoformat()
         
         print(f"📅 Fecha emisión guardando: {fecha_emision}")
-        print(f"🕐 Hora Perú: {ahora_peru.strftime('%H:%M:%S')}")
         
         query = """
             INSERT INTO guias_remision (
@@ -431,7 +426,7 @@ def guardar_guia_db(data):
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,  # ← CON HORA DE PERÚ
+            fecha_emision,
             fecha_traslado,
             data.get('ruc_remitente'),
             data.get('remitente_nombre'),
@@ -464,7 +459,6 @@ def guardar_guia_db(data):
         print(f"❌ Error en guardar_guia_db: {e}")
         raise
 
-    
 def actualizar_guia_db(guia_id, data):
     """Actualiza una guía existente"""
     try:
@@ -1777,6 +1771,7 @@ def api_guias_listar():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @ventas_bp.route('/ventas/api/guias/guardar', methods=['POST'])
 @login_required
 def api_guias_guardar():
@@ -1790,13 +1785,6 @@ def api_guias_guardar():
         print("=" * 80)
         
         from datetime import datetime
-        import pytz  # ← IMPORTANTE: instalar con pip install pytz
-        
-        # ============================================================
-        # 🔽 OBTENER HORA DE PERÚ (UTC-5)
-        # ============================================================
-        zona_peru = pytz.timezone('America/Lima')
-        ahora_peru = datetime.now(zona_peru)
         
         # ============================================================
         # ORIGEN FIJO - DATOS DEL REMITENTE
@@ -1809,31 +1797,35 @@ def api_guias_guardar():
         }
         
         # ============================================================
-        # 🔽 FECHA DE EMISIÓN CON HORA DE PERÚ
+        # 🔽 OBTENER FECHA CON HORA - IGUAL QUE EN FACTURAS
         # ============================================================
+        # USAR datetime.now().isoformat() IGUAL QUE EN FACTURAS
         fecha_emision = data.get('fecha_emision')
         if fecha_emision:
+            # Si viene sin hora (solo fecha), agregar hora actual usando isoformat()
             if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
-                # Si viene solo fecha (YYYY-MM-DD), agregar hora de Perú
-                fecha_emision = datetime(
+                # Construir fecha completa con hora actual (como en facturas)
+                from datetime import datetime
+                ahora = datetime.now()
+                fecha_dt = datetime(
                     int(fecha_emision[0:4]),
                     int(fecha_emision[5:7]),
                     int(fecha_emision[8:10]),
-                    ahora_peru.hour,
-                    ahora_peru.minute,
-                    ahora_peru.second
-                ).isoformat()
+                    ahora.hour,
+                    ahora.minute,
+                    ahora.second
+                )
+                fecha_emision = fecha_dt.isoformat()
             else:
                 fecha_emision = fecha_emision
         else:
-            # Usar hora de Perú
-            fecha_emision = ahora_peru.isoformat()
+            # Si no viene, usar ahora mismo con isoformat() (IGUAL QUE FACTURAS)
+            fecha_emision = datetime.now().isoformat()
         
         # Fecha de traslado (solo fecha)
-        fecha_traslado = data.get('fecha_traslado') or data.get('fecha_emision') or ahora_peru.date().isoformat()
+        fecha_traslado = data.get('fecha_traslado') or data.get('fecha_emision') or datetime.now().date().isoformat()
         
         print(f"📅 Fecha emisión guardando: {fecha_emision}")
-        print(f"🕐 Hora Perú: {ahora_peru.strftime('%H:%M:%S')}")
         
         # ============================================================
         # CONSULTA
@@ -1863,7 +1855,7 @@ def api_guias_guardar():
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,  # ← CON HORA DE PERÚ
+            fecha_emision,
             fecha_traslado,
             data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],
             data.get('remitente_nombre') or ORIGEN_FIJO['nombre'],
@@ -1919,7 +1911,6 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
