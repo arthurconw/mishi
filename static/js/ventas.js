@@ -12630,9 +12630,25 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcCliente', data.cliente_razon_social || '');
             setReadonlyValue('pcRuc', data.cliente_ruc || '');
             setReadonlyValue('pcMontoConIgv', (data.total || 0) * 1.18);
+            setReadonlyValue('pcMonto', data.total || 0);
             setReadonlyValue('pcCondicionPago', data.condicion_pago || 'Contado');
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
+
+            // ============================================================
+// 🔽 FORZAR QUE EL CAMPO "MONTO PC" QUEDE VACÍO
+// ============================================================
+const montoPCInput = document.getElementById('pcMontoPC');
+if (montoPCInput) {
+    montoPCInput.value = '';
+    montoPCInput.placeholder = '0.00';
+    montoPCInput.readOnly = false;
+    montoPCInput.style.background = '#FFFFFF';
+    montoPCInput.style.color = '#0F172A';
+    montoPCInput.style.cursor = 'text';
+    montoPCInput.style.border = '1px solid #CBD5E1';
+}
+
             // ============================================================
             // 🔽 ACTUALIZAR CONDICIÓN DE PAGO EN EL SELECT
             // ============================================================
