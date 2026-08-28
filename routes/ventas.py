@@ -377,37 +377,38 @@ def guardar_guia_db(data):
     """Guarda una nueva guía con fecha y hora correcta"""
     try:
         from datetime import datetime
+        import pytz  # ← IMPORTANTE
         
         # ============================================================
-        # 🔽 OBTENER FECHA Y HORA ACTUAL (igual que en facturas)
+        # 🔽 OBTENER HORA DE PERÚ (UTC-5)
         # ============================================================
-        ahora = datetime.now()
+        zona_peru = pytz.timezone('America/Lima')
+        ahora_peru = datetime.now(zona_peru)
         
         # Asegurar que fecha_emision tenga hora correcta
         fecha_emision = data.get('fecha_emision')
         if fecha_emision:
-            # Si viene sin hora (solo fecha), agregar hora actual
             if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
-                # Usar isoformat() como en facturas
+                # Si viene solo fecha, agregar hora de Perú
                 fecha_emision = datetime(
                     int(fecha_emision[0:4]),
                     int(fecha_emision[5:7]),
                     int(fecha_emision[8:10]),
-                    ahora.hour,
-                    ahora.minute,
-                    ahora.second
+                    ahora_peru.hour,
+                    ahora_peru.minute,
+                    ahora_peru.second
                 ).isoformat()
             else:
                 fecha_emision = fecha_emision
         else:
-            # Si no viene, usar ahora mismo con isoformat()
-            fecha_emision = ahora.isoformat()
+            # Usar hora de Perú
+            fecha_emision = ahora_peru.isoformat()
         
-        # Fecha traslado (puede ser solo fecha)
-        fecha_traslado = data.get('fecha_traslado') or ahora.date().isoformat()
+        # Fecha traslado
+        fecha_traslado = data.get('fecha_traslado') or ahora_peru.date().isoformat()
         
         print(f"📅 Fecha emisión guardando: {fecha_emision}")
-        print(f"📅 Fecha traslado guardando: {fecha_traslado}")
+        print(f"🕐 Hora Perú: {ahora_peru.strftime('%H:%M:%S')}")
         
         query = """
             INSERT INTO guias_remision (
@@ -430,7 +431,7 @@ def guardar_guia_db(data):
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,  # ← CON HORA CORRECTA (isoformat)
+            fecha_emision,  # ← CON HORA DE PERÚ
             fecha_traslado,
             data.get('ruc_remitente'),
             data.get('remitente_nombre'),
@@ -463,6 +464,7 @@ def guardar_guia_db(data):
         print(f"❌ Error en guardar_guia_db: {e}")
         raise
 
+    
 def actualizar_guia_db(guia_id, data):
     """Actualiza una guía existente"""
     try:
@@ -1788,6 +1790,13 @@ def api_guias_guardar():
         print("=" * 80)
         
         from datetime import datetime
+        import pytz  # ← IMPORTANTE: instalar con pip install pytz
+        
+        # ============================================================
+        # 🔽 OBTENER HORA DE PERÚ (UTC-5)
+        # ============================================================
+        zona_peru = pytz.timezone('America/Lima')
+        ahora_peru = datetime.now(zona_peru)
         
         # ============================================================
         # ORIGEN FIJO - DATOS DEL REMITENTE
@@ -1800,38 +1809,34 @@ def api_guias_guardar():
         }
         
         # ============================================================
-        # 🔽 OBTENER FECHA Y HORA ACTUAL (igual que en facturas)
+        # 🔽 FECHA DE EMISIÓN CON HORA DE PERÚ
         # ============================================================
-        ahora = datetime.now()
-        
-        # Fecha de emisión - usando isoformat() como en facturas
         fecha_emision = data.get('fecha_emision')
         if fecha_emision:
-            # Si viene sin hora (solo fecha), agregar hora actual
             if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
-                # Usar isoformat() como en facturas
+                # Si viene solo fecha (YYYY-MM-DD), agregar hora de Perú
                 fecha_emision = datetime(
                     int(fecha_emision[0:4]),
                     int(fecha_emision[5:7]),
                     int(fecha_emision[8:10]),
-                    ahora.hour,
-                    ahora.minute,
-                    ahora.second
+                    ahora_peru.hour,
+                    ahora_peru.minute,
+                    ahora_peru.second
                 ).isoformat()
             else:
                 fecha_emision = fecha_emision
         else:
-            # Si no viene, usar ahora mismo con isoformat()
-            fecha_emision = ahora.isoformat()
+            # Usar hora de Perú
+            fecha_emision = ahora_peru.isoformat()
         
         # Fecha de traslado (solo fecha)
-        fecha_traslado = data.get('fecha_traslado') or data.get('fecha_emision') or ahora.date().isoformat()
+        fecha_traslado = data.get('fecha_traslado') or data.get('fecha_emision') or ahora_peru.date().isoformat()
         
         print(f"📅 Fecha emisión guardando: {fecha_emision}")
-        print(f"📅 Fecha traslado guardando: {fecha_traslado}")
+        print(f"🕐 Hora Perú: {ahora_peru.strftime('%H:%M:%S')}")
         
         # ============================================================
-        # CONSULTA CON SOLO LAS COLUMNAS QUE EXISTEN EN LA TABLA
+        # CONSULTA
         # ============================================================
         query = """
             INSERT INTO guias_remision (
@@ -1855,13 +1860,10 @@ def api_guias_guardar():
         
         items_json = json.dumps(data.get('items', []))
         
-        # ============================================================
-        # 27 VALORES QUE COINCIDEN CON LOS 27 PLACEHOLDERS
-        # ============================================================
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,  # ← CON HORA CORRECTA (isoformat)
+            fecha_emision,  # ← CON HORA DE PERÚ
             fecha_traslado,
             data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],
             data.get('remitente_nombre') or ORIGEN_FIJO['nombre'],
@@ -1889,17 +1891,10 @@ def api_guias_guardar():
             usuario_id
         )
         
-        print(f"📊 Número de parámetros: {len(params)}")
-        print(f"📊 Items: {len(data.get('items', []))} productos")
-        
-        # ============================================================
-        # EJECUTAR CONSULTA
-        # ============================================================
         result = db_query(query, params)
         
         if result and len(result) > 0:
             row = result[0]
-            
             if isinstance(row, dict):
                 guia_id = row.get('id')
                 guia_numero = row.get('numero')
