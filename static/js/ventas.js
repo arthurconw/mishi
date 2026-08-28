@@ -11164,19 +11164,20 @@ function openPedidoCompraModalSAP(mode = 'cot', id = null) {
         const searchInput = document.getElementById('pcCotSearch');
         if (searchInput) {
             searchInput.value = '';
-            searchInput.placeholder = 'Buscar Cotizacion : Escribe N° cotización, RUC, razón social...';
-            searchInput.readOnly = false;
-            searchInput.style.background = '#FFFFFF';
-            searchInput.style.color = '#0F172A';
-            searchInput.style.cursor = 'text';
+            searchInput.disabled = true; // bloquear hasta que carguen
+            searchInput.placeholder = 'Cargando cotizaciones...';
         }
-        
-        if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
-            showToast('⏳ Cargando cotizaciones...', 'info');
-            loadCotizaciones().then(() => {
-                console.log(`✅ ${cotizacionesData.length} cotizaciones cargadas`);
-            });
-        }
+        const ensureData = (!cotizacionesData || cotizacionesData.length === 0)
+            ? loadCotizaciones()
+            : Promise.resolve();
+
+        ensureData.then(() => {
+            if (searchInput) {
+                searchInput.disabled = false;
+                searchInput.placeholder = 'Buscar Cotizacion : Escribe N° cotización, RUC, razón social...';
+            }
+            console.log(`✅ ${cotizacionesData.length} cotizaciones listas para buscar`);
+        });
     }
     
     // Mostrar modal
@@ -11476,6 +11477,21 @@ async function cargarPCParaEditar(id) {
         // ============================================================
         // ACTUALIZAR SEMÁFORO
         // ============================================================
+        setTimeout(() => {
+            updateValidationSemaphore();
+            updateValidationStatus();
+        }, 100);
+
+        const monedaEl = document.getElementById('pcResumenMoneda');
+        if (monedaEl) {
+            monedaEl.textContent = (pc.moneda && pc.moneda.includes('Soles')) ? 'S/' : (pc.moneda || 'S/');
+        }
+        setTimeout(() => {
+            if (typeof actualizarResumenPC === 'function') {
+                actualizarResumenPC();
+            }
+        }, 50);
+        
         setTimeout(() => {
             updateValidationSemaphore();
             updateValidationStatus();
@@ -12814,6 +12830,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 
                 const tr = document.createElement('tr');
                 tr.id = `item-row-${i + 1}`;
+                
                 tr.style.borderBottom = '1px solid #E2E8F0';
                 
                 tr.innerHTML = `
@@ -13100,6 +13117,29 @@ function clearPedidoModalSAP() {
     cotizacionSeleccionada = null;
     modalMode = 'cot';
     editingId = null;
+
+    const resumenSubtotal = document.getElementById('pcResumenSubtotal');
+    const resumenValorVenta = document.getElementById('pcResumenValorVenta');
+    const resumenIgv = document.getElementById('pcResumenIgv');
+    const resumenTotal = document.getElementById('pcResumenTotal');
+    const resumenProductos = document.getElementById('pcResumenProductos');
+    const resumenMoneda = document.getElementById('pcResumenMoneda');
+    const diferenciaBox = document.getElementById('pcDiferenciaSinIgv');
+    const montoPCInput = document.getElementById('pcMontoPC');
+
+    if (resumenSubtotal) resumenSubtotal.textContent = 'S/ 0.00';
+    if (resumenValorVenta) resumenValorVenta.textContent = 'S/ 0.00';
+    if (resumenIgv) resumenIgv.textContent = 'S/ 0.00';
+    if (resumenTotal) resumenTotal.textContent = 'S/ 0.00';
+    if (resumenProductos) resumenProductos.textContent = '0';
+    if (resumenMoneda) resumenMoneda.textContent = 'S/';
+    if (diferenciaBox) {
+        diferenciaBox.textContent = 'S/ 0.00';
+        diferenciaBox.style.color = '#DC2626';
+    }
+    if (montoPCInput) montoPCInput.value = '';
+    
+   
     
     console.log('✅ Modal de PC restaurado a estado inicial');
 }
