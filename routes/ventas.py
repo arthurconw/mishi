@@ -2566,12 +2566,13 @@ def api_pedido_compra_guardar():
                     data['ruc'] = cot.get('cliente_ruc')
                 if not data.get('cotizacion_numero'):
                     data['cotizacion_numero'] = cot.get('numero_cotizacion')
-                if not data.get('monto') or data.get('monto') == 0:
-                    data['monto'] = float(cot.get('total', 0))
                 if not data.get('lugar_entrega'):
                     data['lugar_entrega'] = cot.get('direccion_entrega')
                 if not data.get('condicion_pago'):
                     data['condicion_pago'] = cot.get('condicion_pago')
+
+                if 'monto' not in data or not data['monto']:
+                 data['monto'] = 0.0
         
         # ============================================================
         # GENERAR NÚMERO SI ES NUEVO Y NO TIENE
