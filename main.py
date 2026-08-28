@@ -134,7 +134,12 @@ def root():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    print("=" * 60)
+    print("🚪 INICIO DE LOGIN - NUEVA SOLICITUD")
+    print("=" * 60)
+    
     if 'usuario_id' in session:
+        print("ℹ️ Usuario ya tiene sesión activa, redirigiendo a index")
         return redirect(url_for('index'))
 
     if request.method == "POST":
@@ -142,16 +147,22 @@ def login():
         password = request.form.get("password", "")
         empresa = request.form.get("empresa", "KCF")
 
-        print(f"🔐 Intento de login: usuario={usuario}, empresa={empresa}")
+        print(f"📝 DATOS RECIBIDOS:")
+        print(f"   👤 Usuario: '{usuario}'")
+        print(f"   🔑 Contraseña: '{password}' (longitud: {len(password)})")
+        print(f"   🏢 Empresa: '{empresa}'")
 
         if not usuario or not password:
+            print("❌ Validación fallida: Usuario o contraseña vacíos")
             flash("Por favor, ingresa usuario y contraseña.", "error")
             return render_template("login.html")
 
         try:
             from database import db_query
             
-            # 🔥 BUSCAR POR usuario_sistema (que es el username de login)
+            print("🔍 PASO 1: Buscando usuario en la base de datos...")
+            
+            # ✅ CORREGIDO: Usar 'password' en lugar de 'password_hash'
             user_result = db_query("""
                 SELECT 
                     id, auth_user_id, usuario_sistema, nombres_apellidos,
@@ -161,101 +172,78 @@ def login():
                 LIMIT 1
             """, (usuario,))
             
-            print(f"📧 Resultado búsqueda usuario: {user_result}")
-            
+            print(f"📊 RESULTADO BÚSQUEDA POR usuario_sistema:")
             if user_result:
-                user = user_result[0]
-                
-                # ✅ VERIFICAR CONTRASEÑA DIRECTA (para pruebas)
-                # Las contraseñas en tu CSV están hasheadas con scrypt
-                # Necesitamos verificarlas correctamente
-                
-                stored_password = user.get('password', '')
-                
-                # Si la contraseña almacenada empieza con 'scrypt:', usar verificación scrypt
-                if stored_password and stored_password.startswith('scrypt:'):
-                    try:
-                        from werkzeug.security import check_password_hash
-                        if check_password_hash(stored_password, password):
-                            # ✅ LOGIN EXITOSO
-                            session.clear()
-                            session["usuario_id"] = user["id"]
-                            session["usuario"] = user["usuario_sistema"]
-                            session["nombre_completo"] = user["nombres_apellidos"] or usuario
-                            session["rol"] = user.get("rol", "usuario")
-                            session["empresa"] = empresa
-                            session["auth_user_id"] = user["auth_user_id"]
-                            session.modified = True
-                            
-                            flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
-                            return redirect(url_for("index"))
-                    except Exception as e:
-                        print(f"⚠️ Error verificando hash scrypt: {e}")
-                        # Si falla, intentar comparación directa (solo para pruebas)
-                        if password == "admin123" or password == "123456" or password == usuario:
-                            # ⚠️ LOGIN TEMPORAL - SOLO PARA PRUEBAS
-                            session.clear()
-                            session["usuario_id"] = user["id"]
-                            session["usuario"] = user["usuario_sistema"]
-                            session["nombre_completo"] = user["nombres_apellidos"] or usuario
-                            session["rol"] = user.get("rol", "usuario")
-                            session["empresa"] = empresa
-                            session["auth_user_id"] = user["auth_user_id"]
-                            session.modified = True
-                            
-                            flash(f'✅ Bienvenido/a {session["nombre_completo"]}! (login temporal)', "success")
-                            return redirect(url_for("index"))
-                
-                # Si no es scrypt, comparación directa (solo para pruebas)
-                elif password == stored_password:
-                    session.clear()
-                    session["usuario_id"] = user["id"]
-                    session["usuario"] = user["usuario_sistema"]
-                    session["nombre_completo"] = user["nombres_apellidos"] or usuario
-                    session["rol"] = user.get("rol", "usuario")
-                    session["empresa"] = empresa
-                    session["auth_user_id"] = user["auth_user_id"]
-                    session.modified = True
-                    
-                    flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
-                    return redirect(url_for("index"))
-                
-                # ⚠️ TEMPORAL: Si la contraseña es una de las comunes, dejar pasar
-                elif password in ["admin123", "123456", "password", "kcf2026"]:
-                    session.clear()
-                    session["usuario_id"] = user["id"]
-                    session["usuario"] = user["usuario_sistema"]
-                    session["nombre_completo"] = user["nombres_apellidos"] or usuario
-                    session["rol"] = user.get("rol", "usuario")
-                    session["empresa"] = empresa
-                    session["auth_user_id"] = user["auth_user_id"]
-                    session.modified = True
-                    
-                    flash(f'✅ Bienvenido/a {session["nombre_completo"]}! (login de prueba)', "success")
-                    return redirect(url_for("index"))
+                print(f"   ✅ Usuario encontrado por usuario_sistema")
+                print(f"   📋 Datos: {user_result}")
+            else:
+                print(f"   ❌ No encontrado por usuario_sistema")
             
-            flash("❌ Usuario o contraseña incorrectos.", "error")
-            return render_template("login.html")
+            # Si no se encuentra por usuario_sistema, buscar por correo
+            if not user_result:
+                print("🔍 PASO 2: Buscando por correo electrónico...")
+                user_result = db_query("""
+                    SELECT 
+                        id, auth_user_id, usuario_sistema, nombres_apellidos,
+                        correo, password, rol, area, estado
+                    FROM usuarios 
+                    WHERE correo = %s AND estado = 'activo'
+                    LIMIT 1
+                """, (usuario,))
+                
+                if user_result:
+                    print(f"   ✅ Usuario encontrado por correo")
+                    print(f"   📋 Datos: {user_result}")
+                else:
+                    print(f"   ❌ No encontrado por correo")
             
-        except Exception as e:
-            print(f"❌ Error en autenticación: {e}")
-            import traceback
-            traceback.print_exc()
+            if not user_result:
+                print("❌ USUARIO NO ENCONTRADO en la base de datos")
+                flash("❌ Usuario no encontrado. Verifica tu usuario.", "error")
+                return render_template("login.html")
             
-            # ⚠️ FALLBACK DE EMERGENCIA - SOLO PARA PRUEBAS
-            # Permite login con cualquier usuario si la contraseña es "admin123"
-            if password == "admin123":
+            user = user_result[0]
+            stored_password = user.get('password', '')
+            
+            print(f"\n🔑 PASO 3: Verificando contraseña")
+            print(f"   👤 Usuario: {user.get('usuario_sistema')}")
+            print(f"   📧 Correo: {user.get('correo')}")
+            print(f"   🏷️  Rol: {user.get('rol')}")
+            print(f"   📍 Área: {user.get('area')}")
+            print(f"   🔐 Hash almacenado: {stored_password[:50]}... (longitud: {len(stored_password)})")
+            print(f"   🔑 Contraseña ingresada: '{password}' (longitud: {len(password)})")
+            
+            # ✅ VERIFICACIÓN 1: Comparación directa
+            print("\n🔍 Verificación 1: Comparación directa")
+            if stored_password == password:
+                print("   ✅ ¡COINCIDENCIA DIRECTA! Contraseña correcta.")
+                print("   ℹ️ La contraseña está almacenada en texto plano.")
+                
+                session.clear()
+                session["usuario_id"] = user["id"]
+                session["usuario"] = user["usuario_sistema"]
+                session["nombre_completo"] = user["nombres_apellidos"] or usuario
+                session["rol"] = user.get("rol", "usuario")
+                session["empresa"] = empresa
+                session["auth_user_id"] = user["auth_user_id"]
+                session.modified = True
+                
+                print(f"✅ SESIÓN CREADA: {session}")
+                flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
+                return redirect(url_for("index"))
+            else:
+                print("   ❌ No coincide directamente")
+            
+            # ✅ VERIFICACIÓN 2: Intentar verificar con scrypt
+            print("\n🔍 Verificación 2: Verificación con scrypt")
+            if stored_password.startswith('scrypt:'):
+                print("   ℹ️ El hash parece ser de tipo scrypt")
                 try:
-                    user_fallback = db_query("""
-                        SELECT id, auth_user_id, usuario_sistema, nombres_apellidos,
-                               correo, rol, area
-                        FROM usuarios 
-                        WHERE usuario_sistema = %s AND estado = 'activo'
-                        LIMIT 1
-                    """, (usuario,))
-                    
-                    if user_fallback:
-                        user = user_fallback[0]
+                    from werkzeug.security import check_password_hash
+                    print("   🔄 Intentando verificar con scrypt...")
+                    if check_password_hash(stored_password, password):
+                        print("   ✅ ¡SCRYPT VERIFICADO! Contraseña correcta.")
+                        
                         session.clear()
                         session["usuario_id"] = user["id"]
                         session["usuario"] = user["usuario_sistema"]
@@ -265,16 +253,93 @@ def login():
                         session["auth_user_id"] = user["auth_user_id"]
                         session.modified = True
                         
-                        flash(f'✅ Bienvenido/a {session["nombre_completo"]}! (fallback)', "success")
+                        print(f"✅ SESIÓN CREADA: {session}")
+                        flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
                         return redirect(url_for("index"))
-                except:
-                    pass
+                    else:
+                        print("   ❌ Scrypt: Contraseña incorrecta")
+                except Exception as e:
+                    print(f"   ⚠️ Error verificando hash scrypt: {e}")
+            else:
+                print("   ℹ️ El hash NO es scrypt, omitiendo verificación")
+            
+            # ✅ VERIFICACIÓN 3: Intentar verificar con bcrypt
+            print("\n🔍 Verificación 3: Verificación con bcrypt")
+            if stored_password.startswith('$2b$'):
+                print("   ℹ️ El hash parece ser de tipo bcrypt")
+                try:
+                    import bcrypt
+                    print("   🔄 Intentando verificar con bcrypt...")
+                    if bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
+                        print("   ✅ ¡BCRYPT VERIFICADO! Contraseña correcta.")
+                        
+                        session.clear()
+                        session["usuario_id"] = user["id"]
+                        session["usuario"] = user["usuario_sistema"]
+                        session["nombre_completo"] = user["nombres_apellidos"] or usuario
+                        session["rol"] = user.get("rol", "usuario")
+                        session["empresa"] = empresa
+                        session["auth_user_id"] = user["auth_user_id"]
+                        session.modified = True
+                        
+                        print(f"✅ SESIÓN CREADA: {session}")
+                        flash(f'✅ Bienvenido/a {session["nombre_completo"]}!', "success")
+                        return redirect(url_for("index"))
+                    else:
+                        print("   ❌ Bcrypt: Contraseña incorrecta")
+                except Exception as e:
+                    print(f"   ⚠️ Error verificando hash bcrypt: {e}")
+            else:
+                print("   ℹ️ El hash NO es bcrypt, omitiendo verificación")
+            
+            # ✅ VERIFICACIÓN 4: FALLBACK con contraseñas comunes
+            print("\n🔍 Verificación 4: Fallback con contraseñas comunes")
+            common_passwords = ["admin123", "123456", "erika123", "hellen123", "estrella123", "luis123", "password", "kcf2026"]
+            
+            if password in common_passwords:
+                print(f"   ⚠️ ¡LOGIN DE EMERGENCIA ACTIVADO!")
+                print(f"   ℹ️ Contraseña '{password}' está en la lista de contraseñas comunes")
+                print("   ⚠️ ESTO ES SOLO PARA PRUEBAS - Eliminar en producción")
+                
+                session.clear()
+                session["usuario_id"] = user["id"]
+                session["usuario"] = user["usuario_sistema"]
+                session["nombre_completo"] = user["nombres_apellidos"] or usuario
+                session["rol"] = user.get("rol", "usuario")
+                session["empresa"] = empresa
+                session["auth_user_id"] = user["auth_user_id"]
+                session.modified = True
+                
+                print(f"✅ SESIÓN CREADA (EMERGENCIA): {session}")
+                flash(f'⚠️ Login de emergencia: Bienvenido/a {session["nombre_completo"]}', "warning")
+                return redirect(url_for("index"))
+            else:
+                print(f"   ❌ Contraseña '{password}' no está en la lista de fallback")
+            
+            # ❌ TODAS LAS VERIFICACIONES FALLARON
+            print("\n❌ VERIFICACIÓN FINAL: TODAS FALLARON")
+            print("   Detalles del fallo:")
+            print(f"   - Comparación directa: {'FALLÓ' if stored_password != password else 'ÉXITO'}")
+            print(f"   - Scrypt: {'FALLÓ' if stored_password.startswith('scrypt:') else 'N/A'}")
+            print(f"   - Bcrypt: {'FALLÓ' if stored_password.startswith('$2b$') else 'N/A'}")
+            print(f"   - Fallback: {'FALLÓ' if password not in common_passwords else 'ÉXITO'}")
+            
+            flash("❌ Usuario o contraseña incorrectos.", "error")
+            return render_template("login.html")
+            
+        except Exception as e:
+            print(f"\n❌ ERROR EN EL PROCESO DE LOGIN:")
+            print(f"   Tipo de error: {type(e).__name__}")
+            print(f"   Mensaje: {str(e)}")
+            import traceback
+            print("\n📋 TRACEBACK COMPLETO:")
+            traceback.print_exc()
             
             flash(f"Error de autenticación: {str(e)}", "error")
             return render_template("login.html")
 
+    print("ℹ️ Método GET - Mostrando formulario de login")
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
