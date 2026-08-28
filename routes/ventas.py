@@ -374,36 +374,25 @@ def obtener_guia_por_id_db(guia_id):
         return None
 
 def guardar_guia_db(data):
-    """Guarda una nueva guía con fecha y hora correcta"""
+    """Guarda una nueva guía con fecha y hora correcta - IGUAL QUE COMPROBANTES"""
     try:
         from datetime import datetime
         
         # ============================================================
-        # 🔽 USAR datetime.now().isoformat() IGUAL QUE EN FACTURAS
+        # 🔽 USAR EXACTAMENTE EL MISMO CÓDIGO QUE EN COMPROBANTES
         # ============================================================
-        ahora = datetime.now()
-        
         fecha_emision = data.get('fecha_emision')
-        if fecha_emision:
-            if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
-                # Si viene solo fecha, construir con hora actual
-                fecha_emision = datetime(
-                    int(fecha_emision[0:4]),
-                    int(fecha_emision[5:7]),
-                    int(fecha_emision[8:10]),
-                    ahora.hour,
-                    ahora.minute,
-                    ahora.second
-                ).isoformat()
-            else:
-                fecha_emision = fecha_emision
+        if not fecha_emision:
+            fecha_emision = datetime.now().isoformat()
         else:
-            # Usar isoformat() como en facturas
-            fecha_emision = ahora.isoformat()
+            # Si la fecha NO tiene hora (solo YYYY-MM-DD), usar ahora
+            if isinstance(fecha_emision, str) and len(fecha_emision) == 10 and '-' in fecha_emision:
+                fecha_emision = datetime.now().isoformat()
         
-        fecha_traslado = data.get('fecha_traslado') or ahora.date().isoformat()
+        fecha_traslado = data.get('fecha_traslado') or datetime.now().date().isoformat()
         
         print(f"📅 Fecha emisión guardando: {fecha_emision}")
+        print(f"📅 Fecha traslado guardando: {fecha_traslado}")
         
         query = """
             INSERT INTO guias_remision (
@@ -426,7 +415,7 @@ def guardar_guia_db(data):
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,
+            fecha_emision,  # ← IGUAL QUE EN COMPROBANTES
             fecha_traslado,
             data.get('ruc_remitente'),
             data.get('remitente_nombre'),
@@ -458,6 +447,7 @@ def guardar_guia_db(data):
     except Exception as e:
         print(f"❌ Error en guardar_guia_db: {e}")
         raise
+
 
 def actualizar_guia_db(guia_id, data):
     """Actualiza una guía existente"""
@@ -1797,38 +1787,26 @@ def api_guias_guardar():
         }
         
         # ============================================================
-        # 🔽 OBTENER FECHA CON HORA - IGUAL QUE EN FACTURAS
+        # 🔽 USAR EXACTAMENTE EL MISMO CÓDIGO QUE EN COMPROBANTES
         # ============================================================
-        # USAR datetime.now().isoformat() IGUAL QUE EN FACTURAS
         fecha_emision = data.get('fecha_emision')
-        if fecha_emision:
-            # Si viene sin hora (solo fecha), agregar hora actual usando isoformat()
-            if isinstance(fecha_emision, str) and 'T' not in fecha_emision and ' ' not in fecha_emision:
-                # Construir fecha completa con hora actual (como en facturas)
-                from datetime import datetime
-                ahora = datetime.now()
-                fecha_dt = datetime(
-                    int(fecha_emision[0:4]),
-                    int(fecha_emision[5:7]),
-                    int(fecha_emision[8:10]),
-                    ahora.hour,
-                    ahora.minute,
-                    ahora.second
-                )
-                fecha_emision = fecha_dt.isoformat()
-            else:
-                fecha_emision = fecha_emision
-        else:
-            # Si no viene, usar ahora mismo con isoformat() (IGUAL QUE FACTURAS)
+        if not fecha_emision:
             fecha_emision = datetime.now().isoformat()
+        else:
+            # Si la fecha NO tiene hora (solo YYYY-MM-DD), agregar hora actual
+            if isinstance(fecha_emision, str) and len(fecha_emision) == 10 and '-' in fecha_emision:
+                # Usar datetime.now().isoformat() como en comprobantes
+                fecha_emision = datetime.now().isoformat()
+                print(f"📅 Fecha sin hora, usando ahora: {fecha_emision}")
         
-        # Fecha de traslado (solo fecha)
-        fecha_traslado = data.get('fecha_traslado') or data.get('fecha_emision') or datetime.now().date().isoformat()
+        # Fecha de traslado - igual que en comprobantes
+        fecha_traslado = data.get('fecha_traslado') or datetime.now().date().isoformat()
         
         print(f"📅 Fecha emisión guardando: {fecha_emision}")
+        print(f"📅 Fecha traslado guardando: {fecha_traslado}")
         
         # ============================================================
-        # CONSULTA
+        # CONSULTA - IGUAL QUE EN COMPROBANTES
         # ============================================================
         query = """
             INSERT INTO guias_remision (
@@ -1855,7 +1833,7 @@ def api_guias_guardar():
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,
+            fecha_emision,  # ← IGUAL QUE EN COMPROBANTES
             fecha_traslado,
             data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],
             data.get('remitente_nombre') or ORIGEN_FIJO['nombre'],
@@ -1911,6 +1889,7 @@ def api_guias_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/guias/<int:id>', methods=['GET'])
 @login_required
