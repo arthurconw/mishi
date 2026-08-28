@@ -704,6 +704,7 @@ def obtener_pc_db():
                 fecha_recepcion, fecha_despacho, archivo_oc,
                 observaciones, valida_precios, valida_cantidades,
                 valida_stock, valida_entrega, valida_montos,
+                valida_transporte, valida_margen, valida_vigencia,
                 responsable, lugar_entrega, condicion_atencion,
                 medio, entrega, req_compra, guia, factura,
                 condicion_pago, vendedor,
@@ -713,7 +714,22 @@ def obtener_pc_db():
             ORDER BY id DESC
         """
         results = db_query(query)
+        
         for row in results:
+            # ============================================================
+            # 🔽 CONVERTIR FECHAS A STRING SIN ZONA HORARIA
+            # ============================================================
+            campos_fecha = ['fecha', 'fecha_recepcion', 'fecha_despacho', 'created_at', 'updated_at']
+            for campo in campos_fecha:
+                if row.get(campo):
+                    valor = row[campo]
+                    if isinstance(valor, datetime):
+                        # Convertir datetime a string con formato YYYY-MM-DD HH:MM:SS
+                        row[campo] = valor.strftime('%Y-%m-%d %H:%M:%S')
+                    elif isinstance(valor, str):
+                        # Si ya es string, mantenerlo
+                        pass
+            
             if row.get('items_json'):
                 try:
                     row['items'] = json.loads(row['items_json'])
