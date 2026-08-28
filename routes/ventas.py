@@ -973,6 +973,14 @@ def obtener_despachos_db():
 def guardar_despacho_db(data):
     """Guarda un nuevo despacho"""
     try:
+        from datetime import datetime
+        
+        # ============================================================
+        # 🔽 FECHA CON HORA ACTUAL
+        # ============================================================
+        ahora = datetime.now()
+        fecha_actual = ahora.strftime('%Y-%m-%d %H:%M:%S')
+        
         query = """
             INSERT INTO despachos (
                 numero, fecha, fecha_despacho, estado,
@@ -988,8 +996,8 @@ def guardar_despacho_db(data):
         """
         params = (
             data.get('numero'),
-            data.get('fecha') or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            data.get('fecha_despacho'),
+            fecha_actual,  # ← CON HORA COMPLETA
+            data.get('fecha_despacho') or fecha_actual,
             data.get('estado', 'Pendiente despacho'),
             data.get('pc_id'),
             data.get('pc_numero'),
@@ -1011,6 +1019,8 @@ def guardar_despacho_db(data):
     except Exception as e:
         print(f"❌ Error en guardar_despacho_db: {e}")
         raise
+
+
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA DEVOLUCIONES

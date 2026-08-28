@@ -2895,8 +2895,27 @@ function savePedidoCompra(estado) {
     );
 }
 
+// ============================================================
+// FUNCIÓN saveDespacho CORREGIDA - CON FECHA Y HORA COMPLETA
+// ============================================================
 async function _saveDespacho(estado) {
     try {
+        // ============================================================
+        // 🔽 FECHA CON HORA - IGUAL QUE EN COMPROBANTES Y GUÍAS
+        // ============================================================
+        const ahora = new Date();
+        const year = ahora.getFullYear();
+        const month = String(ahora.getMonth() + 1).padStart(2, '0');
+        const day = String(ahora.getDate()).padStart(2, '0');
+        const hours = String(ahora.getHours()).padStart(2, '0');
+        const minutes = String(ahora.getMinutes()).padStart(2, '0');
+        const seconds = String(ahora.getSeconds()).padStart(2, '0');
+        
+        // Formato ISO completo con hora: 2026-08-28T16:17:30
+        const fechaHoraISO = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+
+        console.log(`🕐 Fecha y hora actual para despacho: ${fechaHoraISO}`);
+
         const data = {
             id: editingId,
             estado: estado || 'Pendiente despacho',
@@ -2904,12 +2923,15 @@ async function _saveDespacho(estado) {
             pc_numero: document.getElementById('despachoPC')?.value || '',
             cliente: document.getElementById('despachoCliente')?.value || '',
             ruc: document.getElementById('despachoRuc')?.value || '',
-            fecha_despacho: document.getElementById('despachoFecha')?.value || '',
+            // 🔽 ENVIAR FECHA CON HORA COMPLETA
+            fecha_despacho: fechaHoraISO,
             origen: document.getElementById('despachoOrigen')?.value || '',
             destino: document.getElementById('despachoDestino')?.value || '',
             transportista: document.getElementById('despachoTransportista')?.value || '',
             observaciones: document.getElementById('despachoObs')?.value || ''
         };
+        
+        console.log('📦 Datos a guardar (despacho):', data);
         
         const response = await apiFetch('/ventas/api/despachos/guardar', {
             method: 'POST',
@@ -2917,18 +2939,15 @@ async function _saveDespacho(estado) {
         });
         
         if (response.success) {
-
-            
-
-            showToast(`Despacho guardado como: ${estado}`, 'success');
+            showToast(`✅ Despacho guardado como: ${estado}`, 'success');
             closeModal('despachoModal');
             await loadDespachos();
         } else {
-            showToast('Error: ' + (response.error || 'No se pudo guardar'), 'error');
+            showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
         }
     } catch (error) {
         console.error('❌ Error guardando despacho:', error);
-        showToast('Error al guardar el despacho', 'error');
+        showToast('❌ Error al guardar el despacho: ' + error.message, 'error');
     }
 }
 
@@ -2947,6 +2966,9 @@ function saveDespacho(estado) {
         '💾 Sí, guardar'
     );
 }
+window.saveDespacho = saveDespacho;
+
+
 
 // ============================================================
 // FUNCIÓN saveGuia CORREGIDA - CON FECHA Y HORA COMPLETA
@@ -13109,15 +13131,14 @@ let modalMode = 'cot';  // 'cot' | 'directo' | 'editar'
 
 
 // ============================================================
-// GUARDAR PC - CON VALIDACIÓN DE CAMPOS OBLIGATORIOS
+// FUNCIÓN savePedidoCompraSAP CORREGIDA - CON FECHA Y HORA COMPLETA
 // ============================================================
-
 async function savePedidoCompraSAP(force) {
     console.log('🔄 savePedidoCompraSAP ejecutándose...', { force, modalMode, editingId });
     
     try {
         // ============================================================
-        // 🔽 VALIDAR CAMPOS OBLIGATORIOS DE LA SECCIÓN 2
+        // 🔽 VALIDAR CAMPOS OBLIGATORIOS
         // ============================================================
         const pcFecha = document.getElementById('pcFecha')?.value || '';
         const pcNumero = document.getElementById('pcNumero')?.value?.trim() || '';
@@ -13127,7 +13148,6 @@ async function savePedidoCompraSAP(force) {
         const pcMontoPC = document.getElementById('pcMontoPC')?.value || '';
         const pcEntrega = document.getElementById('pcEntrega')?.value?.trim() || '';
         
-        // Array de campos obligatorios con sus nombres para mostrar
         const camposObligatorios = [
             { id: 'pcFecha', valor: pcFecha, nombre: 'Fecha recepción' },
             { id: 'pcNumero', valor: pcNumero, nombre: 'N° PC Pedido Compra' },
@@ -13138,14 +13158,12 @@ async function savePedidoCompraSAP(force) {
             { id: 'pcEntrega', valor: pcEntrega, nombre: 'Lugar entrega' }
         ];
         
-        // Verificar campos faltantes
         const camposFaltantes = camposObligatorios.filter(campo => !campo.valor || campo.valor === '' || campo.valor === '0' || campo.valor === '0.00');
         
         if (camposFaltantes.length > 0) {
             const nombresFaltantes = camposFaltantes.map(c => c.nombre).join(', ');
             showToast(`⚠️ Campos obligatorios faltantes: ${nombresFaltantes}`, 'warning');
             
-            // Resaltar los campos faltantes
             camposFaltantes.forEach(campo => {
                 const el = document.getElementById(campo.id);
                 if (el) {
@@ -13158,7 +13176,6 @@ async function savePedidoCompraSAP(force) {
                 }
             });
             
-            // Enfocar el primer campo faltante
             const primerCampo = document.getElementById(camposFaltantes[0].id);
             if (primerCampo) {
                 primerCampo.focus();
@@ -13168,12 +13185,11 @@ async function savePedidoCompraSAP(force) {
         }
         
         // ============================================================
-        // 🔽 VALIDAR QUE LA TABLA DE PRODUCTOS TENGA DATOS
+        // 🔽 VALIDAR PRODUCTOS
         // ============================================================
         const tbody = document.getElementById('pcItemsBody');
         const filas = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
         
-        // Verifica que al menos una fila tenga un código de producto real
         const hayProductosReales = filas.some(row => {
             const primerInput = row.querySelector('input');
             return primerInput && primerInput.value.trim() !== '';
@@ -13185,7 +13201,7 @@ async function savePedidoCompraSAP(force) {
         }
         
         // ============================================================
-        // 🔽 VALIDAR SWITCHES ANTES DE GUARDAR
+        // 🔽 VALIDAR SWITCHES
         // ============================================================
         const validationSwitches = [
             { id: 'vPrecio', label: 'Precio' },
@@ -13198,35 +13214,22 @@ async function savePedidoCompraSAP(force) {
         ];
         
         const invalidSwitches = [];
-        const validSwitches = [];
         
         validationSwitches.forEach(({ id, label }) => {
             const checkbox = document.getElementById(id);
-            if (checkbox) {
-                if (checkbox.checked) {
-                    validSwitches.push(label);
-                } else {
-                    invalidSwitches.push(label);
-                }
+            if (checkbox && !checkbox.checked) {
+                invalidSwitches.push(label);
             }
         });
         
-        console.log('📋 Switches válidos:', validSwitches);
-        console.log('📋 Switches inválidos:', invalidSwitches);
-        
-        // ============================================================
-        // 🔽 SI ES "PC CONFORME" Y HAY SWITCHES INVÁLIDOS, BLOQUEAR
-        // ============================================================
         if (force !== 'observado' && invalidSwitches.length > 0) {
             showValidationWarningModal(invalidSwitches);
             return;
         }
         
         // ============================================================
-        // CONTINUAR CON EL GUARDADO NORMAL
+        // 🔽 VALIDAR SELECCIÓN DE COTIZACIÓN
         // ============================================================
-        
-        // VALIDAR QUE SE HAYA SELECCIONADO UNA COTIZACIÓN EN MODO 'cot'
         if (modalMode === 'cot' && !cotizacionSeleccionada) {
             const searchInput = document.getElementById('pcCotSearch');
             const valor = searchInput?.value?.trim() || '';
@@ -13235,7 +13238,6 @@ async function savePedidoCompraSAP(force) {
                 searchInput?.focus();
                 return;
             }
-            // Si hay texto pero no se seleccionó, intentar buscar automáticamente
             const results = cotizacionesData.filter(c => {
                 const searchStr = `${c.numero || ''} ${c.razon || ''} ${c.ruc || ''}`.toLowerCase();
                 return searchStr.includes(valor.toLowerCase());
@@ -13254,7 +13256,9 @@ async function savePedidoCompraSAP(force) {
             }
         }
         
-        // LEER VALIDACIONES DE LOS SWITCHES
+        // ============================================================
+        // 🔽 OBTENER VALIDACIONES DE SWITCHES
+        // ============================================================
         const val = ['vPrecio', 'vCantidad', 'vProducto', 'vEntrega', 'vMoneda', 'vTransporte', 'vVigencia']
             .map(id => {
                 const el = document.getElementById(id);
@@ -13266,10 +13270,11 @@ async function savePedidoCompraSAP(force) {
         
         console.log('📋 Validaciones:', val);
         
-        // OBSERVADO SOLO POR VALIDACIONES, NO POR STOCK
         const observed = force === 'observado' || val.some(v => v === 'No');
         
-        // LEER ITEMS DE LA TABLA
+        // ============================================================
+        // 🔽 LEER ITEMS DE LA TABLA
+        // ============================================================
         const trs = document.querySelectorAll('#pcItemsBody tr');
         const items = [];
         trs.forEach(row => {
@@ -13293,11 +13298,15 @@ async function savePedidoCompraSAP(force) {
         
         console.log('📦 Items del PC:', items);
         
-        // DETERMINAR ESTADO - SIN BLOQUEAR POR STOCK
+        // ============================================================
+        // 🔽 DETERMINAR ESTADO
+        // ============================================================
         const estado = observed ? 'PC observado' : 'PC conforme';
         const req_compra = observed ? 'Bloqueado' : 'Sí';
         
-        // OBTENER VALOR DE CONDICIÓN DE PAGO
+        // ============================================================
+        // 🔽 OBTENER CONDICIÓN DE PAGO
+        // ============================================================
         const condicionSelect = document.getElementById('pcCondicion');
         const condicionCustom = document.getElementById('pcCondicionCustom');
         let condicionPago = condicionSelect?.value || 'Contado';
@@ -13305,7 +13314,9 @@ async function savePedidoCompraSAP(force) {
             condicionPago = condicionCustom.value.trim() || 'Personalizado';
         }
         
-        // OBTENER EL NÚMERO DEL PC
+        // ============================================================
+        // 🔽 OBTENER NÚMERO DEL PC
+        // ============================================================
         let numeroPC = document.getElementById('pcNumero')?.value || '';
         
         if (modalMode === 'editar' && editingId) {
@@ -13319,11 +13330,28 @@ async function savePedidoCompraSAP(force) {
         
         console.log(`📋 Número de PC final: ${numeroPC} | editingId: ${editingId} | modalMode: ${modalMode}`);
         
-        // PREPARAR DATOS PARA ENVIAR A LA API
+        // ============================================================
+        // 🔽 FECHA CON HORA - IGUAL QUE EN COMPROBANTES Y GUÍAS
+        // ============================================================
+        const ahora = new Date();
+        const year = ahora.getFullYear();
+        const month = String(ahora.getMonth() + 1).padStart(2, '0');
+        const day = String(ahora.getDate()).padStart(2, '0');
+        const hours = String(ahora.getHours()).padStart(2, '0');
+        const minutes = String(ahora.getMinutes()).padStart(2, '0');
+        const seconds = String(ahora.getSeconds()).padStart(2, '0');
+        
+        // Formato para la base de datos: YYYY-MM-DD HH:MM:SS
+        const fechaDB = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        console.log(`🕐 Fecha y hora para PC: ${fechaDB}`);
+
+        // ============================================================
+        // 🔽 PREPARAR DATOS PARA LA API
+        // ============================================================
         const pcData = {
             id: editingId || null,
             numero: numeroPC,
-            fecha: document.getElementById('pcFecha')?.value?.replace('T', ' ') || new Date().toISOString(),
+            fecha: fechaDB,  // ← CON HORA COMPLETA
             medio: document.getElementById('pcMedio')?.value || 'Correo',
             estado: estado,
             cliente: document.getElementById('pcCliente')?.value || '',
@@ -13349,8 +13377,11 @@ async function savePedidoCompraSAP(force) {
         };
         
         console.log('📦 Datos a enviar a la API:', pcData);
+        console.log('📅 fecha enviada:', pcData.fecha);
 
-        // 🔽 CONFIRMACIÓN ANTES DE ENVIAR
+        // ============================================================
+        // 🔽 CONFIRMACIÓN Y ENVÍO
+        // ============================================================
         const confirmado = await new Promise(resolve => {
             showConfirmModal(
                 '💾 ¿Guardar Pedido de Compra?',
@@ -13362,7 +13393,6 @@ async function savePedidoCompraSAP(force) {
         });
         if (!confirmado) return;
         
-        // ENVIAR A LA API
         showToast('⏳ Guardando PC...', 'info');
         
         const response = await fetch('/ventas/api/pedido-compra/guardar', {
@@ -13377,9 +13407,6 @@ async function savePedidoCompraSAP(force) {
         console.log('📦 Respuesta del servidor:', result);
         
         if (result.success) {
-
-            
-
             let mensaje = `✅ PC guardado como: ${estado}`;
             if (estado === 'PC conforme') {
                 const stockFalta = items.some(i => Number(i.cantidad_pc) > Number(i.stock));
@@ -13414,7 +13441,7 @@ async function savePedidoCompraSAP(force) {
         showToast('❌ Error al guardar el PC: ' + error.message, 'error');
     }
 }
-
+window.savePedidoCompraSAP = savePedidoCompraSAP;
 
 
 
