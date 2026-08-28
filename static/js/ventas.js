@@ -12630,7 +12630,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcCliente', data.cliente_razon_social || '');
             setReadonlyValue('pcRuc', data.cliente_ruc || '');
             setReadonlyValue('pcMontoConIgv', (data.total || 0) * 1.18);
-            setReadonlyValue('pcMonto', data.total || 0);
             setReadonlyValue('pcCondicionPago', data.condicion_pago || 'Contado');
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
