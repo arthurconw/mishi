@@ -12642,13 +12642,7 @@ const montoPCInput = document.getElementById('pcMontoPC');
 if (montoPCInput) {
     montoPCInput.value = '';
     montoPCInput.placeholder = '0.00';
-    montoPCInput.readOnly = false;
-    montoPCInput.style.background = '#FFFFFF';
-    montoPCInput.style.color = '#0F172A';
-    montoPCInput.style.cursor = 'text';
-    montoPCInput.style.border = '1px solid #CBD5E1';
 }
-
             // ============================================================
             // 🔽 ACTUALIZAR CONDICIÓN DE PAGO EN EL SELECT
             // ============================================================
