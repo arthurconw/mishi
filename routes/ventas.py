@@ -5408,7 +5408,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML BLANCO Y NEGRO (NEUTRAL)
+        # 4. Template HTML CON GRISES SUAVES (neutral)
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5423,20 +5423,31 @@ def api_cotizaciones_preview_pdf(id):
         body { 
             font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; 
             font-size: 10px; 
-            color: #000000; 
+            color: #2d2d2d; 
             line-height: 1.3; 
             background: #ffffff; 
         }
         
         /* ============================================================
-           ESTILO BLANCO Y NEGRO NEUTRAL
+           GRISES SUAVES
            ============================================================ */
+        :root {
+            --gris-oscuro: #3d3d3d;
+            --gris-medio: #666666;
+            --gris-suave: #888888;
+            --gris-muy-suave: #aaaaaa;
+            --gris-fondo: #f5f5f5;
+            --gris-fondo-claro: #fafafa;
+            --gris-borde: #e0e0e0;
+            --gris-borde-suave: #eeeeee;
+        }
+        
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 12px;
-            border-bottom: 2px solid #000000;
+            border-bottom: 2px solid var(--gris-medio);
             padding-bottom: 10px;
         }
         .logo-section { flex: 1; }
@@ -5444,19 +5455,19 @@ def api_cotizaciones_preview_pdf(id):
         .logo img { width: 100%; display: block; }
         .empresa-info { flex: 2; text-align: center; }
         .empresa-info h1 { 
-            color: #000000; 
+            color: var(--gris-oscuro); 
             margin: 0 0 3px 0; 
             font-size: 18px; 
             font-weight: bold; 
         }
         .empresa-info .slogan { 
             font-size: 9px; 
-            color: #555555; 
+            color: var(--gris-suave); 
             letter-spacing: 1px; 
         }
         .empresa-info .ruc-text { 
             font-size: 8px; 
-            color: #666666; 
+            color: var(--gris-medio); 
             font-weight: bold; 
             margin-top: 2px; 
         }
@@ -5464,35 +5475,35 @@ def api_cotizaciones_preview_pdf(id):
         .cotizacion-info {
             flex: 1;
             text-align: right;
-            background: #f5f5f5;
+            background: var(--gris-fondo);
             padding: 6px 10px;
             border-radius: 4px;
-            border: 1px solid #cccccc;
+            border: 1px solid var(--gris-borde);
         }
         .cotizacion-info .numero-linea {
             font-size: 11px;
             font-weight: bold;
-            color: #000000;
+            color: var(--gris-oscuro);
             white-space: nowrap;
         }
         .cotizacion-info .fecha, 
         .cotizacion-info .hora {
             font-size: 8px;
             margin-top: 2px;
-            color: #666666;
+            color: var(--gris-medio);
         }
         
         .layout-principal { display: flex; gap: 15px; margin-bottom: 12px; }
         .seccion-cliente, .seccion-condiciones { 
             flex: 1; 
-            background: #f7f7f7; 
+            background: var(--gris-fondo); 
             padding: 8px 12px; 
             border-radius: 4px; 
-            border: 1px solid #dddddd; 
+            border: 1px solid var(--gris-borde); 
         }
         .seccion-cliente h3, .seccion-condiciones h3 { 
-            color: #000000; 
-            border-bottom: 1px solid #cccccc; 
+            color: var(--gris-oscuro); 
+            border-bottom: 1px solid var(--gris-borde); 
             padding-bottom: 3px; 
             font-size: 10px; 
             margin-top: 0; 
@@ -5507,15 +5518,15 @@ def api_cotizaciones_preview_pdf(id):
         .info-label, .condicion-label { 
             width: 90px; 
             font-weight: bold; 
-            color: #444444;
+            color: var(--gris-medio);
         }
-        .info-value, .condicion-value { flex: 1; color: #000000; }
+        .info-value, .condicion-value { flex: 1; color: var(--gris-oscuro); }
         
         .texto-introductorio { 
             margin: 10px 0; 
             padding: 8px 15px; 
-            background: #fafafa; 
-            border-left: 4px solid #000000; 
+            background: var(--gris-fondo-claro); 
+            border-left: 4px solid var(--gris-medio); 
             font-size: 9px; 
             line-height: 1.4; 
             text-align: justify; 
@@ -5524,7 +5535,7 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 10px; 
             font-weight: bold; 
             margin-bottom: 5px; 
-            color: #000000;
+            color: var(--gris-oscuro);
         }
         
         .tabla-productos { 
@@ -5534,25 +5545,25 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 8.2px; 
         }
         .tabla-productos th { 
-            background: #000000; 
+            background: var(--gris-oscuro); 
             color: #ffffff; 
             padding: 6px 4px; 
-            border: 1px solid #333333; 
+            border: 1px solid var(--gris-muy-suave); 
             font-weight: bold; 
             text-align: center; 
             vertical-align: middle; 
         }
         .tabla-productos td { 
             padding: 5px 4px; 
-            border: 1px solid #dddddd; 
+            border: 1px solid var(--gris-borde); 
             vertical-align: middle; 
-            color: #000000;
+            color: var(--gris-oscuro);
         }
         .tabla-productos tr:nth-child(even) td {
-            background: #f9f9f9;
+            background: var(--gris-fondo);
         }
         .tabla-productos tr:hover td {
-            background: #f0f0f0;
+            background: #ebebeb;
         }
         
         .col-item { text-align: center; width: 35px; }
@@ -5568,7 +5579,7 @@ def api_cotizaciones_preview_pdf(id):
             width: 90px; 
             background: #f0f0f0; 
             font-weight: bold; 
-            color: #000000;
+            color: var(--gris-oscuro);
         }
         
         .numero-formateado { 
@@ -5584,10 +5595,10 @@ def api_cotizaciones_preview_pdf(id):
             margin-right: 0; 
             margin-top: 8px; 
             margin-bottom: 12px; 
-            border: 1px solid #cccccc; 
+            border: 1px solid var(--gris-borde); 
             padding: 8px 12px; 
             border-radius: 4px; 
-            background: #f7f7f7; 
+            background: var(--gris-fondo); 
         }
         .total-line { 
             display: flex; 
@@ -5597,19 +5608,19 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 9px; 
             gap: 8px; 
         }
-        .total-line span:first-child { white-space: nowrap; color: #444444; }
+        .total-line span:first-child { white-space: nowrap; color: var(--gris-medio); }
         .total-line .numero-formateado { 
             font-weight: 500; 
             white-space: nowrap; 
-            color: #000000;
+            color: var(--gris-oscuro);
         }
         .total-final { 
-            border-top: 2px solid #000000; 
+            border-top: 2px solid var(--gris-medio); 
             padding-top: 5px; 
             margin-top: 5px; 
             font-weight: bold; 
             font-size: 11px; 
-            color: #000000; 
+            color: var(--gris-oscuro); 
         }
         
         .seccion-importante { 
@@ -5619,21 +5630,21 @@ def api_cotizaciones_preview_pdf(id):
             border: none;
             border-radius: 4px; 
             font-size: 7.5px; 
-            color: #555555; 
+            color: var(--gris-medio); 
         }
-        .seccion-importante strong { color: #000000; }
+        .seccion-importante strong { color: var(--gris-oscuro); }
         
         .cuentas-bancarias { 
             margin-top: 10px; 
             padding: 8px 12px; 
-            background: #f7f7f7; 
-            border: 1px solid #cccccc; 
+            background: var(--gris-fondo); 
+            border: 1px solid var(--gris-borde); 
             border-radius: 4px; 
             font-size: 7.5px; 
         }
         .cuentas-bancarias h3 { 
-            color: #000000; 
-            border-bottom: 1px solid #cccccc; 
+            color: var(--gris-oscuro); 
+            border-bottom: 1px solid var(--gris-borde); 
             padding-bottom: 3px; 
             font-size: 9px; 
             margin-top: 0; 
@@ -5645,32 +5656,32 @@ def api_cotizaciones_preview_pdf(id):
         }
         .cuenta-line .banco { 
             font-weight: bold; 
-            color: #000000; 
+            color: var(--gris-oscuro); 
             font-size: 9px; 
         }
         .cuenta-line .tipo { 
             font-size: 8px; 
-            color: #666666; 
+            color: var(--gris-medio); 
         }
         .cuenta-line .numero { 
             font-size: 8px; 
-            color: #000000; 
+            color: var(--gris-oscuro); 
             font-weight: 600; 
         }
         .cuenta-line .cci { 
             font-size: 7.5px; 
-            color: #555555; 
+            color: var(--gris-suave); 
         }
         
         .seccion-aclaratoria { 
             margin-top: 12px; 
             padding: 8px 16px; 
-            background: #fafafa; 
+            background: var(--gris-fondo-claro); 
             border-radius: 4px; 
             font-size: 8.5px; 
             text-align: left; 
-            border-left: 4px solid #000000; 
-            border-right: 1px solid #e0e0e0; 
+            border-left: 4px solid var(--gris-medio); 
+            border-right: 1px solid var(--gris-borde-suave); 
             font-style: normal; 
             line-height: 1.4; 
         }
@@ -5679,18 +5690,18 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 9px; 
             margin-bottom: 4px; 
             font-style: normal; 
-            color: #444444; 
+            color: var(--gris-medio); 
             text-align: left; 
         }
         .seccion-aclaratoria .web-link { 
-            color: #000000; 
+            color: var(--gris-oscuro); 
             text-decoration: underline; 
             font-weight: bold; 
         }
         
         .seccion-contacto { 
             margin-top: 14px; 
-            border-top: 2px solid #000000; 
+            border-top: 2px solid var(--gris-medio); 
             padding-top: 12px; 
             text-align: left; 
             font-size: 8.5px; 
@@ -5698,13 +5709,13 @@ def api_cotizaciones_preview_pdf(id):
         .contacto-nombre { 
             font-size: 10.5px; 
             font-weight: bold; 
-            color: #000000; 
+            color: var(--gris-oscuro); 
             margin-bottom: 4px; 
         }
-        .contacto-line { margin-bottom: 2px; color: #333333; }
-        .web-link { color: #000000; text-decoration: underline; }
+        .contacto-line { margin-bottom: 2px; color: var(--gris-medio); }
+        .web-link { color: var(--gris-oscuro); text-decoration: underline; }
         .fw-bold { font-weight: bold; }
-        .bg-warning { background: #f5f5f5; }
+        .bg-warning { background: #f0f0f0; }
         
         .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { 
             page-break-inside: avoid; 
@@ -5824,7 +5835,7 @@ def api_cotizaciones_preview_pdf(id):
             <span class="banco">BBVA</span>
             <span class="tipo">| Cuenta de ahorro empresa</span><br>
             <span class="numero">Cuenta: 00110319160100022197</span>
-            <span style="color:#666666;"> | </span>
+            <span style="color: #888888;"> | </span>
             <span class="cci">CCI: 011-319-000100022197-16</span>
         </div>
     </div>
