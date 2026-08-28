@@ -12635,14 +12635,12 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
 
-            // ============================================================
-// 🔽 FORZAR QUE EL CAMPO "MONTO PC" QUEDE VACÍO
-// ============================================================
-const montoPCInput = document.getElementById('pcMontoPC');
-if (montoPCInput) {
-    montoPCInput.value = '';
-    montoPCInput.placeholder = '0.00';
-}
+          
+            const montoPCInput = document.getElementById('pcMontoPC');
+            if (montoPCInput) {
+             montoPCInput.value = '';
+             montoPCInput.placeholder = '0.00';
+                }
             // ============================================================
             // 🔽 ACTUALIZAR CONDICIÓN DE PAGO EN EL SELECT
             // ============================================================
