@@ -2949,8 +2949,7 @@ function saveDespacho(estado) {
 }
 
 // ============================================================
-// FUNCIÓN saveGuia CORREGIDA - reemplaza TODAS las versiones
-// anteriores de saveGuia y _saveGuia en ventas.js
+// FUNCIÓN saveGuia CORREGIDA - CON FECHA Y HORA COMPLETA
 // ============================================================
 async function saveGuia(estado) {
     try {
@@ -2993,8 +2992,24 @@ async function saveGuia(estado) {
         }
 
         // ============================================================
-        // 3. ARMAR PAYLOAD CON LOS NOMBRES QUE ESPERA EL BACKEND
-        //    (api_guias_guardar en ventas.py)
+        // 3. 🔽 FECHA CON HORA - IGUAL QUE EN COMPROBANTES
+        // ============================================================
+        const ahora = new Date();
+        const year = ahora.getFullYear();
+        const month = String(ahora.getMonth() + 1).padStart(2, '0');
+        const day = String(ahora.getDate()).padStart(2, '0');
+        const hours = String(ahora.getHours()).padStart(2, '0');
+        const minutes = String(ahora.getMinutes()).padStart(2, '0');
+        const seconds = String(ahora.getSeconds()).padStart(2, '0');
+        
+        // Formato ISO completo con hora: 2026-08-28T16:17:30
+        const fechaHoraISO = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        const fechaSolo = `${year}-${month}-${day}`;
+
+        console.log(`🕐 Fecha y hora actual: ${fechaHoraISO}`);
+
+        // ============================================================
+        // 4. ARMAR PAYLOAD CON FECHA Y HORA COMPLETA
         // ============================================================
         const data = {
             id: editingId,
@@ -3002,10 +3017,9 @@ async function saveGuia(estado) {
             serie: document.getElementById('guiaSerie')?.value || 'T001',
             numero: document.getElementById('guiaNumero')?.value || String(Date.now()).slice(-8),
 
-            fecha_emision: document.getElementById('guiaFechaEmision')?.value || new Date().toISOString(),
-            fecha_traslado: document.getElementById('guiaFechaInicio')?.value
-                || document.getElementById('guiaFechaEmision')?.value
-                || new Date().toISOString().slice(0, 10),
+            // 🔽 ENVIAR FECHA CON HORA COMPLETA (IGUAL QUE COMPROBANTES)
+            fecha_emision: fechaHoraISO,  // ← CON HORA COMPLETA
+            fecha_traslado: fechaSolo,
 
             // ---- REMITENTE (fijo) ----
             ruc_remitente: document.getElementById('guiaRucRemitente')?.value || '20602095704',
@@ -3019,7 +3033,7 @@ async function saveGuia(estado) {
             destinatario_direccion: document.getElementById('guiaDestino')?.value || '',
             destinatario_ubigeo: document.getElementById('guiaUbigeoDestino')?.value || '',
 
-            // ---- TRANSPORTE / VEHÍCULO / CONDUCTOR (esto era lo que faltaba) ----
+            // ---- TRANSPORTE / VEHÍCULO / CONDUCTOR ----
             modalidad_transporte: modalidad,
             placa_vehiculo: placa,
             conductor_dni: conductorDni,
@@ -3042,7 +3056,11 @@ async function saveGuia(estado) {
         };
 
         console.log('📦 Datos a guardar (guía):', data);
+        console.log('📅 fecha_emision enviada:', data.fecha_emision);
 
+        // ============================================================
+        // 5. ENVIAR A LA API
+        // ============================================================
         const response = await apiFetch('/ventas/api/guias/guardar', {
             method: 'POST',
             body: JSON.stringify(data)
@@ -3062,7 +3080,6 @@ async function saveGuia(estado) {
     }
 }
 window.saveGuia = saveGuia;
-
 
 // ============================================================
 // RENDERIZAR CONTENIDO DEL MODAL DE COMPROBANTES CON RETENCIÓN TOGGLE

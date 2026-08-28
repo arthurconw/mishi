@@ -1787,26 +1787,24 @@ def api_guias_guardar():
         }
         
         # ============================================================
-        # 🔽 USAR EXACTAMENTE EL MISMO CÓDIGO QUE EN COMPROBANTES
+        # 🔽 RECIBIR FECHA CON HORA DEL FRONTEND
         # ============================================================
+        # El frontend ya envía fecha_emision con hora completa
         fecha_emision = data.get('fecha_emision')
         if not fecha_emision:
+            # Fallback: usar ahora
             fecha_emision = datetime.now().isoformat()
-        else:
-            # Si la fecha NO tiene hora (solo YYYY-MM-DD), agregar hora actual
-            if isinstance(fecha_emision, str) and len(fecha_emision) == 10 and '-' in fecha_emision:
-                # Usar datetime.now().isoformat() como en comprobantes
-                fecha_emision = datetime.now().isoformat()
-                print(f"📅 Fecha sin hora, usando ahora: {fecha_emision}")
         
-        # Fecha de traslado - igual que en comprobantes
-        fecha_traslado = data.get('fecha_traslado') or datetime.now().date().isoformat()
+        # Fecha de traslado
+        fecha_traslado = data.get('fecha_traslado')
+        if not fecha_traslado:
+            fecha_traslado = datetime.now().date().isoformat()
         
-        print(f"📅 Fecha emisión guardando: {fecha_emision}")
-        print(f"📅 Fecha traslado guardando: {fecha_traslado}")
+        print(f"📅 fecha_emision recibida: {fecha_emision}")
+        print(f"📅 fecha_traslado: {fecha_traslado}")
         
         # ============================================================
-        # CONSULTA - IGUAL QUE EN COMPROBANTES
+        # CONSULTA
         # ============================================================
         query = """
             INSERT INTO guias_remision (
@@ -1833,7 +1831,7 @@ def api_guias_guardar():
         params = (
             data.get('serie', 'T001'),
             data.get('numero'),
-            fecha_emision,  # ← IGUAL QUE EN COMPROBANTES
+            fecha_emision,  # ← YA VIENE CON HORA DEL FRONTEND
             fecha_traslado,
             data.get('ruc_remitente') or ORIGEN_FIJO['ruc'],
             data.get('remitente_nombre') or ORIGEN_FIJO['nombre'],
