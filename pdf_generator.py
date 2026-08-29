@@ -89,44 +89,198 @@ class PDFGenerator:
             traceback.print_exc()
             return None
 
-    def _obtener_template_guia(self):
-        return """<!DOCTYPE html>
+def _obtener_template_guia(self):
+    return """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Guía de Remisión {{ serie }}-{{ numero }}</title>
     <style>
-        @page { size: A4; margin: 1.2cm 1.5cm; }
-        body { font-family: 'Helvetica', Arial, sans-serif; font-size: 9.5px; color: #1a1a1a; line-height: 1.8; }
-        .header-superior { display: flex; justify-content: space-between; align-items: stretch; margin-bottom: 10px; gap: 15px; }
-        .empresa-izquierda { flex: 1; display: flex; align-items: center; gap: 12px; }
-        .empresa-izquierda .logo-container { flex-shrink: 0; width: 80px; height: 60px; display: flex; align-items: center; justify-content: center; }
-        .empresa-izquierda .logo-container img { max-height: 60px; max-width: 100px; object-fit: contain; }
-        .empresa-izquierda .info-texto { font-size: 8px; line-height: 1.4; }
-        .empresa-izquierda .info-texto .nombre { font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .recuadro-derecha { flex-shrink: 0; border: 2px solid #000; border-radius: 12px; padding: 10px 20px; text-align: center; min-width: 200px; }
-        .recuadro-derecha .ruc { font-size: 10px; font-weight: bold; }
-        .recuadro-derecha .titulo { font-size: 11px; font-weight: bold; letter-spacing: 1px; margin: 2px 0; }
-        .recuadro-derecha .numero { font-size: 13px; font-weight: bold; }
-        .seccion { margin-bottom: 8px; }
-        .seccion-titulo { font-weight: bold; font-size: 9.5px; margin-bottom: 3px; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px; }
+        @page { size: A4; margin: 1.5cm 1.5cm; }
+        body { 
+            font-family: 'Helvetica', Arial, sans-serif; 
+            font-size: 9.5px; 
+            color: #000000; 
+            line-height: 1.8; 
+            margin-top: 15px;
+        }
+        .header-superior { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: stretch; 
+            margin-bottom: 15px; 
+            gap: 15px; 
+            padding-top: 5px;
+        }
+        .empresa-izquierda { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        .empresa-izquierda .logo-container { 
+            flex-shrink: 0; 
+            width: 80px; 
+            height: 60px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .empresa-izquierda .logo-container img { 
+            max-height: 60px; 
+            max-width: 100px; 
+            object-fit: contain; 
+        }
+        .empresa-izquierda .info-texto { 
+            font-size: 8px; 
+            line-height: 1.4; 
+        }
+        .empresa-izquierda .info-texto .nombre { 
+            font-size: 11px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+        }
+        .recuadro-derecha { 
+            flex-shrink: 0; 
+            border: 2px solid #000; 
+            border-radius: 12px; 
+            padding: 10px 20px; 
+            text-align: center; 
+            min-width: 200px; 
+        }
+        .recuadro-derecha .ruc { 
+            font-size: 10px; 
+            font-weight: bold; 
+        }
+        .recuadro-derecha .titulo { 
+            font-size: 11px; 
+            font-weight: bold; 
+            letter-spacing: 1px; 
+            margin: 2px 0; 
+        }
+        .recuadro-derecha .numero { 
+            font-size: 13px; 
+            font-weight: bold; 
+        }
+        
+        .seccion { 
+            margin-bottom: 8px; 
+        }
+        
+        /* ============================================================
+           TÍTULO DENTRO DEL RECUADRO
+           ============================================================ */
+        .seccion-con-borde {
+            border: 1px solid #000;
+            border-radius: 8px;
+            padding: 0;
+            margin-bottom: 6px;
+            overflow: hidden;
+        }
+        .seccion-con-borde .seccion-titulo {
+            font-weight: bold;
+            font-size: 9px;
+            text-transform: uppercase;
+            background: #000000;
+            color: #ffffff;
+            padding: 4px 12px;
+            margin: 0;
+            border-bottom: 1px solid #000;
+            letter-spacing: 0.5px;
+        }
+        .seccion-con-borde .seccion-contenido {
+            padding: 6px 12px;
+            background: #ffffff;
+        }
+        
         .info-destinatario, .datos-traslado, .datos-ruta, .datos-transporte, .referencias, .observaciones {
-            border: 1px solid #ccc; border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; background: #f9f9f9; }
-        .fila { display: flex; padding: 1px 0; align-items: baseline; }
-        .fila .label { font-weight: bold; min-width: 200px; flex-shrink: 0; }
-        .fila .value { flex: 1; text-align: left; padding-left: 5px; }
-        .products-table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 8.5px; }
-        .products-table th { background: #333; color: white; padding: 4px 5px; text-align: center; border: 1px solid #000; }
-        .products-table td { padding: 3px 5px; border: 1px solid #ccc; text-align: center; }
-        .products-table td.descripcion { text-align: left; }
-        .qr-container { text-align: center; margin: 8px 0 5px 0; padding: 6px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
-        .qr-container img { width: 90px; height: 90px; }
-        .qr-container .qr-text { font-size: 7px; color: #64748B; margin-top: 2px; }
-        .footer { margin-top: 12px; text-align: center; font-size: 7.5px; color: #555; border-top: 1px solid #ddd; padding-top: 6px; }
-        .referencias-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 6px 0; }
-        .ref-item { text-align: center; }
-        .ref-item .ref-label { font-weight: bold; display: block; font-size: 7.5px; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
-        .ref-item .ref-value { font-size: 9px; font-weight: 600; }
+            border: none;
+            padding: 0;
+            margin-bottom: 0;
+            background: transparent;
+        }
+        .fila { 
+            display: flex; 
+            padding: 2px 0; 
+            align-items: baseline; 
+        }
+        .fila .label { 
+            font-weight: bold; 
+            min-width: 200px; 
+            flex-shrink: 0; 
+        }
+        .fila .value { 
+            flex: 1; 
+            text-align: left; 
+            padding-left: 5px; 
+        }
+        .products-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 4px 0; 
+            font-size: 8.5px; 
+        }
+        .products-table th { 
+            background: #000000; 
+            color: white; 
+            padding: 4px 5px; 
+            text-align: center; 
+            border: 1px solid #000; 
+        }
+        .products-table td { 
+            padding: 3px 5px; 
+            border: 1px solid #000; 
+            text-align: center; 
+        }
+        .products-table td.descripcion { 
+            text-align: left; 
+        }
+        .qr-container { 
+            text-align: center; 
+            margin: 8px 0 5px 0; 
+            padding: 6px; 
+            border: 1px solid #000; 
+            border-radius: 8px; 
+            background: #ffffff; 
+        }
+        .qr-container img { 
+            width: 90px; 
+            height: 90px; 
+        }
+        .qr-container .qr-text { 
+            font-size: 7px; 
+            color: #000000; 
+            margin-top: 2px; 
+        }
+        .footer { 
+            margin-top: 12px; 
+            text-align: center; 
+            font-size: 7.5px; 
+            color: #000000; 
+            border-top: 1px solid #000; 
+            padding-top: 6px; 
+        }
+        .referencias-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 8px; 
+            padding: 4px 0; 
+        }
+        .ref-item { 
+            text-align: center; 
+        }
+        .ref-item .ref-label { 
+            font-weight: bold; 
+            display: block; 
+            font-size: 7.5px; 
+            color: #000000; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+        }
+        .ref-item .ref-value { 
+            font-size: 9px; 
+            font-weight: 600; 
+        }
     </style>
 </head>
 <body>
@@ -148,75 +302,115 @@ class PDFGenerator:
             <div class="numero">{{ serie }}-{{ numero }}</div>
         </div>
     </div>
-    <div class="seccion">
+    
+    <!-- DESTINATARIO - TÍTULO DENTRO DEL RECUADRO -->
+    <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DESTINATARIO</div>
-        <div class="info-destinatario">
-            <div class="fila"><span class="label">R.U.C.:</span><span class="value">{{ ruc_destinatario }}</span></div>
-            <div class="fila"><span class="label">DENOMINACIÓN:</span><span class="value">{{ destinatario_nombre }}</span></div>
-        </div>
-    </div>
-    <div class="seccion">
-        <div class="seccion-titulo">DATOS DEL TRASLADO</div>
-        <div class="datos-traslado">
-            <div class="fila"><span class="label">FECHA EMISIÓN:</span><span class="value">{{ fecha_emision }}</span></div>
-            <div class="fila"><span class="label">FECHA INICIO TRASLADO:</span><span class="value">{{ fecha_inicio_traslado }}</span></div>
-            <div class="fila"><span class="label">MOTIVO DE TRASLADO:</span><span class="value">{{ motivo_texto }}</span></div>
-            <div class="fila"><span class="label">MODALIDAD DE TRANSPORTE:</span><span class="value">{{ modalidad_texto }}</span></div>
-            <div class="fila"><span class="label">PESO BRUTO TOTAL (KGM):</span><span class="value">{{ peso_bruto_total }}</span></div>
-            <div class="fila"><span class="label">NÚMERO DE BULTOS:</span><span class="value">{{ numero_bultos }}</span></div>
-        </div>
-    </div>
-   <div class="seccion">
-    <div class="seccion-titulo">DATOS DE RUTA</div>
-    <div class="datos-ruta">
-        <div class="fila">
-            <span class="label">PUNTO DE PARTIDA:</span>
-            <span class="value" style="white-space: pre-line; line-height: 1.6;">
-                {{ remitente_direccion }}
-            </span>
-        </div>
-        <div class="fila">
-            <span class="label">PUNTO DE LLEGADA:</span>
-            <span class="value" style="white-space: pre-line; line-height: 1.6;">
-                {{ destinatario_direccion }}
-            </span>
-        </div>
-    </div>
-</div>
-    <div class="seccion">
-        <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
-        <div class="datos-transporte">
-            <div class="fila"><span class="label">TRANSPORTISTA:</span><span class="value">{{ transportista_nombre }}</span></div>
-            <div class="fila"><span class="label">CONDUCTOR:</span><span class="value">{{ conductor_nombre }}</span></div>
-            <div class="fila"><span class="label">DNI:</span><span class="value">{{ conductor_dni }}</span></div>
-            <div class="fila"><span class="label">PLACA:</span><span class="value">{{ placa_vehiculo }}</span></div>
-            <div class="fila"><span class="label">LICENCIA:</span><span class="value">{{ licencia_conductor }}</span></div>
-        </div>
-    </div>
-    <div class="seccion">
-        <div class="seccion-titulo">PRODUCTOS</div>
-        <table class="products-table">
-            <thead><tr><th style="width:8%">ITEM</th><th style="width:15%">CODIGO</th><th style="width:40%">PRODUCTO</th><th style="width:15%">UM</th><th style="width:15%">CANTIDAD</th></tr></thead>
-            <tbody>{% for item in items %}<tr><td>{{ item.item }}</td><td>{{ item.codigo }}</td><td class="descripcion">{{ item.descripcion }}</td><td>{{ item.unidad }}</td><td>{{ item.cantidad }}</td></tr>{% endfor %}</tbody>
-        </table>
-    </div>
-    <div class="seccion">
-        <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
-        <div class="referencias">
-            <div class="referencias-grid">
-                <div class="ref-item"><span class="ref-label">NRO ORDEN DE COMPRA</span><span class="ref-value">{{ orden_compra_cliente or '—' }}</span></div>
-                <div class="ref-item"><span class="ref-label">NRO DE FACTURA</span><span class="ref-value">{{ factura or '—' }}</span></div>
-                <div class="ref-item"><span class="ref-label">NRO DE COTIZACION</span><span class="ref-value">{{ nro_cotizacion or '—' }}</span></div>
+        <div class="seccion-contenido">
+            <div class="info-destinatario">
+                <div class="fila"><span class="label">R.U.C.:</span><span class="value">{{ ruc_destinatario }}</span></div>
+                <div class="fila"><span class="label">DENOMINACIÓN:</span><span class="value">{{ destinatario_nombre }}</span></div>
             </div>
         </div>
     </div>
-    <div class="observaciones"><div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div></div>
+    
+    <!-- DATOS DEL TRASLADO - TÍTULO DENTRO DEL RECUADRO -->
+    <div class="seccion seccion-con-borde">
+        <div class="seccion-titulo">DATOS DEL TRASLADO</div>
+        <div class="seccion-contenido">
+            <div class="datos-traslado">
+                <div class="fila"><span class="label">FECHA EMISIÓN:</span><span class="value">{{ fecha_emision }}</span></div>
+                <div class="fila"><span class="label">FECHA INICIO TRASLADO:</span><span class="value">{{ fecha_inicio_traslado }}</span></div>
+                <div class="fila"><span class="label">MOTIVO DE TRASLADO:</span><span class="value">{{ motivo_texto }}</span></div>
+                <div class="fila"><span class="label">MODALIDAD DE TRANSPORTE:</span><span class="value">{{ modalidad_texto }}</span></div>
+                <div class="fila"><span class="label">PESO BRUTO TOTAL (KGM):</span><span class="value">{{ peso_bruto_total }}</span></div>
+                <div class="fila"><span class="label">NÚMERO DE BULTOS:</span><span class="value">{{ numero_bultos }}</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- DATOS DE RUTA - TÍTULO DENTRO DEL RECUADRO -->
+    <div class="seccion seccion-con-borde">
+        <div class="seccion-titulo">DATOS DE RUTA</div>
+        <div class="seccion-contenido">
+            <div class="datos-ruta">
+                <div class="fila">
+                    <span class="label">PUNTO DE PARTIDA:</span>
+                    <span class="value" style="white-space: pre-line; line-height: 1.6;">
+                        {{ remitente_direccion }}
+                    </span>
+                </div>
+                <div class="fila">
+                    <span class="label">PUNTO DE LLEGADA:</span>
+                    <span class="value" style="white-space: pre-line; line-height: 1.6;">
+                        {{ destinatario_direccion }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- DATOS DEL TRANSPORTE - TÍTULO DENTRO DEL RECUADRO -->
+    <div class="seccion seccion-con-borde">
+        <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
+        <div class="seccion-contenido">
+            <div class="datos-transporte">
+                <div class="fila"><span class="label">TRANSPORTISTA:</span><span class="value">{{ transportista_nombre }}</span></div>
+                <div class="fila"><span class="label">CONDUCTOR:</span><span class="value">{{ conductor_nombre }}</span></div>
+                <div class="fila"><span class="label">DNI:</span><span class="value">{{ conductor_dni }}</span></div>
+                <div class="fila"><span class="label">PLACA:</span><span class="value">{{ placa_vehiculo }}</span></div>
+                <div class="fila"><span class="label">LICENCIA:</span><span class="value">{{ licencia_conductor }}</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PRODUCTOS - TÍTULO DENTRO DEL RECUADRO -->
+    <div class="seccion seccion-con-borde">
+        <div class="seccion-titulo">PRODUCTOS</div>
+        <div class="seccion-contenido" style="padding: 4px 8px;">
+            <table class="products-table">
+                <thead><tr><th style="width:8%">ITEM</th><th style="width:15%">CODIGO</th><th style="width:40%">PRODUCTO</th><th style="width:15%">UM</th><th style="width:15%">CANTIDAD</th></tr></thead>
+                <tbody>{% for item in items %}<tr><td>{{ item.item }}</td><td>{{ item.codigo }}</td><td class="descripcion">{{ item.descripcion }}</td><td>{{ item.unidad }}</td><td>{{ item.cantidad }}</td></tr>{% endfor %}</tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- DOCUMENTOS RELACIONADOS - TÍTULO DENTRO DEL RECUADRO -->
+    <div class="seccion seccion-con-borde">
+        <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
+        <div class="seccion-contenido">
+            <div class="referencias">
+                <div class="referencias-grid">
+                    <div class="ref-item"><span class="ref-label">NRO ORDEN DE COMPRA</span><span class="ref-value">{{ orden_compra_cliente or '—' }}</span></div>
+                    <div class="ref-item"><span class="ref-label">NRO DE FACTURA</span><span class="ref-value">{{ factura or '—' }}</span></div>
+                    <div class="ref-item"><span class="ref-label">NRO DE COTIZACION</span><span class="ref-value">{{ nro_cotizacion or '—' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- OBSERVACIONES - TÍTULO DENTRO DEL RECUADRO -->
+    <div class="seccion seccion-con-borde">
+        <div class="seccion-titulo">OBSERVACIONES</div>
+        <div class="seccion-contenido">
+            <div class="observaciones">
+                <div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR -->
     <div class="qr-container">
         <img src="{{ qr_base64 }}" alt="QR">
         <div class="qr-text">Representación impresa de la GUIA DE REMISIÓN REMITENTE ELECTRÓNICA, consulte el documento en https://see.conflux.pe
 Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     </div>
-    <div class="footer"><div>Pag. 1 de 1</div><div>Powered by KCF CORPORACION</div></div>
+    
+    <!-- FOOTER -->
+    <div class="footer">
+        <div>Pag. 1 de 1</div>
+        <div>Powered by KCF CORPORACION</div>
+    </div>
 </body>
 </html>"""
 
