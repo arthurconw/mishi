@@ -88,8 +88,9 @@ class PDFGenerator:
             import traceback
             traceback.print_exc()
             return None
+
     def _obtener_template_guia(self):
-    return """<!DOCTYPE html>
+         return """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
