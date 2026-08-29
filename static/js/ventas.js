@@ -6729,8 +6729,9 @@ function actualizarResumenDesdeMontoPC(input) {
     
     // Debounce para el resumen lateral
     _timeoutResumen = setTimeout(() => {
-        const igv = valorPC * 0.18;
-        const total = valorPC + igv;
+        // 🔽 REDONDEAR A 2 DECIMALES para evitar decimales largos
+        const igv = parseFloat((valorPC * 0.18).toFixed(2));
+        const total = parseFloat((valorPC + igv).toFixed(2));
         
         document.getElementById('pcResumenSubtotal').textContent = formatNum(valorPC);
         document.getElementById('pcResumenValorVenta').textContent = formatNum(valorPC);
@@ -6741,7 +6742,6 @@ function actualizarResumenDesdeMontoPC(input) {
         _timeoutResumen = null;
     }, 100);
 }
-
 
 // ============================================================
 // LIMPIAR CONDUCTOR EN GUÍA
@@ -12750,7 +12750,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcCliente', data.cliente_razon_social || '');
             setReadonlyValue('pcRuc', data.cliente_ruc || '');
             setReadonlyValue('pcMontoConIgv', (data.total || 0) * 1.18);
-            setReadonlyValue('pcMonto', data.total || 0);
+            setReadonlyValue('pcMonto', data.subtotal || 0);
             setReadonlyValue('pcCondicionPago', data.condicion_pago || 'Contado');
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
