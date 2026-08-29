@@ -5418,7 +5418,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML EN BLANCO Y NEGRO - MANTENIENDO TAMAÑOS ORIGINALES
+        # 4. Template HTML EN BLANCO Y NEGRO - RUC MÁS GRANDE, SIN LÍNEA EN TEXTO INTRODUCTORIO
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5470,10 +5470,10 @@ def api_cotizaciones_preview_pdf(id):
             letter-spacing: 1px; 
         }
         .empresa-info .ruc-text { 
-            font-size: 8px; 
+            font-size: 11px;  /* 🔼 MÁS GRANDE - antes 8px */
             color: #000000; 
             font-weight: bold; 
-            margin-top: 2px; 
+            margin-top: 3px; 
         }
         
         .cotizacion-info {
@@ -5522,10 +5522,10 @@ def api_cotizaciones_preview_pdf(id):
         }
         .info-value, .condicion-value { flex: 1; color: #000000; }
         
+        /* 🔽 ELIMINADA LA LÍNEA DE DISEÑO (border-left eliminado) */
         .texto-introductorio { 
             margin: 10px 0; 
             padding: 8px 15px; 
-            border-left: 4px solid #000000; 
             font-size: 9px; 
             line-height: 1.4; 
             text-align: justify; 
@@ -5757,7 +5757,7 @@ def api_cotizaciones_preview_pdf(id):
         </div>
     </div>
 
-    <!-- TEXTO INTRODUCTORIO -->
+    <!-- TEXTO INTRODUCTORIO - SIN LÍNEA DE DISEÑO -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
