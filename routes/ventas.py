@@ -3859,7 +3859,7 @@ def api_cotizaciones_generar_pdf(id):
         
         print(f"📊 Datos preparados: {len(productos_list)} productos, Total: {total}")
         
-        # 5. Template HTML CON GRISES MUY SUAVES (estilo perla/elegante)
+        # 5. Template HTML EN BLANCO Y NEGRO - RUC MÁS GRANDE, SIN LÍNEA
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -3870,36 +3870,29 @@ def api_cotizaciones_generar_pdf(id):
             size: A4;
             margin: 1.2cm;
         }
-        * { text-rendering: optimizeLegibility; margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
         body { 
             font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; 
             font-size: 10px; 
-            color: #4a4a4a; 
+            color: #000000; 
             line-height: 1.3; 
             background: #ffffff; 
         }
         
         /* ============================================================
-           GRISES MUY SUAVES (estilo perla/elegante)
+           BLANCO Y NEGRO - MANTENIENDO TAMAÑOS ORIGINALES
            ============================================================ */
-        :root {
-            --gris-texto: #4a4a4a;
-            --gris-titulo: #555555;
-            --gris-borde-suave: #d5d5d5;
-            --gris-borde-muy-suave: #e8e8e8;
-            --gris-fondo: #f8f8f8;
-            --gris-fondo-claro: #fcfcfc;
-            --gris-secundario: #7a7a7a;
-            --gris-claro: #999999;
-            --gris-muy-claro: #bbbbbb;
-        }
         
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 12px;
-            border-bottom: 2px solid var(--gris-borde-suave);
+            border-bottom: 2px solid #000000;
             padding-bottom: 10px;
         }
         .logo-section { flex: 1; }
@@ -3907,55 +3900,51 @@ def api_cotizaciones_generar_pdf(id):
         .logo img { width: 100%; display: block; }
         .empresa-info { flex: 2; text-align: center; }
         .empresa-info h1 { 
-            color: var(--gris-titulo); 
+            color: #000000; 
             margin: 0 0 3px 0; 
             font-size: 18px; 
             font-weight: bold; 
         }
         .empresa-info .slogan { 
             font-size: 9px; 
-            color: var(--gris-claro); 
+            color: #000000; 
             letter-spacing: 1px; 
         }
         .empresa-info .ruc-text { 
-            font-size: 8px; 
-            color: var(--gris-secundario); 
+            font-size: 11px;  /* 🔼 MÁS GRANDE */
+            color: #000000; 
             font-weight: bold; 
-            margin-top: 2px; 
+            margin-top: 3px; 
         }
         
         .cotizacion-info {
             flex: 1;
             text-align: right;
-            background: var(--gris-fondo);
+            border: 1px solid #000000;
             padding: 6px 10px;
-            border-radius: 4px;
-            border: 1px solid var(--gris-borde-muy-suave);
         }
         .cotizacion-info .numero-linea {
             font-size: 11px;
             font-weight: bold;
-            color: var(--gris-titulo);
+            color: #000000;
             white-space: nowrap;
         }
         .cotizacion-info .fecha, 
         .cotizacion-info .hora {
             font-size: 8px;
             margin-top: 2px;
-            color: var(--gris-secundario);
+            color: #000000;
         }
         
         .layout-principal { display: flex; gap: 15px; margin-bottom: 12px; }
         .seccion-cliente, .seccion-condiciones { 
             flex: 1; 
-            background: var(--gris-fondo); 
+            border: 1px solid #000000;
             padding: 8px 12px; 
-            border-radius: 4px; 
-            border: 1px solid var(--gris-borde-muy-suave); 
         }
         .seccion-cliente h3, .seccion-condiciones h3 { 
-            color: var(--gris-titulo); 
-            border-bottom: 1px solid var(--gris-borde-muy-suave); 
+            color: #000000; 
+            border-bottom: 1px solid #000000; 
             padding-bottom: 3px; 
             font-size: 10px; 
             margin-top: 0; 
@@ -3970,15 +3959,14 @@ def api_cotizaciones_generar_pdf(id):
         .info-label, .condicion-label { 
             width: 90px; 
             font-weight: bold; 
-            color: var(--gris-secundario);
+            color: #000000;
         }
-        .info-value, .condicion-value { flex: 1; color: var(--gris-texto); }
+        .info-value, .condicion-value { flex: 1; color: #000000; }
         
+        /* 🔽 ELIMINADA LA LÍNEA DE DISEÑO */
         .texto-introductorio { 
             margin: 10px 0; 
             padding: 8px 15px; 
-            background: var(--gris-fondo-claro); 
-            border-left: 4px solid var(--gris-borde-suave); 
             font-size: 9px; 
             line-height: 1.4; 
             text-align: justify; 
@@ -3987,7 +3975,7 @@ def api_cotizaciones_generar_pdf(id):
             font-size: 10px; 
             font-weight: bold; 
             margin-bottom: 5px; 
-            color: var(--gris-titulo);
+            color: #000000;
         }
         
         .tabla-productos { 
@@ -3997,25 +3985,22 @@ def api_cotizaciones_generar_pdf(id):
             font-size: 8.2px; 
         }
         .tabla-productos th { 
-            background: var(--gris-titulo); 
+            background: #000000; 
             color: #ffffff; 
             padding: 6px 4px; 
-            border: 1px solid var(--gris-borde-suave); 
+            border: 1px solid #000000; 
             font-weight: bold; 
             text-align: center; 
             vertical-align: middle; 
         }
         .tabla-productos td { 
             padding: 5px 4px; 
-            border: 1px solid var(--gris-borde-muy-suave); 
+            border: 1px solid #000000; 
             vertical-align: middle; 
-            color: var(--gris-texto);
+            color: #000000;
         }
         .tabla-productos tr:nth-child(even) td {
-            background: var(--gris-fondo);
-        }
-        .tabla-productos tr:hover td {
-            background: #f3f3f3;
+            background: #f5f5f5;
         }
         
         .col-item { text-align: center; width: 35px; }
@@ -4029,17 +4014,17 @@ def api_cotizaciones_generar_pdf(id):
         .col-valor-total { 
             text-align: right; 
             width: 90px; 
-            background: #f5f5f5; 
+            background: #e8e8e8; 
             font-weight: bold; 
-            color: var(--gris-texto);
         }
         
         .numero-formateado { 
             text-align: right; 
             font-family: 'Courier New', monospace; 
-            font-weight: 500; 
+            font-weight: bold; 
         }
         .text-center { text-align: center; }
+        .fw-bold { font-weight: bold; }
         
         .seccion-totales { 
             width: 280px; 
@@ -4047,56 +4032,54 @@ def api_cotizaciones_generar_pdf(id):
             margin-right: 0; 
             margin-top: 8px; 
             margin-bottom: 12px; 
-            border: 1px solid var(--gris-borde-muy-suave); 
+            border: 2px solid #000000; 
             padding: 8px 12px; 
-            border-radius: 4px; 
-            background: var(--gris-fondo); 
+            background: #ffffff; 
         }
         .total-line { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin-bottom: 5px; 
+            margin-bottom: 4px; 
             font-size: 9px; 
             gap: 8px; 
         }
-        .total-line span:first-child { white-space: nowrap; color: var(--gris-secundario); }
-        .total-line .numero-formateado { 
-            font-weight: 500; 
+        .total-line span:first-child { 
             white-space: nowrap; 
-            color: var(--gris-texto);
+            color: #000000; 
+        }
+        .total-line .numero-formateado { 
+            font-weight: bold; 
+            white-space: nowrap; 
+            color: #000000;
         }
         .total-final { 
-            border-top: 2px solid var(--gris-borde-suave); 
+            border-top: 2px solid #000000; 
             padding-top: 5px; 
             margin-top: 5px; 
             font-weight: bold; 
             font-size: 11px; 
-            color: var(--gris-titulo); 
+            color: #000000; 
         }
         
         .seccion-importante { 
             margin: 8px 0; 
             padding: 5px 10px; 
-            background: transparent;
-            border: none;
-            border-radius: 4px; 
+            border: 1px solid #000000;
             font-size: 7.5px; 
-            color: var(--gris-secundario); 
+            color: #000000; 
         }
-        .seccion-importante strong { color: var(--gris-titulo); }
+        .seccion-importante strong { color: #000000; }
         
         .cuentas-bancarias { 
             margin-top: 10px; 
             padding: 8px 12px; 
-            background: var(--gris-fondo); 
-            border: 1px solid var(--gris-borde-muy-suave); 
-            border-radius: 4px; 
+            border: 1px solid #000000; 
             font-size: 7.5px; 
         }
         .cuentas-bancarias h3 { 
-            color: var(--gris-titulo); 
-            border-bottom: 1px solid var(--gris-borde-muy-suave); 
+            color: #000000; 
+            border-bottom: 1px solid #000000; 
             padding-bottom: 3px; 
             font-size: 9px; 
             margin-top: 0; 
@@ -4108,52 +4091,47 @@ def api_cotizaciones_generar_pdf(id):
         }
         .cuenta-line .banco { 
             font-weight: bold; 
-            color: var(--gris-titulo); 
+            color: #000000; 
             font-size: 9px; 
         }
         .cuenta-line .tipo { 
             font-size: 8px; 
-            color: var(--gris-secundario); 
+            color: #000000; 
         }
         .cuenta-line .numero { 
             font-size: 8px; 
-            color: var(--gris-texto); 
-            font-weight: 600; 
+            color: #000000; 
+            font-weight: bold; 
         }
         .cuenta-line .cci { 
             font-size: 7.5px; 
-            color: var(--gris-claro); 
+            color: #000000; 
         }
         
         .seccion-aclaratoria { 
             margin-top: 12px; 
             padding: 8px 16px; 
-            background: var(--gris-fondo-claro); 
-            border-radius: 4px; 
+            border: 1px solid #000000; 
             font-size: 8.5px; 
             text-align: left; 
-            border-left: 4px solid var(--gris-borde-suave); 
-            border-right: 1px solid var(--gris-borde-muy-suave); 
-            font-style: normal; 
             line-height: 1.4; 
         }
         .seccion-aclaratoria .titulo { 
             font-weight: bold; 
             font-size: 9px; 
             margin-bottom: 4px; 
-            font-style: normal; 
-            color: var(--gris-secundario); 
+            color: #000000; 
             text-align: left; 
         }
         .seccion-aclaratoria .web-link { 
-            color: var(--gris-titulo); 
+            color: #000000; 
             text-decoration: underline; 
             font-weight: bold; 
         }
         
         .seccion-contacto { 
             margin-top: 14px; 
-            border-top: 2px solid var(--gris-borde-suave); 
+            border-top: 2px solid #000000; 
             padding-top: 12px; 
             text-align: left; 
             font-size: 8.5px; 
@@ -4161,13 +4139,11 @@ def api_cotizaciones_generar_pdf(id):
         .contacto-nombre { 
             font-size: 10.5px; 
             font-weight: bold; 
-            color: var(--gris-titulo); 
+            color: #000000; 
             margin-bottom: 4px; 
         }
-        .contacto-line { margin-bottom: 2px; color: var(--gris-secundario); }
-        .web-link { color: var(--gris-titulo); text-decoration: underline; }
-        .fw-bold { font-weight: bold; }
-        .bg-warning { background: #f5f5f5; }
+        .contacto-line { margin-bottom: 2px; color: #000000; }
+        .web-link { color: #000000; text-decoration: underline; }
         
         .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { 
             page-break-inside: avoid; 
@@ -4202,27 +4178,27 @@ def api_cotizaciones_generar_pdf(id):
     <div class="layout-principal">
         <div class="seccion-cliente">
             <h3>INFORMACIÓN DEL CLIENTE</h3>
-            <div class="info-line"><span class="info-label">Cliente:</span><span class="info-value">{{ cliente_razon_social }}</span></div>
-            <div class="info-line"><span class="info-label">RUC / DNI:</span><span class="info-value">{{ cliente_ruc }}</span></div>
-            <div class="info-line"><span class="info-label">Dirección:</span><span class="info-value">{{ cliente_direccion }}</span></div>
-            <div class="info-line"><span class="info-label">Teléfono:</span><span class="info-value">{{ telefono_contacto|default('-') }}</span></div>
-            <div class="info-line"><span class="info-label">Atención:</span><span class="info-value">{{ cliente_contacto|default('-') }}</span></div>
-            <div class="info-line"><span class="info-label">Correo:</span><span class="info-value">{{ email_contacto_cliente|default('-') }}</span></div>
-            <div class="info-line"><span class="info-label">N° Requerimiento:</span><span class="info-value">{{ numero_requerimiento|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label"><strong>Cliente:</strong></span><span class="info-value">{{ cliente_razon_social }}</span></div>
+            <div class="info-line"><span class="info-label"><strong>RUC / DNI:</strong></span><span class="info-value">{{ cliente_ruc }}</span></div>
+            <div class="info-line"><span class="info-label"><strong>Dirección:</strong></span><span class="info-value">{{ cliente_direccion }}</span></div>
+            <div class="info-line"><span class="info-label"><strong>Teléfono:</strong></span><span class="info-value">{{ telefono_contacto|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label"><strong>Atención:</strong></span><span class="info-value">{{ cliente_contacto|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label"><strong>Correo:</strong></span><span class="info-value">{{ email_contacto_cliente|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label"><strong>N° Requerimiento:</strong></span><span class="info-value">{{ numero_requerimiento|default('-') }}</span></div>
         </div>
         <div class="seccion-condiciones">
             <h3>CONDICIONES COMERCIALES</h3>
-            <div class="condicion-line"><span class="condicion-label">Ejecutiva:</span><span class="condicion-value">{{ asesor_comercial }}</span></div>
-            <div class="condicion-line"><span class="condicion-label">E-mail:</span><span class="condicion-value">{{ email_contacto }}</span></div>
-            <div class="condicion-line"><span class="condicion-label">Teléfono:</span><span class="condicion-value">{{ telefono_contacto_user }}</span></div>
-            <div class="condicion-line"><span class="condicion-label">Condición Pago:</span><span class="condicion-value">{{ condicion_pago }}</span></div>
-            <div class="condicion-line"><span class="condicion-label">Tiempo Entrega:</span><span class="condicion-value">{{ tiempo_entrega }}</span></div>
-            <div class="condicion-line"><span class="condicion-label">Dirección Entrega:</span><span class="condicion-value">{{ direccion_entrega }}</span></div>
-            <div class="condicion-line"><span class="condicion-label">Validez Oferta:</span><span class="condicion-value">{{ validez_oferta }}</span></div>
+            <div class="condicion-line"><span class="condicion-label"><strong>Ejecutiva:</strong></span><span class="condicion-value">{{ asesor_comercial }}</span></div>
+            <div class="condicion-line"><span class="condicion-label"><strong>E-mail:</strong></span><span class="condicion-value">{{ email_contacto }}</span></div>
+            <div class="condicion-line"><span class="condicion-label"><strong>Teléfono:</strong></span><span class="condicion-value">{{ telefono_contacto_user }}</span></div>
+            <div class="condicion-line"><span class="condicion-label"><strong>Condición Pago:</strong></span><span class="condicion-value">{{ condicion_pago }}</span></div>
+            <div class="condicion-line"><span class="condicion-label"><strong>Tiempo Entrega:</strong></span><span class="condicion-value">{{ tiempo_entrega }}</span></div>
+            <div class="condicion-line"><span class="condicion-label"><strong>Dirección Entrega:</strong></span><span class="condicion-value">{{ direccion_entrega }}</span></div>
+            <div class="condicion-line"><span class="condicion-label"><strong>Validez Oferta:</strong></span><span class="condicion-value">{{ validez_oferta }}</span></div>
         </div>
     </div>
 
-    <!-- TEXTO INTRODUCTORIO -->
+    <!-- TEXTO INTRODUCTORIO - SIN LÍNEA DE DISEÑO -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
@@ -4255,7 +4231,7 @@ def api_cotizaciones_generar_pdf(id):
                     <td class="text-center">{{ producto.unidad|default('Unid') }}</td>
                     <td class="text-center">{{ "%.0f"|format(producto.cantidad|default(0)) }}</td>
                     <td class="numero-formateado">{{ "%.2f"|format(producto.precio_venta_unitario|default(0)) }}</td>
-                    <td class="numero-formateado fw-bold bg-warning">{{ "%.2f"|format(producto.subtotal_venta_desc|default(producto.subtotal_venta|default(0))) }}</td>
+                    <td class="numero-formateado fw-bold">{{ "%.2f"|format(producto.subtotal_venta_desc|default(producto.subtotal_venta|default(0))) }}</td>
                 </tr>
                 {% endfor %}
             {% else %}
@@ -4287,7 +4263,7 @@ def api_cotizaciones_generar_pdf(id):
             <span class="banco">BBVA</span>
             <span class="tipo">| Cuenta de ahorro empresa</span><br>
             <span class="numero">Cuenta: 00110319160100022197</span>
-            <span style="color: #bbbbbb;"> | </span>
+            <span style="color: #000000;"> | </span>
             <span class="cci">CCI: 011-319-000100022197-16</span>
         </div>
     </div>
@@ -4342,8 +4318,6 @@ def api_cotizaciones_generar_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-# routes.py - Agregar esta función al final
-
 # ============================================================
 # GENERAR PDF DE GUÍA CON PDFGenerator
 # ============================================================
