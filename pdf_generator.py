@@ -142,11 +142,11 @@ class PDFGenerator:
         }
         .recuadro-derecha { 
             flex-shrink: 0; 
-            border: 2px solid #000; 
-            border-radius: 12px; 
-            padding: 10px 20px; 
+            border: 1px solid #000; 
+            border-radius: 10px; 
+            padding: 8px 18px; 
             text-align: center; 
-            min-width: 200px; 
+            min-width: 180px; 
         }
         .recuadro-derecha .ruc { 
             font-size: 10px; 
@@ -164,32 +164,32 @@ class PDFGenerator:
         }
         
         .seccion { 
-            margin-bottom: 8px; 
+            margin-bottom: 6px; 
         }
         
         /* ============================================================
-           TÍTULO DENTRO DEL RECUADRO
+           TÍTULO DENTRO DEL RECUADRO - BORDES DELGADOS
            ============================================================ */
         .seccion-con-borde {
             border: 1px solid #000;
-            border-radius: 8px;
+            border-radius: 6px;
             padding: 0;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             overflow: hidden;
         }
         .seccion-con-borde .seccion-titulo {
             font-weight: bold;
-            font-size: 9px;
+            font-size: 8.5px;
             text-transform: uppercase;
             background: #000000;
             color: #ffffff;
-            padding: 4px 12px;
+            padding: 3px 10px;
             margin: 0;
             border-bottom: 1px solid #000;
             letter-spacing: 0.5px;
         }
         .seccion-con-borde .seccion-contenido {
-            padding: 6px 12px;
+            padding: 4px 10px;
             background: #ffffff;
         }
         
@@ -201,7 +201,7 @@ class PDFGenerator:
         }
         .fila { 
             display: flex; 
-            padding: 2px 0; 
+            padding: 1px 0; 
             align-items: baseline; 
         }
         .fila .label { 
@@ -218,18 +218,19 @@ class PDFGenerator:
             width: 100%; 
             border-collapse: collapse; 
             margin: 4px 0; 
-            font-size: 8.5px; 
+            font-size: 8px; 
         }
         .products-table th { 
             background: #000000; 
             color: white; 
-            padding: 4px 5px; 
+            padding: 3px 5px; 
             text-align: center; 
             border: 1px solid #000; 
+            font-weight: bold;
         }
         .products-table td { 
-            padding: 3px 5px; 
-            border: 1px solid #000; 
+            padding: 2px 5px; 
+            border: 1px solid #ccc; 
             text-align: center; 
         }
         .products-table td.descripcion { 
@@ -240,31 +241,31 @@ class PDFGenerator:
             margin: 8px 0 5px 0; 
             padding: 6px; 
             border: 1px solid #000; 
-            border-radius: 8px; 
+            border-radius: 6px; 
             background: #ffffff; 
         }
         .qr-container img { 
-            width: 90px; 
-            height: 90px; 
+            width: 80px; 
+            height: 80px; 
         }
         .qr-container .qr-text { 
-            font-size: 7px; 
+            font-size: 6.5px; 
             color: #000000; 
             margin-top: 2px; 
         }
         .footer { 
             margin-top: 12px; 
             text-align: center; 
-            font-size: 7.5px; 
+            font-size: 7px; 
             color: #000000; 
-            border-top: 1px solid #000; 
+            border-top: 1px solid #ccc; 
             padding-top: 6px; 
         }
         .referencias-grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr 1fr; 
-            gap: 8px; 
-            padding: 4px 0; 
+            gap: 6px; 
+            padding: 3px 0; 
         }
         .ref-item { 
             text-align: center; 
@@ -272,13 +273,13 @@ class PDFGenerator:
         .ref-item .ref-label { 
             font-weight: bold; 
             display: block; 
-            font-size: 7.5px; 
+            font-size: 7px; 
             color: #000000; 
             text-transform: uppercase; 
             letter-spacing: 0.3px; 
         }
         .ref-item .ref-value { 
-            font-size: 9px; 
+            font-size: 8.5px; 
             font-weight: 600; 
         }
     </style>
@@ -303,7 +304,7 @@ class PDFGenerator:
         </div>
     </div>
     
-    <!-- DESTINATARIO - TÍTULO DENTRO DEL RECUADRO -->
+    <!-- DESTINATARIO -->
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DESTINATARIO</div>
         <div class="seccion-contenido">
@@ -314,7 +315,7 @@ class PDFGenerator:
         </div>
     </div>
     
-    <!-- DATOS DEL TRASLADO - TÍTULO DENTRO DEL RECUADRO -->
+    <!-- DATOS DEL TRASLADO -->
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DATOS DEL TRASLADO</div>
         <div class="seccion-contenido">
@@ -329,7 +330,7 @@ class PDFGenerator:
         </div>
     </div>
     
-    <!-- DATOS DE RUTA - TÍTULO DENTRO DEL RECUADRO -->
+    <!-- DATOS DE RUTA -->
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DATOS DE RUTA</div>
         <div class="seccion-contenido">
@@ -350,7 +351,7 @@ class PDFGenerator:
         </div>
     </div>
     
-    <!-- DATOS DEL TRANSPORTE - TÍTULO DENTRO DEL RECUADRO -->
+    <!-- DATOS DEL TRANSPORTE -->
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
         <div class="seccion-contenido">
@@ -364,10 +365,10 @@ class PDFGenerator:
         </div>
     </div>
     
-    <!-- PRODUCTOS - TÍTULO DENTRO DEL RECUADRO -->
+    <!-- PRODUCTOS -->
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">PRODUCTOS</div>
-        <div class="seccion-contenido" style="padding: 4px 8px;">
+        <div class="seccion-contenido" style="padding: 3px 6px;">
             <table class="products-table">
                 <thead><tr><th style="width:8%">ITEM</th><th style="width:15%">CODIGO</th><th style="width:40%">PRODUCTO</th><th style="width:15%">UM</th><th style="width:15%">CANTIDAD</th></tr></thead>
                 <tbody>{% for item in items %}<tr><td>{{ item.item }}</td><td>{{ item.codigo }}</td><td class="descripcion">{{ item.descripcion }}</td><td>{{ item.unidad }}</td><td>{{ item.cantidad }}</td></tr>{% endfor %}</tbody>
@@ -375,7 +376,7 @@ class PDFGenerator:
         </div>
     </div>
     
-    <!-- DOCUMENTOS RELACIONADOS - TÍTULO DENTRO DEL RECUADRO -->
+    <!-- DOCUMENTOS RELACIONADOS -->
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
         <div class="seccion-contenido">
@@ -389,7 +390,7 @@ class PDFGenerator:
         </div>
     </div>
     
-    <!-- OBSERVACIONES - TÍTULO DENTRO DEL RECUADRO -->
+    <!-- OBSERVACIONES -->
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">OBSERVACIONES</div>
         <div class="seccion-contenido">
