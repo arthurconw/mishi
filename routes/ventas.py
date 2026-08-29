@@ -5418,7 +5418,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML EN BLANCO Y NEGRO - SIN GRISES, LETRAS FUERTES
+        # 4. Template HTML EN BLANCO Y NEGRO - MANTENIENDO TAMAÑOS ORIGINALES
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5427,7 +5427,7 @@ def api_cotizaciones_preview_pdf(id):
     <style>
         @page {
             size: A4;
-            margin: 1.5cm 1.5cm;
+            margin: 1.2cm;
         }
         * { 
             margin: 0; 
@@ -5435,63 +5435,62 @@ def api_cotizaciones_preview_pdf(id):
             box-sizing: border-box; 
         }
         body { 
-            font-family: Arial, Helvetica, sans-serif; 
-            font-size: 10pt; 
+            font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; 
+            font-size: 10px; 
             color: #000000; 
-            line-height: 1.4; 
+            line-height: 1.3; 
             background: #ffffff; 
         }
         
         /* ============================================================
-           BLANCO Y NEGRO - SIN GRISES
+           BLANCO Y NEGRO - MANTENIENDO TAMAÑOS ORIGINALES
            ============================================================ */
         
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border-bottom: 2px solid #000000;
-            padding-bottom: 12px;
+            padding-bottom: 10px;
         }
         .logo-section { flex: 1; }
-        .logo { max-width: 150px; }
+        .logo { max-width: 140px; }
         .logo img { width: 100%; display: block; }
         .empresa-info { flex: 2; text-align: center; }
         .empresa-info h1 { 
             color: #000000; 
-            margin: 0 0 4px 0; 
-            font-size: 20pt; 
+            margin: 0 0 3px 0; 
+            font-size: 18px; 
             font-weight: bold; 
         }
         .empresa-info .slogan { 
-            font-size: 9pt; 
+            font-size: 9px; 
             color: #000000; 
             letter-spacing: 1px; 
-            font-weight: normal;
         }
         .empresa-info .ruc-text { 
-            font-size: 9pt; 
+            font-size: 8px; 
             color: #000000; 
             font-weight: bold; 
-            margin-top: 3px; 
+            margin-top: 2px; 
         }
         
         .cotizacion-info {
             flex: 1;
             text-align: right;
             border: 1px solid #000000;
-            padding: 8px 12px;
+            padding: 6px 10px;
         }
         .cotizacion-info .numero-linea {
-            font-size: 12pt;
+            font-size: 11px;
             font-weight: bold;
             color: #000000;
             white-space: nowrap;
         }
         .cotizacion-info .fecha, 
         .cotizacion-info .hora {
-            font-size: 9pt;
+            font-size: 8px;
             margin-top: 2px;
             color: #000000;
         }
@@ -5505,8 +5504,8 @@ def api_cotizaciones_preview_pdf(id):
         .seccion-cliente h3, .seccion-condiciones h3 { 
             color: #000000; 
             border-bottom: 1px solid #000000; 
-            padding-bottom: 4px; 
-            font-size: 10pt; 
+            padding-bottom: 3px; 
+            font-size: 10px; 
             margin-top: 0; 
             margin-bottom: 6px; 
             font-weight: bold; 
@@ -5514,10 +5513,10 @@ def api_cotizaciones_preview_pdf(id):
         .info-line, .condicion-line { 
             display: flex; 
             margin-bottom: 3px; 
-            font-size: 9pt; 
+            font-size: 8.5px; 
         }
         .info-label, .condicion-label { 
-            width: 110px; 
+            width: 90px; 
             font-weight: bold; 
             color: #000000;
         }
@@ -5526,13 +5525,13 @@ def api_cotizaciones_preview_pdf(id):
         .texto-introductorio { 
             margin: 10px 0; 
             padding: 8px 15px; 
-            border-left: 3px solid #000000; 
-            font-size: 9pt; 
+            border-left: 4px solid #000000; 
+            font-size: 9px; 
             line-height: 1.4; 
             text-align: justify; 
         }
         .texto-introductorio .saludo { 
-            font-size: 10pt; 
+            font-size: 10px; 
             font-weight: bold; 
             margin-bottom: 5px; 
             color: #000000;
@@ -5542,12 +5541,12 @@ def api_cotizaciones_preview_pdf(id):
             width: 100%; 
             border-collapse: collapse; 
             margin: 10px 0; 
-            font-size: 8.5pt; 
+            font-size: 8.2px; 
         }
         .tabla-productos th { 
             background: #000000; 
             color: #ffffff; 
-            padding: 5px 4px; 
+            padding: 6px 4px; 
             border: 1px solid #000000; 
             font-weight: bold; 
             text-align: center; 
@@ -5560,20 +5559,20 @@ def api_cotizaciones_preview_pdf(id):
             color: #000000;
         }
         .tabla-productos tr:nth-child(even) td {
-            background: #f0f0f0;
+            background: #f5f5f5;
         }
         
-        .col-item { text-align: center; width: 30px; }
-        .col-codigo { text-align: left; width: 75px; }
+        .col-item { text-align: center; width: 35px; }
+        .col-codigo { text-align: left; width: 70px; }
         .col-descripcion { text-align: left; }
         .col-modelo { text-align: left; width: 60px; }
-        .col-marca { text-align: left; width: 60px; }
-        .col-unidad-medida { text-align: center; width: 50px; }
+        .col-marca { text-align: left; width: 65px; }
+        .col-unidad-medida { text-align: center; width: 55px; }
         .col-cantidad { text-align: center; width: 45px; }
-        .col-valor-unitario { text-align: right; width: 80px; }
+        .col-valor-unitario { text-align: right; width: 85px; }
         .col-valor-total { 
             text-align: right; 
-            width: 85px; 
+            width: 90px; 
             background: #e8e8e8; 
             font-weight: bold; 
         }
@@ -5584,17 +5583,16 @@ def api_cotizaciones_preview_pdf(id):
             font-weight: bold; 
         }
         .text-center { text-align: center; }
-        .text-right { text-align: right; }
         .fw-bold { font-weight: bold; }
         
         .seccion-totales { 
-            width: 300px; 
+            width: 280px; 
             margin-left: auto; 
             margin-right: 0; 
-            margin-top: 10px; 
+            margin-top: 8px; 
             margin-bottom: 12px; 
             border: 2px solid #000000; 
-            padding: 10px 14px; 
+            padding: 8px 12px; 
             background: #ffffff; 
         }
         .total-line { 
@@ -5602,13 +5600,12 @@ def api_cotizaciones_preview_pdf(id):
             justify-content: space-between; 
             align-items: center; 
             margin-bottom: 4px; 
-            font-size: 9pt; 
-            gap: 10px; 
+            font-size: 9px; 
+            gap: 8px; 
         }
         .total-line span:first-child { 
             white-space: nowrap; 
             color: #000000; 
-            font-weight: normal;
         }
         .total-line .numero-formateado { 
             font-weight: bold; 
@@ -5617,22 +5614,18 @@ def api_cotizaciones_preview_pdf(id):
         }
         .total-final { 
             border-top: 2px solid #000000; 
-            padding-top: 6px; 
-            margin-top: 6px; 
+            padding-top: 5px; 
+            margin-top: 5px; 
             font-weight: bold; 
-            font-size: 12pt; 
+            font-size: 11px; 
             color: #000000; 
-        }
-        .total-final .numero-formateado {
-            font-size: 13pt;
-            font-weight: bold;
         }
         
         .seccion-importante { 
             margin: 8px 0; 
             padding: 5px 10px; 
             border: 1px solid #000000;
-            font-size: 8pt; 
+            font-size: 7.5px; 
             color: #000000; 
         }
         .seccion-importante strong { color: #000000; }
@@ -5641,36 +5634,36 @@ def api_cotizaciones_preview_pdf(id):
             margin-top: 10px; 
             padding: 8px 12px; 
             border: 1px solid #000000; 
-            font-size: 8pt; 
+            font-size: 7.5px; 
         }
         .cuentas-bancarias h3 { 
             color: #000000; 
             border-bottom: 1px solid #000000; 
-            padding-bottom: 4px; 
-            font-size: 9pt; 
+            padding-bottom: 3px; 
+            font-size: 9px; 
             margin-top: 0; 
             margin-bottom: 6px; 
         }
         .cuenta-line { 
             margin-bottom: 2px;
-            padding: 3px 0;
+            padding: 4px 0;
         }
         .cuenta-line .banco { 
             font-weight: bold; 
             color: #000000; 
-            font-size: 9pt; 
+            font-size: 9px; 
         }
         .cuenta-line .tipo { 
-            font-size: 8pt; 
+            font-size: 8px; 
             color: #000000; 
         }
         .cuenta-line .numero { 
-            font-size: 8pt; 
+            font-size: 8px; 
             color: #000000; 
             font-weight: bold; 
         }
         .cuenta-line .cci { 
-            font-size: 8pt; 
+            font-size: 7.5px; 
             color: #000000; 
         }
         
@@ -5678,13 +5671,13 @@ def api_cotizaciones_preview_pdf(id):
             margin-top: 12px; 
             padding: 8px 16px; 
             border: 1px solid #000000; 
-            font-size: 8.5pt; 
+            font-size: 8.5px; 
             text-align: left; 
             line-height: 1.4; 
         }
         .seccion-aclaratoria .titulo { 
             font-weight: bold; 
-            font-size: 9pt; 
+            font-size: 9px; 
             margin-bottom: 4px; 
             color: #000000; 
             text-align: left; 
@@ -5700,10 +5693,10 @@ def api_cotizaciones_preview_pdf(id):
             border-top: 2px solid #000000; 
             padding-top: 12px; 
             text-align: left; 
-            font-size: 9pt; 
+            font-size: 8.5px; 
         }
         .contacto-nombre { 
-            font-size: 11pt; 
+            font-size: 10.5px; 
             font-weight: bold; 
             color: #000000; 
             margin-bottom: 4px; 
@@ -5716,15 +5709,6 @@ def api_cotizaciones_preview_pdf(id):
             break-inside: avoid; 
         }
         .tabla-productos { page-break-inside: avoid; }
-        
-        /* NEGRITA PARA TODOS LOS TEXTOS */
-        .fw-900 { font-weight: 900; }
-        .text-strong { font-weight: bold; }
-        .label-negrita { font-weight: 700; }
-        
-        /* BORDES MÁS DEFINIDOS */
-        .borde-negro { border: 1px solid #000000; }
-        .borde-negro-fuerte { border: 2px solid #000000; }
     </style>
 </head>
 <body>
@@ -5784,14 +5768,14 @@ def api_cotizaciones_preview_pdf(id):
         <thead>
             <tr>
                 <th class="col-item">Item</th>
-                <th class="col-codigo">Código</th>
+                <th class="col-codigo">Código Producto</th>
                 <th class="col-descripcion">Descripción</th>
                 <th class="col-modelo">Modelo</th>
                 <th class="col-marca">Marca</th>
-                <th class="col-unidad-medida">UM</th>
-                <th class="col-cantidad">Cant.</th>
-                <th class="col-valor-unitario">Valor Unit S/.</th>
-                <th class="col-valor-total">Valor Total S/.</th>
+                <th class="col-unidad-medida">Unidad Medida</th>
+                <th class="col-cantidad">Cantidad</th>
+                <th class="col-valor-unitario">Valor Venta Unit S/.</th>
+                <th class="col-valor-total">Valor Venta Total S/.</th>
             </tr>
         </thead>
         <tbody>
@@ -5800,7 +5784,7 @@ def api_cotizaciones_preview_pdf(id):
                 <tr>
                     <td class="text-center">{{ producto.item }}</td>
                     <td>{{ producto.codigo|default('-') }}</td>
-                    <td class="descripcion"><strong>{{ producto.descripcion }}</strong></td>
+                    <td class="descripcion">{{ producto.descripcion }}</td>
                     <td>{{ producto.modelo|default('-') }}</td>
                     <td>{{ producto.marca|default('-') }}</td>
                     <td class="text-center">{{ producto.unidad|default('Unid') }}</td>
@@ -5817,28 +5801,28 @@ def api_cotizaciones_preview_pdf(id):
 
     <!-- IMPORTANTE -->
     <div class="seccion-importante">
-        <strong>IMPORTANTE:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
+        <strong>Importante:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
     </div>
 
     <!-- TOTALES -->
     <div class="seccion-totales">
-        <div class="total-line"><span><strong>Subtotal (S/):</strong></span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
+        <div class="total-line"><span>Subtotal (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
         {% if hay_descuentos %}
-        <div class="total-line"><span><strong>Descuentos aplicados (S/):</strong></span><span class="numero-formateado">- S/ {{ "%.2f"|format(total_descuento_subtotal|default(0)) }}</span></div>
+        <div class="total-line"><span>Descuentos aplicados (S/):</span><span class="numero-formateado">- S/ {{ "%.2f"|format(total_descuento_subtotal|default(0)) }}</span></div>
         {% endif %}
-        <div class="total-line"><span><strong>Subtotal con descuento (S/):</strong></span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta_desc|default(0)) }}</span></div>
-        <div class="total-line"><span><strong>IGV (18%):</strong></span><span class="numero-formateado">S/ {{ "%.2f"|format(summary_igv|default(0)) }}</span></div>
+        <div class="total-line"><span>Subtotal con descuento (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta_desc|default(0)) }}</span></div>
+        <div class="total-line"><span>IGV (18%):</span><span class="numero-formateado">S/ {{ "%.2f"|format(summary_igv|default(0)) }}</span></div>
         <div class="total-line total-final"><span><strong>TOTAL A PAGAR:</strong></span><span class="numero-formateado"><strong>S/ {{ "%.2f"|format(summary_total_venta|default(0)) }}</strong></span></div>
     </div>
 
     <!-- CUENTAS BANCARIAS -->
     <div class="cuentas-bancarias">
-        <h3><strong>CUENTAS BANCARIAS</strong></h3>
+        <h3>CUENTAS BANCARIAS</h3>
         <div class="cuenta-line">
             <span class="banco">BBVA</span>
             <span class="tipo">| Cuenta de ahorro empresa</span><br>
             <span class="numero">Cuenta: 00110319160100022197</span>
-            <span> | </span>
+            <span style="color: #000000;"> | </span>
             <span class="cci">CCI: 011-319-000100022197-16</span>
         </div>
     </div>
