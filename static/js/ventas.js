@@ -8452,7 +8452,7 @@ function loadPedidoCotizacion() {
     document.getElementById('pcMoneda').value = cotizacion.moneda || 'Soles (S/)';
     document.getElementById('pcEntrega').value = cotizacion.direccion_entrega || '';
     document.getElementById('pcMonto').value = cotizacion.total || cotizacion.monto || 0;
-      document.getElementById('pcMontoConIgv').value = (cotizacion.total || cotizacion.monto || 0) * 1.18; 
+    document.getElementById('pcMontoConIgv').value = cotizacion.total || 0;
     
     // Cargar productos de la cotización
     const productos = cotizacion.productos || [];
@@ -12749,7 +12749,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcCotFecha', data.fecha_creacion ? formatFecha(data.fecha_creacion) : '');
             setReadonlyValue('pcCliente', data.cliente_razon_social || '');
             setReadonlyValue('pcRuc', data.cliente_ruc || '');
-            setReadonlyValue('pcMontoConIgv', (data.total || 0) * 1.18);
+            setReadonlyValue('pcMontoConIgv', data.total || 0);
             setReadonlyValue('pcMonto', data.subtotal || 0);
             setReadonlyValue('pcCondicionPago', data.condicion_pago || 'Contado');
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
