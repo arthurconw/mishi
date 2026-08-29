@@ -2775,6 +2775,7 @@
                 <div class="master-title">Base datos: Cotizaciones</div>
                 <div class="master-subtitle">Listado comercial con trazabilidad</div>
             </div>
+            <!-- BUSCADOR + FILTROS DE FECHA EN LA MISMA FILA - IGUAL QUE PC -->
             <div class="search-box" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <input id="qSearch" placeholder="Buscar por N° cotización / RUC / Cliente / Descripción..." style="flex:1; min-width:150px;">
                 <!-- Filtro de fechas -->
@@ -2788,8 +2789,9 @@
             <div class="clean-actions">
                 <select id="qStatus">
                     <option value="">Todos los estados</option>
+                    <option value="Borrador">Borrador</option>
                     <option value="En revisión">En revisión</option>
-                    <option value="Validado">Validacion</option>
+                    <option value="Validado">Validado</option>
                     <option value="Generada">Generada</option>
                     <option value="Aceptada por Cliente">Aceptada por Cliente</option>
                 </select>
