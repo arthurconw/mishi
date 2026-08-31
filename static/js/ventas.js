@@ -199,12 +199,22 @@ function options(arr, selected = '') {
     return arr.map(x => `<option value="${x}" ${x === selected ? 'selected' : ''}>${x}</option>`).join('');
 }
 
+
+
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
+    
+    // Si es el modal de PC, forzar limpieza
+    if (modalId === 'pedidoCompraModal') {
+        // Usar setTimeout para asegurar que la limpieza se ejecute después de cerrar
+        setTimeout(() => {
+            forzarLimpiezaModalPC();
+        }, 100);
+    }
+    
     modal.classList.remove('show');
-    // Limpiar el inline style que algunas modales fuerzan al abrir
-    modal.removeAttribute('style');
+    modal.style.display = '';
     document.body.style.overflow = '';
 }
 
@@ -11062,7 +11072,7 @@ function clearDateFilter() {
 // ============================================================
 function openPedidoCompraModalSAP(mode, id) {
     console.log('📋 openPedidoCompraModalSAP:', mode, id);
-    
+    forzarLimpiezaModalPC();
     // 🔽 FUNCIÓN SEGURA PARA LIMPIAR ELEMENTOS
     function clearElement(id, defaultValue = '') {
         const el = document.getElementById(id);
@@ -13252,7 +13262,7 @@ function actualizarPrecioPCSAP(input, index) {
 
 function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
-    
+     forzarLimpiezaModalPC();
     // ============================================================
     // FUNCIÓN AUXILIAR PARA LIMPIAR CAMPOS
     // ============================================================
@@ -13535,6 +13545,91 @@ function clearPedidoModalSAP() {
     
     console.log('✅ Modal de PC restaurado a estado inicial');
 }
+
+/**
+ * Forza la limpieza completa del modal de PC
+ * Esta función debe llamarse CADA VEZ que se abre el modal
+ */
+function forzarLimpiezaModalPC() {
+    console.log('🧹 FORZANDO limpieza de campos problemáticos...');
+    
+    // 1. Limpiar Condición de Pago - Forzar "Contado"
+    const condSelect = document.getElementById('pcCondicion');
+    if (condSelect) {
+        let found = false;
+        for (let opt of condSelect.options) {
+            if (opt.value === 'Contado') {
+                opt.selected = true;
+                found = true;
+                console.log('✅ Cond. Pago forzado a: Contado');
+                break;
+            }
+        }
+        if (!found && condSelect.options.length > 0) {
+            condSelect.selectedIndex = 0;
+            console.log('⚠️ "Contado" no encontrado, usando primera opción:', condSelect.options[0]?.value);
+        }
+        // Asegurar que el select esté habilitado
+        condSelect.disabled = false;
+        condSelect.style.background = '#FFFFFF';
+        condSelect.style.cursor = 'pointer';
+    }
+    
+    // 2. Limpiar campo personalizado de condición
+    const condCustom = document.getElementById('pcCondicionCustom');
+    if (condCustom) {
+        condCustom.value = '';
+        condCustom.style.display = 'none';
+        condCustom.style.background = '#FFFFFF';
+        condCustom.style.color = '#0F172A';
+        console.log('✅ Campo personalizado de condición limpiado');
+    }
+    
+    // 3. Limpiar Diferencia S/IGV - Forzar a 0
+    const diferenciaBox = document.getElementById('pcDiferenciaSinIgv');
+    if (diferenciaBox) {
+        diferenciaBox.textContent = 'S/ 0.00';
+        diferenciaBox.style.color = '#6B7280';
+        diferenciaBox.style.background = '#f8f9fa';
+        console.log('✅ Diferencia forzada a: S/ 0.00');
+    }
+    
+    // 4. Limpiar Monto PC
+    const montoPC = document.getElementById('pcMontoPC');
+    if (montoPC) {
+        montoPC.value = '';
+        console.log('✅ Monto PC limpiado');
+    }
+    
+    // 5. Limpiar Moneda - Forzar Soles
+    const monedaSelect = document.getElementById('pcMoneda');
+    if (monedaSelect) {
+        let found = false;
+        for (let opt of monedaSelect.options) {
+            if (opt.value === 'S/)' || opt.value === 'S/' || opt.value === 'Soles') {
+                opt.selected = true;
+                found = true;
+                console.log('✅ Moneda forzada a: Soles');
+                break;
+            }
+        }
+        if (!found && monedaSelect.options.length > 0) {
+            monedaSelect.selectedIndex = 0;
+        }
+        monedaSelect.disabled = false;
+        monedaSelect.style.background = '#FFFFFF';
+        monedaSelect.style.cursor = 'pointer';
+    }
+    
+    // 6. Actualizar el resumen con los valores limpios
+    setTimeout(() => {
+        if (typeof actualizarResumenPC === 'function') {
+            actualizarResumenPC();
+            console.log('✅ Resumen actualizado después de limpieza forzada');
+        }
+    }, 50);
+}
+
 
 function setEditableValue(id, value) {
     const el = document.getElementById(id);
