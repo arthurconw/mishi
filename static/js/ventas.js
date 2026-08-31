@@ -11247,28 +11247,13 @@ function openPedidoCompraModalSAP(mode, id) {
     }
 }
 
-// ============================================================
-// CARGAR PC PARA EDICIÓN - VERSIÓN CORREGIDA
-// ============================================================
 function cargarPCParaEdicion(pcId) {
     console.log('📋 Cargando PC para edición:', pcId);
     
-    // 🔽 VERIFICAR QUE TODOS LOS ELEMENTOS EXISTAN ANTES DE USARLOS
     function setValue(id, value, defaultValue = '') {
         const el = document.getElementById(id);
         if (el) {
             el.value = value !== undefined && value !== null ? value : defaultValue;
-            return true;
-        } else {
-            console.warn(`⚠️ Elemento no encontrado: #${id}`);
-            return false;
-        }
-    }
-    
-    function setText(id, value, defaultValue = '') {
-        const el = document.getElementById(id);
-        if (el) {
-            el.textContent = value !== undefined && value !== null ? value : defaultValue;
             return true;
         } else {
             console.warn(`⚠️ Elemento no encontrado: #${id}`);
@@ -11284,47 +11269,14 @@ function cargarPCParaEdicion(pcId) {
                 console.log('📦 Datos del PC:', pc);
                 
                 // ============================================================
-                // 🔽 FUNCIÓN PARA FORMATEAR FECHA
-                // ============================================================
-                function formatearFecha(fecha) {
-                    if (!fecha) return '';
-                    try {
-                        // Si es string ISO, convertir a datetime-local
-                        if (typeof fecha === 'string') {
-                            // Si tiene formato 'YYYY-MM-DDTHH:MM:SS' o 'YYYY-MM-DD HH:MM:SS'
-                            let fechaStr = fecha.replace(' ', 'T');
-                            // Quitar milisegundos y zona horaria
-                            if (fechaStr.includes('.')) {
-                                fechaStr = fechaStr.split('.')[0];
-                            }
-                            if (fechaStr.includes('+')) {
-                                fechaStr = fechaStr.split('+')[0];
-                            }
-                            if (fechaStr.includes('Z')) {
-                                fechaStr = fechaStr.replace('Z', '');
-                            }
-                            return fechaStr;
-                        }
-                        return fecha;
-                    } catch (e) {
-                        console.warn('⚠️ Error formateando fecha:', fecha, e);
-                        return fecha;
-                    }
-                }
-                
-                // ============================================================
-                // 🔽 FUNCIÓN PARA FORMATEAR MONTO (2 decimales)
-                // ============================================================
-                function formatearMonto(valor) {
-                    const num = parseFloat(valor) || 0;
-                    return num.toFixed(2);
-                }
-                
-                // ============================================================
                 // 🔽 BLOQUE 1: Cotización relacionada - SOLO LECTURA
                 // ============================================================
+                // Usar formatearFecha para la fecha de cotización
+                const fechaCotizacion = formatearFecha(pc.fecha || pc.fecha_recepcion);
+                console.log('📅 Fecha cotización formateada:', fechaCotizacion);
+                
                 setValue('pcCotNumero', pc.cotizacion_numero || 'SIN COTIZACIÓN');
-                setValue('pcCotFecha', pc.fecha ? formatearFecha(pc.fecha) : '');
+                setValue('pcCotFecha', fechaCotizacion);
                 setValue('pcRuc', pc.ruc || '');
                 setValue('pcCliente', pc.cliente || '');
                 setValue('pcCondicionPago', pc.condicion_pago || pc.condicion_atencion || 'Contado');
@@ -11333,18 +11285,21 @@ function cargarPCParaEdicion(pcId) {
                 // Montos con 2 decimales
                 const montoSinIgv = parseFloat(pc.monto) || 0;
                 const montoConIgv = montoSinIgv * 1.18;
-                setValue('pcMonto', formatearMonto(montoSinIgv));
-                setValue('pcMontoConIgv', formatearMonto(montoConIgv));
+                setValue('pcMonto', montoSinIgv.toFixed(2));
+                setValue('pcMontoConIgv', montoConIgv.toFixed(2));
                 
                 // ============================================================
                 // 🔽 BLOQUE 2: Datos del PC - EDITABLES
                 // ============================================================
+                const fechaRecepcion = formatearFecha(pc.fecha_recepcion || pc.fecha);
+                console.log('📅 Fecha recepción formateada:', fechaRecepcion);
+                
                 setValue('pcNumero', pc.numero || '');
                 setValue('pcContacto', pc.responsable || pc.cliente_contacto || '');
-                setValue('pcFecha', pc.fecha ? formatearFecha(pc.fecha) : '');
+                setValue('pcFecha', fechaRecepcion);
                 setValue('pcCondicion', pc.condicion_pago || pc.condicion_atencion || 'Contado');
                 setValue('pcMoneda', pc.moneda || 'S/)');
-                setValue('pcMontoPC', formatearMonto(montoSinIgv));
+                setValue('pcMontoPC', montoSinIgv.toFixed(2));
                 setValue('pcEntrega', pc.lugar_entrega || pc.entrega || '');
                 setValue('pcObs', pc.observaciones || '');
                 
@@ -11423,6 +11378,7 @@ function cargarPCParaEdicion(pcId) {
             showToast('❌ Error al cargar los datos del PC', 'error');
         });
 }
+
 
 async function cargarPCParaEditar(id) {
     try {
