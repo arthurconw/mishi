@@ -166,8 +166,8 @@ def obtener_cotizacion_por_id_db(cotizacion_id):
         print(f"❌ Error en obtener_cotizacion_por_id_db: {e}")
         return None
 
+
 def guardar_cotizacion_db(data):
-    """Guarda una nueva cotización"""
     try:
         query = """
             INSERT INTO cotizaciones (
@@ -175,10 +175,9 @@ def guardar_cotizacion_db(data):
                 subtotal, igv, total, usuario_id, notas,
                 forma_pago, tiempo_entrega, almacen, validez_oferta,
                 codigo_cotizacion, correlativo, condicion_pago,
-                direccion_entrega, requerimiento, nota_cotizacion,
+                direccion_entrega, requerimiento, nota_cotizacion,  # ← REQUERIMIENTO ESTÁ AQUÍ
                 descuento_porcentaje, descuento_monto, descuento_tipo,
                 contacto_cliente, telefono_cliente, email_cliente,
-                -- 🔽 NUEVOS CAMPOS DE INFORMACIÓN ADICIONAL
                 seguimiento, motivo, transporte, parihuela, nota_interna,
                 vendedor
             ) VALUES (
@@ -206,7 +205,7 @@ def guardar_cotizacion_db(data):
             data.get('correlativo'),
             data.get('condicion_pago'),
             data.get('direccion_entrega'),
-            data.get('requerimiento'),
+            data.get('requerimiento'),  # ← REQUERIMIENTO
             data.get('nota_cotizacion', ''),
             float(data.get('descuento_porcentaje', 0)),
             float(data.get('descuento_monto', 0)),
@@ -214,7 +213,6 @@ def guardar_cotizacion_db(data):
             data.get('contacto_cliente'),
             data.get('telefono_cliente'),
             data.get('email_cliente'),
-            # 🔽 NUEVOS CAMPOS
             data.get('seguimiento', 'Asesor'),
             data.get('motivo', 'Proyecto nuevo'),
             data.get('transporte', 'Seleccione'),
@@ -223,13 +221,12 @@ def guardar_cotizacion_db(data):
             data.get('vendedor', 'Helen Blas Príncipe')
         )
         
-        print(f"📝 INSERT params: {params}")
         result = db_query(query, params)
-        print(f"📦 INSERT result: {result}")
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en guardar_cotizacion_db: {e}")
         raise
+
 
 def actualizar_cotizacion_db(cotizacion_id, data):
     """Actualiza una cotización existente"""
@@ -5457,9 +5454,18 @@ def api_cotizaciones_preview_pdf(id):
     try:
         print(f"📄 Generando vista previa PDF para cotización ID: {id}")
         
-        from datetime import datetime
+        from datetime import datetime, timedelta
         from flask import send_file, render_template_string
         from weasyprint import HTML
+        
+        # ============================================================
+        # 🔽 FUNCIÓN PARA OBTENER HORA DE PERÚ (UTC-5)
+        # ============================================================
+        def obtener_hora_peru():
+            """Retorna fecha y hora actual en zona horaria de Perú (UTC-5)"""
+            now_utc = datetime.utcnow()
+            now_peru = now_utc - timedelta(hours=5)
+            return now_peru
         
         # ============================================================
         # FUNCIÓN PARA OBTENER LOGO EN BASE64
@@ -5579,11 +5585,18 @@ def api_cotizaciones_preview_pdf(id):
         
         hay_descuentos = any(p.get('descuento_porcentaje', 0) > 0 for p in productos_list) or descuento_monto > 0
         
-        fecha_actual = datetime.now().strftime('%d/%m/%Y')
-        hora_actual = datetime.now().strftime('%H:%M')
+        # 🔽 USAR HORA DE PERÚ (UTC-5)
+        now_peru = obtener_hora_peru()
+        fecha_actual = now_peru.strftime('%d/%m/%Y')
+        hora_actual = now_peru.strftime('%H:%M')
+        print(f"📅 Hora Perú: {fecha_actual} {hora_actual}")
         
         logo_base64 = obtener_logo_base64_para_pdf()
         print(f"📷 Logo cargado: {'Sí' if logo_base64 else 'No'}")
+        
+        # 🔽 OBTENER REQUERIMIENTO
+        requerimiento = c.get('requerimiento') or '---'
+        print(f"📋 Requerimiento: {requerimiento}")
         
         datos_pdf = {
             'codigo_cotizacion': c.get('codigo_cotizacion') or c.get('numero_cotizacion', 'COT-000001'),
@@ -5596,7 +5609,7 @@ def api_cotizaciones_preview_pdf(id):
             'cliente_contacto': c.get('cliente_contacto') or c.get('contacto_cliente') or '---',
             'email_contacto_cliente': c.get('cliente_email') or c.get('email_cliente') or '---',
             'telefono_contacto': c.get('cliente_telefono') or c.get('telefono_cliente') or '---',
-            'numero_requerimiento': c.get('requerimiento') or '---',
+            'numero_requerimiento': requerimiento,  # ← REQUERIMIENTO
             'asesor_comercial': 'Helen Blas Príncipe',
             'email_contacto': 'ventas@kcfcorporacion.com',
             'telefono_contacto_user': '999932051',
@@ -5613,7 +5626,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML EN BLANCO Y NEGRO - RUC MÁS GRANDE, SIN LÍNEA EN TEXTO INTRODUCTORIO
+        # 4. Template HTML - AGREGAR REQUERIMIENTO
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5636,10 +5649,6 @@ def api_cotizaciones_preview_pdf(id):
             line-height: 1.3; 
             background: #ffffff; 
         }
-        
-        /* ============================================================
-           BLANCO Y NEGRO - MANTENIENDO TAMAÑOS ORIGINALES
-           ============================================================ */
         
         .header {
             display: flex;
@@ -5665,7 +5674,7 @@ def api_cotizaciones_preview_pdf(id):
             letter-spacing: 1px; 
         }
         .empresa-info .ruc-text { 
-            font-size: 11px;  /* 🔼 MÁS GRANDE - antes 8px */
+            font-size: 11px;
             color: #000000; 
             font-weight: bold; 
             margin-top: 3px; 
@@ -5717,7 +5726,6 @@ def api_cotizaciones_preview_pdf(id):
         }
         .info-value, .condicion-value { flex: 1; color: #000000; }
         
-        /* 🔽 ELIMINADA LA LÍNEA DE DISEÑO (border-left eliminado) */
         .texto-introductorio { 
             margin: 10px 0; 
             padding: 8px 15px; 
@@ -5952,7 +5960,7 @@ def api_cotizaciones_preview_pdf(id):
         </div>
     </div>
 
-    <!-- TEXTO INTRODUCTORIO - SIN LÍNEA DE DISEÑO -->
+    <!-- TEXTO INTRODUCTORIO -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
