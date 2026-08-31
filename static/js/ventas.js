@@ -12938,6 +12938,18 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 }
             };
             
+            // Función para setear valor editable
+            const setEditableValue = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = val !== undefined && val !== null ? val : '';
+                    el.readOnly = false;
+                    el.style.background = '#FFFFFF';
+                    el.style.color = '#0F172A';
+                    el.style.cursor = 'text';
+                }
+            };
+            
             // ============================================================
             // CARGAR DATOS BÁSICOS - TODOS EN MODO READONLY
             // ============================================================
@@ -12950,13 +12962,62 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcCondicionPago', data.condicion_pago || 'Contado');
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
-
-          
-            const montoPCInput = document.getElementById('pcMontoPC');
-            if (montoPCInput) {
-             montoPCInput.value = '';
-             montoPCInput.placeholder = '0.00';
+            // ============================================================
+            // 🔽 ACTUALIZAR LA MONEDA CORRECTAMENTE 🔽
+            // ============================================================
+            const monedaSelect = document.getElementById('pcMoneda');
+            const monedaDeLaCotizacion = data.moneda || data.moneda_cotizacion || '';
+            
+            console.log('💰 Moneda de la cotización:', monedaDeLaCotizacion);
+            
+            if (monedaSelect) {
+                let found = false;
+                
+                // Intentar encontrar la moneda en las opciones del select
+                for (let opt of monedaSelect.options) {
+                    const optValue = opt.value || '';
+                    const optText = opt.textContent || '';
+                    
+                    // Comparación flexible
+                    if (optValue === monedaDeLaCotizacion || 
+                        optText.includes(monedaDeLaCotizacion) || 
+                        monedaDeLaCotizacion.includes(optValue) ||
+                        (monedaDeLaCotizacion.includes('$') && optValue.includes('$')) ||
+                        (monedaDeLaCotizacion.includes('Soles') && optValue.includes('S/')) ||
+                        (monedaDeLaCotizacion.includes('USD') && optValue.includes('$')) ||
+                        (monedaDeLaCotizacion.includes('PEN') && optValue.includes('S/'))) {
+                        opt.selected = true;
+                        found = true;
+                        console.log('✅ Moneda seleccionada:', optValue);
+                        break;
+                    }
                 }
+                
+                // Si no se encuentra, seleccionar Soles por defecto
+                if (!found) {
+                    for (let opt of monedaSelect.options) {
+                        if (opt.value.includes('S/') || opt.value.includes('Soles') || opt.value.includes('PEN')) {
+                            opt.selected = true;
+                            console.log('⚠️ Moneda no encontrada, usando Soles por defecto');
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // ============================================================
+            // 🔽 ACTUALIZAR EL SÍMBOLO EN EL RESUMEN LATERAL
+            // ============================================================
+            const resumenMoneda = document.getElementById('pcResumenMoneda');
+            if (resumenMoneda) {
+                const monedaActual = monedaSelect ? monedaSelect.value : 'Soles (S/)';
+                if (monedaActual.includes('$') || monedaActual.includes('Dólar') || monedaActual.includes('USD')) {
+                    resumenMoneda.textContent = '$';
+                } else {
+                    resumenMoneda.textContent = 'S/';
+                }
+            }
+            
             // ============================================================
             // 🔽 ACTUALIZAR CONDICIÓN DE PAGO EN EL SELECT
             // ============================================================
@@ -12981,21 +13042,21 @@ function seleccionarCotizacionSAP(cotizacionId) {
             }
             
             // ============================================================
-            // 🔽 FORZAR ACTUALIZACIÓN DE CAMPOS DE PAGO (Contado)
+            // 🔽 DIRECCIÓN DE ENTREGA (EDITABLE)
             // ============================================================
-            togglePagoCampos();
-            
-            // También actualizar el semáforo de validación
-            setTimeout(() => {
-                updateValidationSemaphore();
-            }, 100);
-            
             if (data.direccion_entrega) {
                 setEditableValue('pcEntrega', data.direccion_entrega);
             }
             
             // ============================================================
-            // CARGAR PRODUCTOS EN LA TABLA - SIN BOTÓN ELIMINAR
+            // 🔽 FORZAR ACTUALIZACIÓN DE CAMPOS DE PAGO (Contado)
+            // ============================================================
+            if (typeof togglePagoCampos === 'function') {
+                togglePagoCampos();
+            }
+            
+            // ============================================================
+            // CARGAR PRODUCTOS EN LA TABLA
             // ============================================================
             const tbody = document.getElementById('pcItemsBody');
             if (!tbody) return;
@@ -13007,7 +13068,9 @@ function seleccionarCotizacionSAP(cotizacionId) {
             console.log(`📦 ${productos.length} productos encontrados en la cotización`);
             
             if (productos.length === 0) {
-                addPedidoItemSAP();
+                if (typeof addPedidoItemSAP === 'function') {
+                    addPedidoItemSAP();
+                }
                 showToast('⚠️ Esta cotización no tiene productos', 'warning');
                 return;
             }
@@ -13026,7 +13089,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 
                 const tr = document.createElement('tr');
                 tr.id = `item-row-${i + 1}`;
-                
                 tr.style.borderBottom = '1px solid #E2E8F0';
                 
                 tr.innerHTML = `
@@ -13083,8 +13145,12 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 if (typeof actualizarResumenPC === 'function') {
                     actualizarResumenPC();
                 }
-                updateValidationSemaphore();
-                togglePagoCampos();
+                if (typeof updateValidationSemaphore === 'function') {
+                    updateValidationSemaphore();
+                }
+                if (typeof togglePagoCampos === 'function') {
+                    togglePagoCampos();
+                }
             }, 200);
             
             showToast(`✅ Cotización ${data.numero_cotizacion} cargada con ${productos.length} productos`, 'success');
