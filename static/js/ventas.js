@@ -11055,141 +11055,335 @@ function clearDateFilter() {
     showToast('🧹 Filtros de fecha limpiados', 'info');
 }
 
-function openPedidoCompraModalSAP(mode = 'cot', id = null) {
-    console.log('📋 Abriendo modal PC:', { mode, id });
+// ============================================================
+// OPEN PEDIDO COMPRA MODAL SAP - VERSIÓN CORREGIDA
+// ============================================================
+function openPedidoCompraModalSAP(mode, id) {
+    console.log('📋 openPedidoCompraModalSAP:', mode, id);
+    
+    // Limpiar modal
+    document.getElementById('pcCotSearch').value = '';
+    document.getElementById('pcCotNumero').value = '';
+    document.getElementById('pcCotFecha').value = '';
+    document.getElementById('pcRuc').value = '';
+    document.getElementById('pcCliente').value = '';
+    document.getElementById('pcCondicionPago').value = '';
+    document.getElementById('pcVendedor').value = '';
+    document.getElementById('pcMonto').value = '0';
+    document.getElementById('pcMontoConIgv').value = '0';
+    document.getElementById('pcMontoPC').value = '0';
+    document.getElementById('pcNumero').value = '';
+    document.getElementById('pcContacto').value = '';
+    document.getElementById('pcCondicion').value = 'Contado';
+    document.getElementById('pcEntrega').value = '';
+    document.getElementById('pcObs').value = '';
+    document.getElementById('pcFecha').value = '';
+    document.getElementById('pcMoneda').value = 'S/)';
+    document.getElementById('pcItemsBody').innerHTML = '';
+    document.getElementById('pcResumenSubtotal').textContent = 'S/ 0.00';
+    document.getElementById('pcResumenValorVenta').textContent = 'S/ 0.00';
+    document.getElementById('pcResumenIgv').textContent = 'S/ 0.00';
+    document.getElementById('pcResumenTotal').textContent = 'S/ 0.00';
+    document.getElementById('pcResumenProductos').textContent = '0';
+    
+    // 🔽 LIMPIAR VALIDACIONES
+    document.getElementById('vPrecio').checked = false;
+    document.getElementById('vProducto').checked = false;
+    document.getElementById('vCantidad').checked = false;
+    document.getElementById('vEntrega').checked = false;
+    document.getElementById('vTransporte').checked = false;
+    document.getElementById('vMoneda').checked = false;
+    document.getElementById('vVigencia').checked = false;
+    updateValidationStatus();
+    
+    // 🔽 MODO EDICIÓN vs CREACIÓN
+    const esEdicion = (mode === 'edit' || mode === 'editar' || (mode === 'directo' && id));
+    const esDesdeCotizacion = (mode === 'cot' || mode === 'cotizacion' || mode === 'cotizacion_modal');
+    
+    console.log('📌 esEdicion:', esEdicion, 'esDesdeCotizacion:', esDesdeCotizacion);
     
     // ============================================================
-    // ACTUALIZAR LA VARIABLE GLOBAL modalMode
+    // 🔽 CONFIGURAR CAMPOS DE COTIZACIÓN SEGÚN MODO
     // ============================================================
-    modalMode = mode;  // ← ESTO ES LO QUE FALTABA
+    const cotSearch = document.getElementById('pcCotSearch');
+    const cotNumero = document.getElementById('pcCotNumero');
+    const cotFecha = document.getElementById('pcCotFecha');
+    const ruc = document.getElementById('pcRuc');
+    const cliente = document.getElementById('pcCliente');
+    const condPago = document.getElementById('pcCondicionPago');
+    const vendedor = document.getElementById('pcVendedor');
+    const monto = document.getElementById('pcMonto');
+    const montoConIgv = document.getElementById('pcMontoConIgv');
     
-    const modal = document.getElementById('pedidoCompraModal');
-    if (!modal) {
-        console.error('❌ Modal #pedidoCompraModal no encontrado');
-        showToast('Error: Modal de PC no disponible', 'error');
-        return;
+    // 🔽 SI ES EDICIÓN (Ver/Editar) - TODO SOLO LECTURA
+    if (esEdicion) {
+        console.log('🔒 Modo EDICIÓN - campos de cotización en solo lectura');
+        // Campos de cotización en solo lectura
+        cotSearch.readOnly = true;
+        cotSearch.style.background = '#F1F5F9';
+        cotSearch.style.color = '#64748B';
+        cotSearch.style.cursor = 'not-allowed';
+        
+        cotNumero.readOnly = true;
+        cotNumero.style.background = '#F1F5F9';
+        cotNumero.style.color = '#64748B';
+        cotNumero.style.cursor = 'not-allowed';
+        
+        cotFecha.readOnly = true;
+        cotFecha.style.background = '#F1F5F9';
+        cotFecha.style.color = '#64748B';
+        cotFecha.style.cursor = 'not-allowed';
+        
+        ruc.readOnly = true;
+        ruc.style.background = '#F1F5F9';
+        ruc.style.color = '#64748B';
+        ruc.style.cursor = 'not-allowed';
+        
+        cliente.readOnly = true;
+        cliente.style.background = '#F1F5F9';
+        cliente.style.color = '#64748B';
+        cliente.style.cursor = 'not-allowed';
+        
+        condPago.readOnly = true;
+        condPago.style.background = '#F1F5F9';
+        condPago.style.color = '#64748B';
+        condPago.style.cursor = 'not-allowed';
+        
+        vendedor.readOnly = true;
+        vendedor.style.background = '#F1F5F9';
+        vendedor.style.color = '#64748B';
+        vendedor.style.cursor = 'not-allowed';
+        
+        monto.readOnly = true;
+        monto.style.background = '#F1F5F9';
+        monto.style.color = '#64748B';
+        monto.style.cursor = 'not-allowed';
+        
+        montoConIgv.readOnly = true;
+        montoConIgv.style.background = '#F1F5F9';
+        montoConIgv.style.color = '#64748B';
+        montoConIgv.style.cursor = 'not-allowed';
+        
+        // Ocultar botón de búsqueda
+        document.querySelector('#pcCotSearch + button')?.style.setProperty('opacity', '0.5');
+        document.querySelector('#pcCotSearch + button')?.style.setProperty('pointer-events', 'none');
+        
+        // 🔽 CAMPOS DEL PC - EDITABLES (fondo blanco)
+        document.getElementById('pcFecha').style.background = '#FFFFFF';
+        document.getElementById('pcFecha').style.color = '#0F172A';
+        document.getElementById('pcFecha').readOnly = false;
+        
+        document.getElementById('pcNumero').style.background = '#FFFFFF';
+        document.getElementById('pcNumero').style.color = '#0F172A';
+        document.getElementById('pcNumero').readOnly = false;
+        
+        document.getElementById('pcContacto').style.background = '#FFFFFF';
+        document.getElementById('pcContacto').style.color = '#0F172A';
+        document.getElementById('pcContacto').readOnly = false;
+        
+        document.getElementById('pcCondicion').style.background = '#FFFFFF';
+        document.getElementById('pcCondicion').style.color = '#0F172A';
+        document.getElementById('pcCondicion').disabled = false;
+        
+        document.getElementById('pcMoneda').style.background = '#FFFFFF';
+        document.getElementById('pcMoneda').style.color = '#0F172A';
+        document.getElementById('pcMoneda').disabled = false;
+        
+        document.getElementById('pcMontoPC').style.background = '#FFFFFF';
+        document.getElementById('pcMontoPC').style.color = '#0F172A';
+        document.getElementById('pcMontoPC').readOnly = false;
+        
+        document.getElementById('pcEntrega').style.background = '#FFFFFF';
+        document.getElementById('pcEntrega').style.color = '#0F172A';
+        document.getElementById('pcEntrega').readOnly = false;
+        
+        document.getElementById('pcObs').style.background = '#FFFFFF';
+        document.getElementById('pcObs').style.color = '#0F172A';
+        document.getElementById('pcObs').readOnly = false;
+        
+        // Botones de producto habilitados
+        document.querySelector('.btn-soft[onclick*="openProductSelectorPC"]')?.style.setProperty('opacity', '1');
+        document.querySelector('.btn-soft[onclick*="openProductSelectorPC"]')?.style.setProperty('pointer-events', 'auto');
+        
+        // 🔽 CARGAR DATOS DEL PC SI ES EDICIÓN
+        if (id) {
+            cargarPCParaEdicion(id);
+        }
+        
+    } else {
+        // 🔽 MODO CREACIÓN - campos editables
+        console.log('✏️ Modo CREACIÓN - campos de cotización editables');
+        cotSearch.readOnly = false;
+        cotSearch.style.background = '#FFFFFF';
+        cotSearch.style.color = '#0F172A';
+        cotSearch.style.cursor = 'text';
+        
+        cotNumero.readOnly = false;
+        cotNumero.style.background = '#FFFFFF';
+        cotNumero.style.color = '#0F172A';
+        cotNumero.style.cursor = 'text';
+        
+        cotFecha.readOnly = false;
+        cotFecha.style.background = '#FFFFFF';
+        cotFecha.style.color = '#0F172A';
+        cotFecha.style.cursor = 'text';
+        
+        ruc.readOnly = false;
+        ruc.style.background = '#FFFFFF';
+        ruc.style.color = '#0F172A';
+        ruc.style.cursor = 'text';
+        
+        cliente.readOnly = false;
+        cliente.style.background = '#FFFFFF';
+        cliente.style.color = '#0F172A';
+        cliente.style.cursor = 'text';
+        
+        condPago.readOnly = false;
+        condPago.style.background = '#FFFFFF';
+        condPago.style.color = '#0F172A';
+        condPago.style.cursor = 'text';
+        
+        vendedor.readOnly = false;
+        vendedor.style.background = '#FFFFFF';
+        vendedor.style.color = '#0F172A';
+        vendedor.style.cursor = 'text';
+        
+        monto.readOnly = false;
+        monto.style.background = '#FFFFFF';
+        monto.style.color = '#0F172A';
+        monto.style.cursor = 'text';
+        
+        montoConIgv.readOnly = false;
+        montoConIgv.style.background = '#FFFFFF';
+        montoConIgv.style.color = '#0F172A';
+        montoConIgv.style.cursor = 'text';
+        
+        // Mostrar botón de búsqueda
+        document.querySelector('#pcCotSearch + button')?.style.setProperty('opacity', '1');
+        document.querySelector('#pcCotSearch + button')?.style.setProperty('pointer-events', 'auto');
+        
+        // 🔽 SI ES DESDE COTIZACIÓN (modal de cotización)
+        if (esDesdeCotizacion) {
+            console.log('📋 Cargando datos desde cotización');
+            // Los datos se cargan desde el evento que llama a esta función
+        }
     }
     
-    // SIEMPRE LIMPIAR PRIMERO (pero conservamos la función para edición)
-    if (mode !== 'editar') {
-        clearPedidoModalSAP();
-    }
-    
-    // Obtener elementos del header
+    // Cambiar título del modal
     const title = document.getElementById('pedidoCompraModalTitle');
     const sub = document.getElementById('modalSub');
     
-    // ============================================================
-    // MODO EDICIÓN
-    // ============================================================
-    if (mode === 'editar' && id) {
-        editingId = id;   // 🔧 NUEVO — agrega esta línea, justo aquí
-        
-        if (title) title.textContent = '✏️ Editar PC Cliente - Corregir datos';
-        if (sub) sub.textContent = 'Revisa y corrige los datos del PC. Los campos de cotización son de solo lectura.';
-        
-        // Mostrar bloque de cotización (pero en modo solo lectura)
-        const cotBlock = document.getElementById('cotBlock');
-        if (cotBlock) cotBlock.style.display = 'block';
-        
-        // Cambiar nota de modo
-        const note = document.getElementById('modeNote');
-        if (note) {
-            note.className = 'danger-note';
-            note.textContent = '📝 Modo corrección - Revisa los productos, precios y cantidades. Guarda los cambios cuando termines.';
-            note.style.background = '#FEF2F2';
-            note.style.border = '1px solid #FCA5A5';
-            note.style.color = '#991B1B';
-        }
-        
-        // Cambiar origen
-        const origen = document.getElementById('docOrigen');
-        if (origen) origen.textContent = 'Corrección';
-        
-        // Cargar datos del PC
-        cargarPCParaEditar(id);
-        modal.classList.add('show');
-        
-        // Inicializar switches después de cargar los datos
-        setTimeout(() => {
-            inicializarSwitchesValidacion();
-        }, 300);
-        
-        return;
-    }
-    
-    // ============================================================
-    // MODO NUEVO (cotización o directo)
-    // ============================================================
-    if (title) {
-        title.textContent = mode === 'cot' ? '➕ Crear PC desde cotización' : '📝 PC directo / sin cotización';
-    }
-    
-    if (sub) {
-        sub.textContent = mode === 'cot' 
-            ? 'Busca una cotización para cargar todos sus datos automáticamente.'
-            : 'PC directo: requiere validación comercial.';
-    }
-    
-    // Mostrar/ocultar bloque de cotización según modo
-    const cotBlock = document.getElementById('cotBlock');
-    if (cotBlock) {
-        cotBlock.style.display = mode === 'cot' ? 'block' : 'none';
-    }
-    
-    const note = document.getElementById('modeNote');
-    if (note) {
-        if (mode === 'cot') {
-            note.className = 'mini-note';
-            note.textContent = '✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.';
-            note.style.background = '#EFF6FF';
-            note.style.border = '1px solid #BFDBFE';
-            note.style.color = '#1E3A8A';
-        } else {
-            note.className = 'danger-note';
-            note.textContent = '⚠️ PC directo: requiere validación comercial. No comprar bajo pedido hasta quedar conforme.';
-            note.style.background = '#FEF2F2';
-            note.style.border = '1px solid #FCA5A5';
-            note.style.color = '#991B1B';
-        }
-    }
-    
-    const origen = document.getElementById('docOrigen');
-    if (origen) {
-        origen.textContent = mode === 'cot' ? 'Cotización' : 'Directo';
-    }
-    
-    // Si es modo cotización, cargar cotizaciones disponibles
-    if (mode === 'cot') {
-        const searchInput = document.getElementById('pcCotSearch');
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.disabled = true; // bloquear hasta que carguen
-            searchInput.placeholder = 'Cargando cotizaciones...';
-        }
-        const ensureData = (!cotizacionesData || cotizacionesData.length === 0)
-            ? loadCotizaciones()
-            : Promise.resolve();
-
-        ensureData.then(() => {
-            if (searchInput) {
-                searchInput.disabled = false;
-                searchInput.placeholder = 'Buscar Cotizacion : Escribe N° cotización, RUC, razón social...';
-            }
-            console.log(`✅ ${cotizacionesData.length} cotizaciones listas para buscar`);
-        });
+    if (esEdicion) {
+        title.textContent = '✏️ Editar PC Cliente';
+        sub.textContent = 'Edita los datos del Pedido de Compra - campos de cotización en solo lectura';
+        // Cambiar texto de los botones de guardar
+        document.querySelector('.btn-neon-yellow').textContent = '⚠️ Actualizar PC Observado';
+        document.querySelector('.btn-neon-green').textContent = '✅ Actualizar PC Conforme';
+    } else {
+        title.textContent = '📋 Crear PC Cliente';
+        sub.textContent = 'Primero se valida. No comprar ni despachar si existe observación.';
+        document.querySelector('.btn-neon-yellow').textContent = '⚠️ Crear PC Observado';
+        document.querySelector('.btn-neon-green').textContent = '✅ Crear PC Conforme';
     }
     
     // Mostrar modal
-    modal.classList.add('show');
-    console.log('✅ Modal PC abierto correctamente');
-    
-    // Inicializar switches después de un momento
-    setTimeout(() => {
-        inicializarSwitchesValidacion();
-    }, 200);
+    document.getElementById('pedidoCompraModal').classList.add('show');
 }
 
+// ============================================================
+// CARGAR PC PARA EDICIÓN
+// ============================================================
+function cargarPCParaEdicion(pcId) {
+    console.log('📋 Cargando PC para edición:', pcId);
+    
+    fetch(`/ventas/api/pedido-compra/${pcId}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success && result.data) {
+                const pc = result.data;
+                console.log('📦 Datos del PC:', pc);
+                
+                // ============================================================
+                // 🔽 BLOQUE 1: Cotización relacionada - SOLO LECTURA
+                // ============================================================
+                document.getElementById('pcCotNumero').value = pc.cotizacion_numero || 'SIN COTIZACIÓN';
+                document.getElementById('pcCotFecha').value = pc.fecha || '';
+                document.getElementById('pcRuc').value = pc.ruc || '';
+                document.getElementById('pcCliente').value = pc.cliente || '';
+                document.getElementById('pcCondicionPago').value = pc.condicion_pago || pc.condicion_atencion || 'Contado';
+                document.getElementById('pcVendedor').value = pc.vendedor || pc.responsable || 'Helen Blas Príncipe';
+                document.getElementById('pcMonto').value = pc.monto || 0;
+                document.getElementById('pcMontoConIgv').value = (pc.monto || 0) * 1.18;
+                
+                // ============================================================
+                // 🔽 BLOQUE 2: Datos del PC - EDITABLES
+                // ============================================================
+                document.getElementById('pcNumero').value = pc.numero || '';
+                document.getElementById('pcContacto').value = pc.responsable || pc.cliente_contacto || '';
+                document.getElementById('pcFecha').value = pc.fecha || '';
+                document.getElementById('pcCondicion').value = pc.condicion_pago || pc.condicion_atencion || 'Contado';
+                document.getElementById('pcMoneda').value = pc.moneda || 'S/)';
+                document.getElementById('pcMontoPC').value = pc.monto || 0;
+                document.getElementById('pcEntrega').value = pc.lugar_entrega || pc.entrega || '';
+                document.getElementById('pcObs').value = pc.observaciones || '';
+                
+                // ============================================================
+                // 🔽 BLOQUE 3: Productos
+                // ============================================================
+                const items = pc.items || [];
+                const tbody = document.getElementById('pcItemsBody');
+                tbody.innerHTML = '';
+                
+                if (items.length > 0) {
+                    items.forEach((item, index) => {
+                        agregarItemPCTable(
+                            item.codigo || '',
+                            item.producto || '',
+                            item.marca || '',
+                            item.modelo || '',
+                            item.cantidad_pc || item.cantidad || 1,
+                            item.precio_pc || item.precio || 0,
+                            item.stock || 0
+                        );
+                    });
+                } else {
+                    // Si no hay items, mostrar mensaje
+                    tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:20px;color:#94A3B8;font-size:12px;">⚠️ Este PC no tiene productos asociados</td></tr>`;
+                }
+                
+                // ============================================================
+                // 🔽 BLOQUE 4: Validaciones
+                // ============================================================
+                document.getElementById('vPrecio').checked = pc.valida_precios || false;
+                document.getElementById('vProducto').checked = pc.valida_productos || false;
+                document.getElementById('vCantidad').checked = pc.valida_cantidades || false;
+                document.getElementById('vEntrega').checked = pc.valida_entrega || false;
+                document.getElementById('vTransporte').checked = pc.valida_transporte || false;
+                document.getElementById('vMoneda').checked = pc.valida_montos || false;
+                document.getElementById('vVigencia').checked = pc.valida_vigencia || false;
+                updateValidationStatus();
+                
+                // ============================================================
+                // 🔽 ACTUALIZAR RESUMEN
+                // ============================================================
+                actualizarResumenPC();
+                
+                // ============================================================
+                // 🔽 GUARDAR ID DEL PC PARA ACTUALIZACIÓN
+                // ============================================================
+                document.getElementById('pcEditId').value = pc.id;
+                
+                console.log('✅ PC cargado para edición');
+            } else {
+                console.error('❌ Error cargando PC:', result.error);
+                showToast('❌ Error cargando PC: ' + (result.error || 'Desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error en fetch:', error);
+            showToast('❌ Error al cargar los datos del PC', 'error');
+        });
+}
 
 async function cargarPCParaEditar(id) {
     try {
