@@ -4878,13 +4878,13 @@ window.createDocFromCotizacion = async function(id, tipo) {
     );
 };
 
+
+
+
+
 function switchTab(tabId) {
-    console.log(`🔄 Cambiando a tab: ${tabId}`);
-    
-    // Actualizar URL
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tabId);
-    window.history.pushState({}, '', url);
+    const tabs = document.querySelectorAll('.tab-btn');
+    const sections = document.querySelectorAll('.section');
     
     // Actualizar tabs
     tabs.forEach(btn => {
@@ -4895,67 +4895,288 @@ function switchTab(tabId) {
     });
     
     // Actualizar secciones
-    Object.keys(sections).forEach(key => {
-        if (sections[key]) {
-            sections[key].classList.remove('active');
+    sections.forEach(section => {
+        section.classList.remove('active');
+        if (section.id === tabId) {
+            section.classList.add('active');
         }
     });
-    if (sections[tabId]) {
-        sections[tabId].classList.add('active');
-        console.log(`✅ Sección activada: ${tabId}`);
-    } else {
-        console.warn(`⚠️ Sección no encontrada: ${tabId}`);
-    }
     
-    // 🔽 FORZAR BADGE DESPUÉS DE CAMBIAR DE TAB 🔽
-    setTimeout(forzarBadgeActivo, 50);
-    setTimeout(forzarBadgeActivo, 200);
-    setTimeout(forzarBadgeActivo, 500);
+    // Actualizar URL
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabId);
+    window.history.pushState({}, '', url);
     
     // Cargar datos del módulo
-    cargarModulo(tabId);
+    currentModule = tabId;
+    
+    // ============================================================
+    // 🔽 SIEMPRE CARGAR COTIZACIONES PRIMERO
+    // ============================================================
+    async function cargarDatos() {
+        // Primero cargar cotizaciones si no están cargadas
+        if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
+            await loadCotizaciones();
+        }
+        
+        // Luego cargar el módulo específico
+        switch(tabId) {
+            case 'cotizaciones':
+                // Ya están cargadas
+                break;
+            case 'pedido_compra':
+                await loadPedidos();
+                break;
+            case 'despachar':
+                await loadDespachos();
+                break;
+            case 'guias':
+                await loadGuias();
+                break;
+            case 'comprobantes':
+                await loadComprobantes();
+                break;
+            case 'notas_credito':
+                await loadComprobantes();
+                await loadNotas();
+                break;
+            case 'devoluciones':
+                await loadDevoluciones();
+                break;
+        }
+    }
+    
+    cargarDatos();
 }
 
 
-// 🔽 OBSERVADOR PARA MANTENER EL BADGE VISIBLE 🔽
-// Observar cambios en las clases de los tabs
-const observer = new MutationObserver(function(mutations) {
-    let necesitaActualizar = false;
-    mutations.forEach(function(mutation) {
-        if (mutation.attributeName === 'class') {
-            const btn = mutation.target;
-            if (btn.classList.contains('tab-btn')) {
-                necesitaActualizar = true;
+
+// ============================================================
+// 🟢 SISTEMA DE BADGE - VERSIÓN ÚNICA Y ESTABLE
+// ============================================================
+
+(function() {
+    'use strict';
+    
+    // Flag para evitar ejecuciones simultáneas
+    let actualizando = false;
+    let pestañaActual = null;
+    let intervaloActivo = null;
+    
+    /**
+     * Función principal - SOLO ESTA FUNCIÓN MANEJA EL BADGE
+     */
+    function actualizarBadge() {
+        // Evitar ejecución simultánea
+        if (actualizando) return;
+        actualizando = true;
+        
+        try {
+            // Buscar la pestaña activa
+            const pestañaActiva = document.querySelector('.tab-btn.active');
+            if (!pestañaActiva) {
+                actualizando = false;
+                return;
             }
+            
+            const tabId = pestañaActiva.dataset.tab;
+            
+            // Si ya estamos en la misma pestaña, no hacer nada
+            if (tabId === pestañaActual) {
+                // Solo asegurar que el badge existe
+                asegurarBadge(pestañaActiva);
+                actualizando = false;
+                return;
+            }
+            
+            // 🔥 REMOVER TODOS LOS BADGES EXISTENTES
+            document.querySelectorAll('.tab-btn .tab-badge').forEach(b => b.remove());
+            
+            // 🔥 CREAR NUEVO BADGE SOLO EN LA PESTAÑA ACTIVA
+            const badge = document.createElement('span');
+            badge.className = 'tab-badge';
+            badge.textContent = '📍';
+            badge.style.cssText = `
+                display: inline-block !important;
+                font-size: 10px !important;
+                background: #EF233C !important;
+                color: #FFFFFF !important;
+                padding: 1px 6px !important;
+                border-radius: 4px !important;
+                font-weight: 900 !important;
+                margin-left: 4px !important;
+                animation: pulse-badge 1.5s ease-in-out infinite !important;
+                vertical-align: middle !important;
+            `;
+            pestañaActiva.appendChild(badge);
+            
+            // Actualizar estado
+            pestañaActual = tabId;
+            console.log('✅ Badge actualizado en:', pestañaActiva.textContent.trim());
+            
+        } catch (error) {
+            console.warn('⚠️ Error actualizando badge:', error);
+        } finally {
+            actualizando = false;
+        }
+    }
+    
+    /**
+     * Asegura que el badge exista (sin recrearlo)
+     */
+    function asegurarBadge(pestaña) {
+        if (!pestaña) return;
+        
+        let badge = pestaña.querySelector('.tab-badge');
+        if (!badge) {
+            // Si no existe, crearlo
+            badge = document.createElement('span');
+            badge.className = 'tab-badge';
+            badge.textContent = '📍';
+            badge.style.cssText = `
+                display: inline-block !important;
+                font-size: 10px !important;
+                background: #EF233C !important;
+                color: #FFFFFF !important;
+                padding: 1px 6px !important;
+                border-radius: 4px !important;
+                font-weight: 900 !important;
+                margin-left: 4px !important;
+                animation: pulse-badge 1.5s ease-in-out infinite !important;
+                vertical-align: middle !important;
+            `;
+            pestaña.appendChild(badge);
+        }
+        
+        // Asegurar que sea visible
+        badge.style.display = 'inline-block';
+        badge.style.visibility = 'visible';
+        badge.style.opacity = '1';
+    }
+
+    // ============================================================
+    // EVENTOS - SOLO LOS NECESARIOS
+    // ============================================================
+    
+    // 1️⃣ Click en pestañas
+    document.addEventListener('click', function(e) {
+        const pestaña = e.target.closest('.tab-btn');
+        if (pestaña && pestaña.dataset.tab) {
+            // No prevenir default, solo actualizar después del cambio
+            setTimeout(actualizarBadge, 50);
         }
     });
-    if (necesitaActualizar) {
-        setTimeout(forzarBadgeActivo, 10);
+    
+    // 2️⃣ Cambios de URL (popstate)
+    window.addEventListener('popstate', function() {
+        setTimeout(actualizarBadge, 50);
+    });
+    
+    // 3️⃣ Observador SOLO para cambios de clase en pestañas
+    const observer = new MutationObserver(function(mutations) {
+        let necesitaActualizar = false;
+        
+        for (const mutation of mutations) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                if (target.classList && target.classList.contains('tab-btn')) {
+                    const wasActive = mutation.oldValue && mutation.oldValue.includes('active');
+                    const isActive = target.classList.contains('active');
+                    if (wasActive !== isActive) {
+                        necesitaActualizar = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (necesitaActualizar) {
+            setTimeout(actualizarBadge, 50);
+        }
+    });
+    
+    // Observar SOLO las pestañas
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        observer.observe(btn, { 
+            attributes: true, 
+            attributeFilter: ['class'],
+            attributeOldValue: true
+        });
+    });
+    
+    // 4️⃣ Verificación periódica (cada 2 segundos, pero solo si es necesario)
+    intervaloActivo = setInterval(function() {
+        if (!document.hidden) {
+            const pestañaActiva = document.querySelector('.tab-btn.active');
+            if (!pestañaActiva) {
+                console.log('⚠️ No hay pestaña activa - restaurando...');
+                const urlParams = new URLSearchParams(window.location.search);
+                const tab = urlParams.get('tab') || 'cotizaciones';
+                // Activar la pestaña correcta
+                const pestaña = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+                if (pestaña) {
+                    pestaña.classList.add('active');
+                    setTimeout(actualizarBadge, 50);
+                }
+            } else {
+                // Verificar que el badge existe
+                const badge = pestañaActiva.querySelector('.tab-badge');
+                if (!badge) {
+                    console.log('⚠️ Badge desapareció - restaurando...');
+                    asegurarBadge(pestañaActiva);
+                }
+            }
+        }
+    }, 3000);
+
+    // ============================================================
+    // INICIALIZACIÓN
+    // ============================================================
+    
+    // Al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(actualizarBadge, 200);
+        setTimeout(actualizarBadge, 500);
+    });
+    
+    // Si el DOM ya está cargado, ejecutar inmediatamente
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(actualizarBadge, 100);
     }
-});
+    
+    // ============================================================
+    // EXPORTAR FUNCIÓN ÚTIL
+    // ============================================================
+    window.actualizarBadge = actualizarBadge;
+    window.forzarBadgeActivo = actualizarBadge;
+    
+    console.log('🟢 Sistema de badge simplificado inicializado');
+})();
 
-// Observar todos los tabs
-document.querySelectorAll('.tab-btn').forEach(function(btn) {
-    observer.observe(btn, { attributes: true, attributeFilter: ['class'] });
-});
+// ============================================================
+// CSS PARA LA ANIMACIÓN DEL BADGE
+// ============================================================
 
-console.log('✅ Badge observer inicializado');
+const badgeStyles = document.createElement('style');
+badgeStyles.textContent = `
+    @keyframes pulse-badge {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(239, 35, 60, 0.4);
+        }
+        50% { 
+            transform: scale(1.05);
+            box-shadow: 0 0 8px 2px rgba(239, 35, 60, 0.3);
+        }
+    }
+    
+    .tab-badge {
+        animation: pulse-badge 1.5s ease-in-out infinite !important;
+    }
+`;
+document.head.appendChild(badgeStyles);
 
-// También ejecutar al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(forzarBadgeActivo, 300);
-    setTimeout(forzarBadgeActivo, 800);
-});
-
-// Ejecutar después de que se carguen los datos
-if (typeof window.initVentas === 'function') {
-    const originalInit = window.initVentas;
-    window.initVentas = async function(tab) {
-        await originalInit(tab);
-        setTimeout(forzarBadgeActivo, 300);
-        setTimeout(forzarBadgeActivo, 600);
-    };
-}
+console.log('✅ Estilos del badge agregados');
 
 // ============================================================
 // FUNCIÓN PARA ABRIR MODAL DE GUÍA CON DATOS PRECARGADOS
@@ -13272,14 +13493,13 @@ function actualizarPrecioPCSAP(input, index) {
 }
 
 
-// ============================================================
-// 🔴 SISTEMA DE BADGE PERSISTENTE - VERSIÓN DEFINITIVA 🔴
-// ============================================================
-
 /**
  * Fuerza la visibilidad del badge en la pestaña activa
+ * Esta función se ejecuta cada vez que se cambia de pestaña
  */
 function forzarBadgeActivo() {
+    console.log('🔴 Forzando badge en pestaña activa...');
+    
     // Buscar todas las pestañas
     document.querySelectorAll('.tab-btn').forEach(function(btn) {
         const badge = btn.querySelector('.tab-badge');
@@ -13291,8 +13511,6 @@ function forzarBadgeActivo() {
             badge.style.visibility = 'visible';
             badge.style.opacity = '1';
             badge.style.animation = 'pulse-badge 1.5s ease-in-out infinite';
-            badge.style.position = 'relative';
-            badge.style.zIndex = '10';
             console.log('✅ Badge mostrado en:', btn.textContent.trim());
         } else {
             // Pestaña inactiva - ocultar badge
@@ -13303,406 +13521,6 @@ function forzarBadgeActivo() {
         }
     });
 }
-
-// ============================================================
-// 1. EJECUTAR CADA VEZ QUE CAMBIA EL DOM
-// ============================================================
-const badgeObserver = new MutationObserver(function(mutations) {
-    // Verificar si algún cambio afecta a las pestañas
-    let afectaTabs = false;
-    
-    mutations.forEach(function(mutation) {
-        // Si se agregaron o removieron nodos
-        if (mutation.type === 'childList') {
-            mutation.addedNodes.forEach(function(node) {
-                if (node.nodeType === 1) { // Elemento
-                    if (node.classList && (node.classList.contains('tab-btn') || node.querySelector('.tab-btn'))) {
-                        afectaTabs = true;
-                    }
-                }
-            });
-        }
-        // Si cambió la clase de algún elemento
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            if (mutation.target.classList && mutation.target.classList.contains('tab-btn')) {
-                afectaTabs = true;
-            }
-        }
-    });
-    
-    if (afectaTabs) {
-        console.log('🔄 Cambio detectado en pestañas - forzando badge');
-        setTimeout(forzarBadgeActivo, 10);
-        setTimeout(forzarBadgeActivo, 50);
-        setTimeout(forzarBadgeActivo, 200);
-    }
-});
-
-// Observar todo el body y sus cambios
-badgeObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class']
-});
-
-console.log('✅ BadgeObserver activo - monitoreando cambios en el DOM');
-
-// ============================================================
-// 2. EJECUTAR DESPUÉS DE CADA EVENTO IMPORTANTE
-// ============================================================
-
-// Cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(forzarBadgeActivo, 100);
-    setTimeout(forzarBadgeActivo, 300);
-    setTimeout(forzarBadgeActivo, 800);
-    setTimeout(forzarBadgeActivo, 1500);
-});
-
-// Cuando se hace clic en cualquier pestaña
-document.addEventListener('click', function(e) {
-    const tabBtn = e.target.closest('.tab-btn');
-    if (tabBtn) {
-        console.log('🖱️ Click en pestaña - forzando badge');
-        setTimeout(forzarBadgeActivo, 20);
-        setTimeout(forzarBadgeActivo, 100);
-        setTimeout(forzarBadgeActivo, 300);
-    }
-});
-
-// ============================================================
-// 3. INTERCEPTAR FUNCIONES QUE PUEDEN AFECTAR LAS PESTAÑAS
-// ============================================================
-
-// Interceptar switchTab si existe
-if (typeof window.switchTab === 'function') {
-    const originalSwitchTab = window.switchTab;
-    window.switchTab = function(tabId) {
-        console.log('🔄 switchTab interceptado - tab:', tabId);
-        originalSwitchTab(tabId);
-        setTimeout(forzarBadgeActivo, 50);
-        setTimeout(forzarBadgeActivo, 200);
-        setTimeout(forzarBadgeActivo, 500);
-    };
-}
-
-// Interceptar highlightActiveModule si existe
-if (typeof window.highlightActiveModule === 'function') {
-    const originalHighlight = window.highlightActiveModule;
-    window.highlightActiveModule = function() {
-        console.log('🔄 highlightActiveModule interceptado');
-        originalHighlight();
-        setTimeout(forzarBadgeActivo, 50);
-        setTimeout(forzarBadgeActivo, 200);
-    };
-}
-
-// Interceptar initVentas si existe
-if (typeof window.initVentas === 'function') {
-    const originalInit = window.initVentas;
-    window.initVentas = async function(tab) {
-        console.log('🔄 initVentas interceptado - tab:', tab);
-        await originalInit(tab);
-        setTimeout(forzarBadgeActivo, 100);
-        setTimeout(forzarBadgeActivo, 300);
-        setTimeout(forzarBadgeActivo, 600);
-        setTimeout(forzarBadgeActivo, 1000);
-    };
-}
-
-// ============================================================
-// 4. EJECUTAR DESPUÉS DE CADA CARGA DE DATOS
-// ============================================================
-
-// Interceptar loadPedidos
-if (typeof window.loadPedidos === 'function') {
-    const originalLoadPedidos = window.loadPedidos;
-    window.loadPedidos = async function() {
-        console.log('🔄 loadPedidos interceptado');
-        const result = await originalLoadPedidos();
-        setTimeout(forzarBadgeActivo, 100);
-        setTimeout(forzarBadgeActivo, 300);
-        return result;
-    };
-}
-
-// Interceptar renderPedidos
-if (typeof window.renderPedidos === 'function') {
-    const originalRenderPedidos = window.renderPedidos;
-    window.renderPedidos = function() {
-        console.log('🔄 renderPedidos interceptado');
-        const result = originalRenderPedidos();
-        setTimeout(forzarBadgeActivo, 50);
-        setTimeout(forzarBadgeActivo, 150);
-        return result;
-    };
-}
-
-// ============================================================
-// 5. EJECUTAR PERIÓDICAMENTE (POR SI ACASO)
-// ============================================================
-
-// Cada 2 segundos verificar y forzar el badge (solo si la página está visible)
-let badgeInterval = setInterval(function() {
-    if (!document.hidden) {
-        // Solo verificar si el badge está visible en la pestaña activa
-        const activeTab = document.querySelector('.tab-btn.active');
-        if (activeTab) {
-            const badge = activeTab.querySelector('.tab-badge');
-            if (badge) {
-                const computedStyle = window.getComputedStyle(badge);
-                if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
-                    console.log('🔄 Badge oculto detectado - forzando...');
-                    forzarBadgeActivo();
-                }
-            }
-        }
-    }
-}, 2000);
-
-// Detener el intervalo si la página se cierra
-window.addEventListener('beforeunload', function() {
-    if (badgeInterval) {
-        clearInterval(badgeInterval);
-        badgeInterval = null;
-    }
-});
-
-// Exportar al window
-window.forzarBadgeActivo = forzarBadgeActivo;
-
-console.log('✅ Sistema de badge persistente inicializado');
-
-// ============================================================
-// 🔴 SISTEMA DE BADGE AUTOMÁTICO - VERSIÓN FINAL 🔴
-// ============================================================
-
-/**
- * Activa la pestaña y crea el badge automáticamente
- */
-function activarPestanaConBadge(tabId) {
-    console.log('🔴 Activando pestaña con badge:', tabId);
-    
-    // 1. Buscar la pestaña
-    const pestaña = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-    if (!pestaña) {
-        console.log('❌ Pestaña no encontrada:', tabId);
-        return false;
-    }
-    
-    // 2. Remover active de todas las pestañas
-    document.querySelectorAll('.tab-btn').forEach(function(btn) {
-        btn.classList.remove('active');
-    });
-    
-    // 3. Agregar active a la pestaña seleccionada
-    pestaña.classList.add('active');
-    console.log('✅ Pestaña activada:', pestaña.textContent.trim());
-    
-    // 4. Crear o asegurar el badge
-    let badge = pestaña.querySelector('.tab-badge');
-    if (!badge) {
-        badge = document.createElement('span');
-        badge.className = 'tab-badge';
-        badge.textContent = '📍';
-        badge.style.cssText = `
-            display: inline-block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            font-size: 10px !important;
-            background: #EF233C !important;
-            color: #FFFFFF !important;
-            padding: 1px 6px !important;
-            border-radius: 4px !important;
-            font-weight: 900 !important;
-            margin-left: 4px !important;
-            animation: pulse-badge 1.5s ease-in-out infinite !important;
-            position: relative !important;
-            z-index: 10 !important;
-        `;
-        pestaña.appendChild(badge);
-        console.log('✅ Badge creado');
-    } else {
-        badge.style.display = 'inline-block';
-        badge.style.visibility = 'visible';
-        badge.style.opacity = '1';
-        console.log('✅ Badge asegurado');
-    }
-    
-    // 5. Activar la sección correspondiente
-    const seccion = document.getElementById(tabId);
-    if (seccion) {
-        document.querySelectorAll('.section').forEach(function(s) {
-            s.classList.remove('active');
-        });
-        seccion.classList.add('active');
-        console.log('✅ Sección activada:', tabId);
-    }
-    
-    // 6. Actualizar la URL
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tabId);
-    window.history.pushState({}, '', url);
-    
-    return true;
-}
-
-// ============================================================
-// INTERCEPTAR TODOS LOS MÉTODOS QUE CAMBIAN DE PESTAÑA
-// ============================================================
-
-// 1. Interceptar el click en las pestañas
-document.addEventListener('click', function(e) {
-    const pestaña = e.target.closest('.tab-btn');
-    if (pestaña && pestaña.dataset.tab) {
-        console.log('🖱️ Click en pestaña:', pestaña.dataset.tab);
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Usar nuestro método en lugar del original
-        activarPestanaConBadge(pestaña.dataset.tab);
-    }
-}, true); // Usar true para capturar antes que otros event listeners
-
-// 2. Interceptar switchTab si existe
-if (typeof window.switchTab === 'function') {
-    const originalSwitchTab = window.switchTab;
-    window.switchTab = function(tabId) {
-        console.log('🔄 switchTab interceptado:', tabId);
-        // Llamar al original si es necesario
-        if (typeof originalSwitchTab === 'function') {
-            // Pero también activar nuestro sistema
-            activarPestanaConBadge(tabId);
-            // Llamar al original después
-            setTimeout(function() {
-                originalSwitchTab(tabId);
-            }, 50);
-        } else {
-            activarPestanaConBadge(tabId);
-        }
-    };
-}
-
-// 3. Interceptar highlightActiveModule
-if (typeof window.highlightActiveModule === 'function') {
-    const originalHighlight = window.highlightActiveModule;
-    window.highlightActiveModule = function() {
-        console.log('🔄 highlightActiveModule interceptado');
-        if (typeof originalHighlight === 'function') {
-            originalHighlight();
-        }
-        // Después de highlight, asegurar el badge
-        const urlParams = new URLSearchParams(window.location.search);
-        const tab = urlParams.get('tab') || 'cotizaciones';
-        setTimeout(function() {
-            activarPestanaConBadge(tab);
-        }, 100);
-    };
-}
-
-// 4. Interceptar initVentas
-if (typeof window.initVentas === 'function') {
-    const originalInit = window.initVentas;
-    window.initVentas = async function(tab) {
-        console.log('🔄 initVentas interceptado:', tab);
-        if (typeof originalInit === 'function') {
-            await originalInit(tab);
-        }
-        // Después de init, activar la pestaña correcta
-        const tabId = tab || 'cotizaciones';
-        setTimeout(function() {
-            activarPestanaConBadge(tabId);
-        }, 200);
-        setTimeout(function() {
-            activarPestanaConBadge(tabId);
-        }, 500);
-    };
-}
-
-// ============================================================
-// OBSERVADOR PARA DETECTAR CAMBIOS EN LA URL (popstate)
-// ============================================================
-
-window.addEventListener('popstate', function() {
-    console.log('🔄 popstate detectado');
-    const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab') || 'cotizaciones';
-    setTimeout(function() {
-        activarPestanaConBadge(tab);
-    }, 50);
-});
-
-// ============================================================
-// INICIALIZACIÓN AL CARGAR LA PÁGINA
-// ============================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM cargado - inicializando badge');
-    const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab') || 'cotizaciones';
-    
-    // Activar la pestaña correcta
-    setTimeout(function() {
-        activarPestanaConBadge(tab);
-    }, 200);
-    setTimeout(function() {
-        activarPestanaConBadge(tab);
-    }, 500);
-    setTimeout(function() {
-        activarPestanaConBadge(tab);
-    }, 1000);
-});
-
-// ============================================================
-// VERIFICACIÓN PERIÓDICA (cada 3 segundos)
-// ============================================================
-
-setInterval(function() {
-    if (!document.hidden) {
-        const pestañaActiva = document.querySelector('.tab-btn.active');
-        if (!pestañaActiva) {
-            console.log('⚠️ No hay pestaña activa - restaurando...');
-            const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab') || 'cotizaciones';
-            activarPestanaConBadge(tab);
-        } else {
-            // Verificar que el badge existe
-            const badge = pestañaActiva.querySelector('.tab-badge');
-            if (!badge) {
-                console.log('⚠️ Badge desapareció - restaurando...');
-                const badgeNuevo = document.createElement('span');
-                badgeNuevo.className = 'tab-badge';
-                badgeNuevo.textContent = '📍';
-                badgeNuevo.style.cssText = `
-                    display: inline-block !important;
-                    visibility: visible !important;
-                    opacity: 1 !important;
-                    font-size: 10px !important;
-                    background: #EF233C !important;
-                    color: #FFFFFF !important;
-                    padding: 1px 6px !important;
-                    border-radius: 4px !important;
-                    font-weight: 900 !important;
-                    margin-left: 4px !important;
-                    animation: pulse-badge 1.5s ease-in-out infinite !important;
-                `;
-                pestañaActiva.appendChild(badgeNuevo);
-                console.log('✅ Badge recreado');
-            }
-        }
-    }
-}, 3000);
-
-// ============================================================
-// EXPORTAR FUNCIONES
-// ============================================================
-
-window.activarPestanaConBadge = activarPestanaConBadge;
-
-console.log('✅ Sistema de badge automático V2 inicializado');
-
-
 function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
      forzarLimpiezaModalPC();
