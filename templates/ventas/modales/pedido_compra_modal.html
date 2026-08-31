@@ -154,10 +154,10 @@
                             
                            <div class="form-field">
                               <label style="font-size:8px; font-weight:900; color:#334155; display:block; margin-bottom:1px; text-transform:uppercase;">Moneda</label>
-                            <select id="pcMoneda" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 2px; font-size:9px; font-weight:800; overflow:hidden; text-overflow:ellipsis;" onchange="actualizarResumenPC()">
-                            <option value="S/)" selected>S/</option>
-                             <option value="$">$</option>
-                            </select>
+                            <select id="pcMoneda" class="campo-obligatorio-pc" style="width:100%; height:24px; border-radius:5px; border:1px solid #CBD5E1; padding:0 2px; font-size:9px; font-weight:800; overflow:hidden; text-overflow:ellipsis;" onchange="actualizarMonedaSelect(this.value)">
+    <option value="S/)" selected>S/</option>
+    <option value="$">$</option>
+</select>
                                 </div>
                             
                             <!-- Monto PC + CUADRITO DE DIFERENCIA (Mucho más grande) -->

@@ -6708,41 +6708,39 @@ function cargarConductorGuia(id) {
 
 function actualizarResumenDesdeMontoPC(input) {
     if (_timeoutResumen) clearTimeout(_timeoutResumen);
-    
-    // 1. Obtener el Monto Cotización (Sin IGV) - Es el valor de referencia
-    const montoCotizacionSinIgv = parseFloat(document.getElementById('pcMonto')?.value) || 0;
-    
-    // 2. Obtener el valor que el usuario está escribiendo en Monto PC
-    const valorPC = parseFloat(input.value) || 0;
-    const simbolo = document.getElementById('pcResumenMoneda')?.textContent || 'S/';
-    const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
-    
-    // ============================================================
-    // 🔥 CALCULAR LA DIFERENCIA SIN IGV (Comparando contra la Cotización)
-    // ============================================================
-    const diferenciaSinIgv = valorPC - montoCotizacionSinIgv;
-    const diffElement = document.getElementById('pcDiferenciaSinIgv');
-    if (diffElement) {
-        diffElement.textContent = formatNum(diferenciaSinIgv);
-        // Cambiar color del texto según sea positivo, negativo o cero
-        if (diferenciaSinIgv > 0) diffElement.style.color = '#DC2626'; // Rojo si es mayor
-        else if (diferenciaSinIgv < 0) diffElement.style.color = '#2563EB'; // Azul si es menor
-        else diffElement.style.color = '#6B7280'; // Gris si es igual
-    }
-    // ============================================================
-    
-    // Debounce para el resumen lateral
     _timeoutResumen = setTimeout(() => {
-        // 🔽 REDONDEAR A 2 DECIMALES para evitar decimales largos
-        const igv = parseFloat((valorPC * 0.18).toFixed(2));
-        const total = parseFloat((valorPC + igv).toFixed(2));
+        const valor = parseFloat(input.value) || 0;
+        const monedaSelect = document.getElementById('pcMoneda');
+        const simbolo = (monedaSelect && (monedaSelect.value === '$' || monedaSelect.value === '$/' || monedaSelect.value.includes('$'))) ? '$' : 'S/';
+        const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
         
-        document.getElementById('pcResumenSubtotal').textContent = formatNum(valorPC);
-        document.getElementById('pcResumenValorVenta').textContent = formatNum(valorPC);
-        document.getElementById('pcResumenIgv').textContent = formatNum(igv);
-        document.getElementById('pcResumenTotal').textContent = formatNum(total);
+        // Calcular IGV y total
+        const igv = valor * 0.18;
+        const total = valor + igv;
         
-        console.log(`✅ Resumen actualizado: Cotización S/${montoCotizacionSinIgv.toFixed(2)} | PC S/${valorPC.toFixed(2)} | Diferencia: ${diferenciaSinIgv.toFixed(2)}`);
+        // Actualizar los campos del resumen
+        const subtotalEl = document.getElementById('pcResumenSubtotal');
+        const valorVentaEl = document.getElementById('pcResumenValorVenta');
+        const igvEl = document.getElementById('pcResumenIgv');
+        const totalEl = document.getElementById('pcResumenTotal');
+        
+        if (subtotalEl) subtotalEl.textContent = formatNum(valor);
+        if (valorVentaEl) valorVentaEl.textContent = formatNum(valor);
+        if (igvEl) igvEl.textContent = formatNum(igv);
+        if (totalEl) totalEl.textContent = formatNum(total);
+        
+        // Actualizar el cuadro de diferencia
+        const montoCotizacion = parseFloat(document.getElementById('pcMonto')?.value) || 0;
+        const diferencia = valor - montoCotizacion;
+        const diferenciaBox = document.getElementById('pcDiferenciaSinIgv');
+        if (diferenciaBox) {
+            diferenciaBox.textContent = `${simbolo} ${diferencia.toFixed(2)}`;
+            if (diferencia > 0) diferenciaBox.style.color = '#DC2626';
+            else if (diferencia < 0) diferenciaBox.style.color = '#2563EB';
+            else diferenciaBox.style.color = '#6B7280';
+        }
+        
+        console.log(`✅ Resumen actualizado desde Monto PC: ${simbolo} ${valor}`);
         _timeoutResumen = null;
     }, 100);
 }
@@ -12923,7 +12921,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
             }
             
             // ============================================================
-            // FUNCIÓN PARA SETEAR VALORES EN MODO READONLY
+            // FUNCIONES PARA SETEAR VALORES
             // ============================================================
             const setReadonlyValue = (id, val) => {
                 const el = document.getElementById(id);
@@ -12963,7 +12961,27 @@ function seleccionarCotizacionSAP(cotizacionId) {
             // 🔽 ACTUALIZAR LA MONEDA 🔽
             // ============================================================
             const monedaCotizacion = data.moneda || data.moneda_cotizacion || 'Soles (S/)';
-            actualizarMonedaPC(monedaCotizacion);
+            let monedaValue = 'S/)'; // Valor por defecto
+            
+            if (monedaCotizacion.includes('$') || monedaCotizacion.includes('Dólar') || monedaCotizacion.includes('USD')) {
+                monedaValue = '$';
+            } else {
+                monedaValue = 'S/)';
+            }
+            
+            // Actualizar el select de moneda
+            const monedaSelect = document.getElementById('pcMoneda');
+            if (monedaSelect) {
+                for (let opt of monedaSelect.options) {
+                    if (opt.value === monedaValue) {
+                        opt.selected = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Actualizar el resumen con la nueva moneda
+            actualizarMonedaSelect(monedaValue);
             
             // ============================================================
             // ACTUALIZAR CONDICIÓN DE PAGO
@@ -13075,9 +13093,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
             // ACTUALIZAR RESUMEN Y VALIDACIONES
             // ============================================================
             setTimeout(() => {
-                if (typeof actualizarResumenPC === 'function') {
-                    actualizarResumenPC();
-                }
+                actualizarResumenPC();
                 if (typeof updateValidationSemaphore === 'function') {
                     updateValidationSemaphore();
                 }
@@ -13096,69 +13112,29 @@ function seleccionarCotizacionSAP(cotizacionId) {
 
 
 /**
- * Actualiza la moneda en el modal de PC basado en la cotización seleccionada
- * @param {string} moneda - Moneda de la cotización (ej: "Soles (S/.)", "Dólares ($)", "S/", "$")
+ * Actualiza la moneda en el select y el resumen
+ * @param {string} moneda - Valor de la moneda ("S/)" o "$")
  */
-function actualizarMonedaPC(moneda) {
-    console.log('💰 Actualizando moneda PC a:', moneda);
+function actualizarMonedaSelect(moneda) {
+    console.log('💰 Actualizando moneda a:', moneda);
     
     const monedaSelect = document.getElementById('pcMoneda');
     const resumenMoneda = document.getElementById('pcResumenMoneda');
+    const diferenciaBox = document.getElementById('pcDiferenciaSinIgv');
     
-    if (!monedaSelect) {
-        console.warn('⚠️ Select de moneda no encontrado');
-        return;
-    }
-    
-    // Determinar el símbolo y el texto de la moneda
-    let monedaTexto = '';
+    // Determinar el símbolo correcto
     let simbolo = 'S/';
-    
-    // Limpiar y normalizar la moneda recibida
-    const monedaLower = (moneda || '').toLowerCase().trim();
-    
-    // Detectar si es Dólares
-    if (monedaLower.includes('$') || 
-        monedaLower.includes('dólar') || 
-        monedaLower.includes('dolar') || 
-        monedaLower.includes('usd') ||
-        monedaLower === '$') {
-        monedaTexto = 'Dólares ($)';
+    if (moneda === '$' || moneda === '$/' || moneda.includes('$')) {
         simbolo = '$';
-    } 
-    // Detectar si es Soles (por defecto)
-    else {
-        monedaTexto = 'Soles (S/)';
+    } else {
         simbolo = 'S/';
     }
     
-    console.log('📌 Moneda a seleccionar:', monedaTexto, 'Símbolo:', simbolo);
-    
-    // Buscar y seleccionar la opción correcta en el select
-    let found = false;
-    for (let opt of monedaSelect.options) {
-        const optValue = (opt.value || '').toLowerCase();
-        const optText = (opt.textContent || '').toLowerCase();
-        
-        // Comparar con la moneda detectada
-        if (optValue.includes(monedaLower) || 
-            optText.includes(monedaLower) ||
-            (monedaLower.includes('$') && (optValue.includes('$') || optText.includes('$'))) ||
-            (monedaLower.includes('s/') && (optValue.includes('s/') || optText.includes('s/')))) {
-            opt.selected = true;
-            found = true;
-            console.log('✅ Opción seleccionada:', opt.value);
-            break;
-        }
-    }
-    
-    // Si no se encontró, seleccionar Soles por defecto
-    if (!found) {
+    // Actualizar el select si se pasó un valor
+    if (monedaSelect && moneda) {
         for (let opt of monedaSelect.options) {
-            const optValue = (opt.value || '').toLowerCase();
-            if (optValue.includes('s/') || optValue.includes('soles')) {
+            if (opt.value === moneda) {
                 opt.selected = true;
-                console.log('⚠️ Usando Soles por defecto');
                 break;
             }
         }
@@ -13170,11 +13146,101 @@ function actualizarMonedaPC(moneda) {
         console.log('✅ Símbolo de resumen actualizado a:', simbolo);
     }
     
-    // Actualizar el resumen con la nueva moneda
-    if (typeof actualizarResumenPC === 'function') {
-        setTimeout(() => {
-            actualizarResumenPC();
-        }, 100);
+    // Actualizar el símbolo en el cuadro de diferencia
+    if (diferenciaBox) {
+        const currentValue = diferenciaBox.textContent.replace(/[S/$\s]/g, '');
+        diferenciaBox.textContent = `${simbolo} ${currentValue}`;
+    }
+    
+    // Actualizar todos los montos del resumen
+    actualizarResumenPC();
+}
+
+/**
+ * Actualiza el resumen completo con la moneda correcta
+ */
+function actualizarResumenPC() {
+    // Evitar loops
+    if (_actualizandoResumen) return;
+    _actualizandoResumen = true;
+    
+    try {
+        console.log('🔄 Actualizando resumen lateral del PC...');
+        
+        // Obtener la moneda seleccionada
+        const monedaSelect = document.getElementById('pcMoneda');
+        const monedaValue = monedaSelect ? monedaSelect.value : 'S/)';
+        const simbolo = (monedaValue === '$' || monedaValue === '$/' || monedaValue.includes('$')) ? '$' : 'S/';
+        
+        // Actualizar el símbolo de moneda en el resumen
+        const monedaResumen = document.getElementById('pcResumenMoneda');
+        if (monedaResumen) monedaResumen.textContent = simbolo;
+        
+        // Actualizar el símbolo en el cuadro de diferencia
+        const diferenciaBox = document.getElementById('pcDiferenciaSinIgv');
+        if (diferenciaBox) {
+            const currentValue = parseFloat(diferenciaBox.textContent.replace(/[S/$\s]/g, '')) || 0;
+            diferenciaBox.textContent = `${simbolo} ${currentValue.toFixed(2)}`;
+        }
+        
+        // Sumar los valores totales de cada producto en la tabla
+        let subtotal = 0;
+        const rows = document.querySelectorAll('#pcItemsBody tr');
+        let productCount = 0;
+        
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            if (inputs.length >= 8) {
+                const cantidad = parseFloat(inputs[5]?.value) || 0;
+                const precio = parseFloat(inputs[7]?.value) || 0;
+                const valorTotal = cantidad * precio;
+                
+                const valueSpan = row.querySelector('td:nth-child(10) span');
+                if (valueSpan) {
+                    valueSpan.textContent = valorTotal.toFixed(2);
+                    valueSpan.style.color = valorTotal > 0 ? '#059669' : '#94A3B8';
+                }
+                
+                subtotal += valorTotal;
+                if (cantidad > 0 || precio > 0) productCount++;
+            }
+        });
+        
+        // Calcular IGV y total
+        const igv = subtotal * 0.18;
+        const total = subtotal + igv;
+        
+        // Función para formatear números con el símbolo correcto
+        const formatNum = (num) => `${simbolo} ${num.toFixed(2)}`;
+        
+        // Actualizar los campos del resumen
+        const subtotalEl = document.getElementById('pcResumenSubtotal');
+        const valorVentaEl = document.getElementById('pcResumenValorVenta');
+        const igvEl = document.getElementById('pcResumenIgv');
+        const totalEl = document.getElementById('pcResumenTotal');
+        const productosEl = document.getElementById('pcResumenProductos');
+        
+        if (subtotalEl) subtotalEl.textContent = formatNum(subtotal);
+        if (valorVentaEl) valorVentaEl.textContent = formatNum(subtotal);
+        if (igvEl) igvEl.textContent = formatNum(igv);
+        if (totalEl) totalEl.textContent = formatNum(total);
+        if (productosEl) productosEl.textContent = productCount;
+        
+        // Actualizar el campo de Monto PC
+        const montoPCInput = document.getElementById('pcMontoPC');
+        if (montoPCInput) {
+            const currentValue = parseFloat(montoPCInput.value) || 0;
+            if (Math.abs(currentValue - subtotal) > 0.01) {
+                montoPCInput.value = subtotal.toFixed(2);
+            }
+        }
+        
+        console.log(`✅ Resumen actualizado: ${simbolo} ${subtotal.toFixed(2)}, IGV=${simbolo} ${igv.toFixed(2)}, Total=${simbolo} ${total.toFixed(2)}`);
+        
+    } catch (error) {
+        console.error('❌ Error actualizando resumen:', error);
+    } finally {
+        _actualizandoResumen = false;
     }
 }
 
