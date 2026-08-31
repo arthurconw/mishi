@@ -2743,19 +2743,6 @@
     transform: scale(1.02) !important;
 }
 
-/* Animación para el indicador de módulo activo */
-@keyframes pulse-dot {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.5;
-        transform: scale(0.8);
-    }
-}
-
-
 /* ============================================================
    BADGE PARA PESTAÑA ACTIVA - INDICADOR "ESTÁS AQUÍ"
    ============================================================ */
@@ -2767,7 +2754,7 @@
 }
 
 .tab-badge {
-    display: inline-block !important;
+    display: none !important; /* Oculto por defecto */
     font-size: 10px !important;
     background: #EF233C !important;
     color: #FFFFFF !important;
@@ -2779,14 +2766,9 @@
 }
 
 .tab-btn.active .tab-badge {
-    display: inline-block !important;
+    display: inline-block !important; /* Solo visible en la pestaña activa */
 }
 
-.tab-btn:not(.active) .tab-badge {
-    display: none !important;
-}
-
-/* Animación de parpadeo para el badge */
 @keyframes pulse-badge {
     0%, 100% {
         opacity: 1;
@@ -2797,6 +2779,7 @@
         transform: scale(0.95);
     }
 }
+
 </style>
 {% endblock %}
 
@@ -2807,35 +2790,35 @@
 <div class="tabs" id="tabsRow">
     <button class="tab-btn active" data-tab="cotizaciones">
         📋 Cotizaciones
-        <span class="tab-badge" style="display:none;">📍</span>
+        <span class="tab-badge">📍</span>
     </button>
     <button class="tab-btn" data-tab="pedido_compra">
         📋 PC Pedido Compras
-        <span class="tab-badge" style="display:none;">📍</span>
+        <span class="tab-badge">📍</span>
     </button>
     <button class="tab-btn" data-tab="despachar">
         🚚 Entregas
-        <span class="tab-badge" style="display:none;">📍</span>
+        <span class="tab-badge">📍</span>
     </button>
     <button class="tab-btn" data-tab="guias">
         📦 Guías Remisión
-        <span class="tab-badge" style="display:none;">📍</span>
+        <span class="tab-badge">📍</span>
     </button>
     <button class="tab-btn" data-tab="comprobantes">
         🧾 Facturas
-        <span class="tab-badge" style="display:none;">📍</span>
+        <span class="tab-badge">📍</span>
     </button>
     <button class="tab-btn" data-tab="notas_credito">
         📝 Notas Crédito
-        <span class="tab-badge" style="display:none;">📍</span>
+        <span class="tab-badge">📍</span>
     </button>
     <button class="tab-btn" data-tab="devoluciones">
         🔄 Devoluciones
-        <span class="tab-badge" style="display:none;">📍</span>
+        <span class="tab-badge">📍</span>
     </button>
     <button class="tab-btn" data-tab="eliminadas">
         🗑️ Eliminadas
-        <span class="tab-badge" style="display:none;">📍</span>
+        <span class="tab-badge">📍</span>
     </button>
 </div>
 
@@ -2896,56 +2879,6 @@
 <!-- PC PEDIDO COMPRAS - Estilo SAP -->
 <!-- ============================================================ -->
 <div id="pedido_compra" class="section">
-    <!-- 🔽 INDICADOR DE MÓDULO ACTIVO 🔽 -->
-    <div style="
-        background: #FEF2F2;
-        border: 1px solid #FCA5A5;
-        border-radius: 8px;
-        padding: 8px 14px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        box-shadow: 0 2px 8px rgba(239, 35, 60, 0.15);
-        flex-wrap: wrap;
-    ">
-        <span style="
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #EF233C;
-            animation: pulse-dot 1.5s ease-in-out infinite;
-            flex-shrink: 0;
-        "></span>
-        <span style="
-            font-weight: 900;
-            color: #991B1B;
-            font-size: 13px;
-        ">
-            📍 Módulo activo:
-        </span>
-        <span style="
-            font-weight: 900;
-            color: #EF233C;
-            font-size: 14px;
-            background: #FFFFFF;
-            padding: 2px 12px;
-            border-radius: 4px;
-            border: 1px solid #FCA5A5;
-        ">
-            PC Pedido Compras
-        </span>
-        <span style="
-            font-size: 11px;
-            color: #64748B;
-            margin-left: auto;
-            font-weight: 700;
-        " id="pcStatusIndicator">
-            📋 Listo para trabajar
-        </span>
-    </div>
-    
     <div class="panel">
         <div class="clean-header sap-head">
             <div class="master-title-wrap">
@@ -3441,8 +3374,22 @@
                 comprobantes: document.getElementById('comprobantes'),
                 notas_credito: document.getElementById('notas_credito'),
                 devoluciones: document.getElementById('devoluciones'),
-                  eliminadas: document.getElementById('eliminadas') 
+                eliminadas: document.getElementById('eliminadas') 
             };
+            
+            // Función para actualizar el badge de la pestaña activa
+            function actualizarBadgeActivo() {
+                const tabActiva = document.querySelector('.tab-btn.active');
+                if (tabActiva) {
+                    const badge = tabActiva.querySelector('.tab-badge');
+                    if (badge) {
+                        badge.style.display = 'inline-block';
+                        badge.style.visibility = 'visible';
+                        badge.style.opacity = '1';
+                        console.log(`✅ Badge visible en: ${tabActiva.textContent.trim()}`);
+                    }
+                }
+            }
             
             // Función para cargar módulo con verificación
             function cargarModulo(tabId) {
@@ -3452,6 +3399,8 @@
                 if (typeof window.initVentas === 'function') {
                     console.log('✅ initVentas disponible, cargando...');
                     window.initVentas(tabId);
+                    // Después de cargar, actualizar badge
+                    setTimeout(actualizarBadgeActivo, 200);
                     return;
                 }
                 
@@ -3466,11 +3415,12 @@
                         clearInterval(checkInterval);
                         console.log('✅ initVentas ahora disponible');
                         window.initVentas(tabId);
+                        setTimeout(actualizarBadgeActivo, 200);
                     } else if (attempts >= maxAttempts) {
                         clearInterval(checkInterval);
                         console.error('❌ initVentas no disponible después de', maxAttempts, 'intentos');
-                        // Intentar carga directa de datos
                         cargarDirecto(tabId);
+                        setTimeout(actualizarBadgeActivo, 200);
                     }
                 }, 200);
             }
@@ -3479,7 +3429,6 @@
             function cargarDirecto(tabId) {
                 console.log(`🔄 Carga directa para: ${tabId}`);
                 
-                // Verificar funciones disponibles
                 if (typeof window.loadCotizaciones === 'function') {
                     window.loadCotizaciones();
                 }
@@ -3497,6 +3446,7 @@
                 } else if (tabId === 'devoluciones' && typeof window.loadDevoluciones === 'function') {
                     window.loadDevoluciones();
                 }
+                setTimeout(actualizarBadgeActivo, 200);
             }
             
             // Función para cambiar de tab
@@ -3528,6 +3478,22 @@
                 } else {
                     console.warn(`⚠️ Sección no encontrada: ${tabId}`);
                 }
+                
+                // 🔽 ACTUALIZAR BADGES - FORZAR VISIBILIDAD 🔽
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    const badge = btn.querySelector('.tab-badge');
+                    if (badge) {
+                        if (btn.dataset.tab === tabId) {
+                            badge.style.display = 'inline-block';
+                            badge.style.visibility = 'visible';
+                            badge.style.opacity = '1';
+                        } else {
+                            badge.style.display = 'none';
+                            badge.style.visibility = 'hidden';
+                            badge.style.opacity = '0';
+                        }
+                    }
+                });
                 
                 // Cargar datos del módulo
                 cargarModulo(tabId);
@@ -3577,10 +3543,60 @@
                 sections[initialTab].classList.add('active');
             }
             
+            // Actualizar badges iniciales
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const badge = btn.querySelector('.tab-badge');
+                if (badge) {
+                    if (btn.dataset.tab === initialTab) {
+                        badge.style.display = 'inline-block';
+                        badge.style.visibility = 'visible';
+                        badge.style.opacity = '1';
+                    } else {
+                        badge.style.display = 'none';
+                        badge.style.visibility = 'hidden';
+                        badge.style.opacity = '0';
+                    }
+                }
+            });
+            
             // Inicializar con un retraso para asegurar que todo esté listo
             setTimeout(() => {
                 cargarModulo(initialTab);
+                // Forzar badge nuevamente después de un tiempo
+                setTimeout(actualizarBadgeActivo, 500);
             }, 300);
+            
+            // 🔽 OBSERVADOR PARA MANTENER EL BADGE VISIBLE 🔽
+            // Observar cambios en las clases de los tabs
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'class') {
+                        const btn = mutation.target;
+                        if (btn.classList.contains('active')) {
+                            const badge = btn.querySelector('.tab-badge');
+                            if (badge) {
+                                badge.style.display = 'inline-block';
+                                badge.style.visibility = 'visible';
+                                badge.style.opacity = '1';
+                            }
+                        } else {
+                            const badge = btn.querySelector('.tab-badge');
+                            if (badge) {
+                                badge.style.display = 'none';
+                                badge.style.visibility = 'hidden';
+                                badge.style.opacity = '0';
+                            }
+                        }
+                    }
+                });
+            });
+            
+            // Observar todos los tabs
+            tabs.forEach(btn => {
+                observer.observe(btn, { attributes: true, attributeFilter: ['class'] });
+            });
+            
+            console.log('✅ Badge observer inicializado');
         });
     })();
 </script>
