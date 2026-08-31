@@ -13272,13 +13272,14 @@ function actualizarPrecioPCSAP(input, index) {
 }
 
 
+// ============================================================
+// 🔴 SISTEMA DE BADGE PERSISTENTE - VERSIÓN DEFINITIVA 🔴
+// ============================================================
+
 /**
  * Fuerza la visibilidad del badge en la pestaña activa
- * Esta función se ejecuta cada vez que se cambia de pestaña
  */
 function forzarBadgeActivo() {
-    console.log('🔴 Forzando badge en pestaña activa...');
-    
     // Buscar todas las pestañas
     document.querySelectorAll('.tab-btn').forEach(function(btn) {
         const badge = btn.querySelector('.tab-badge');
@@ -13290,6 +13291,8 @@ function forzarBadgeActivo() {
             badge.style.visibility = 'visible';
             badge.style.opacity = '1';
             badge.style.animation = 'pulse-badge 1.5s ease-in-out infinite';
+            badge.style.position = 'relative';
+            badge.style.zIndex = '10';
             console.log('✅ Badge mostrado en:', btn.textContent.trim());
         } else {
             // Pestaña inactiva - ocultar badge
@@ -13300,6 +13303,178 @@ function forzarBadgeActivo() {
         }
     });
 }
+
+// ============================================================
+// 1. EJECUTAR CADA VEZ QUE CAMBIA EL DOM
+// ============================================================
+const badgeObserver = new MutationObserver(function(mutations) {
+    // Verificar si algún cambio afecta a las pestañas
+    let afectaTabs = false;
+    
+    mutations.forEach(function(mutation) {
+        // Si se agregaron o removieron nodos
+        if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1) { // Elemento
+                    if (node.classList && (node.classList.contains('tab-btn') || node.querySelector('.tab-btn'))) {
+                        afectaTabs = true;
+                    }
+                }
+            });
+        }
+        // Si cambió la clase de algún elemento
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            if (mutation.target.classList && mutation.target.classList.contains('tab-btn')) {
+                afectaTabs = true;
+            }
+        }
+    });
+    
+    if (afectaTabs) {
+        console.log('🔄 Cambio detectado en pestañas - forzando badge');
+        setTimeout(forzarBadgeActivo, 10);
+        setTimeout(forzarBadgeActivo, 50);
+        setTimeout(forzarBadgeActivo, 200);
+    }
+});
+
+// Observar todo el body y sus cambios
+badgeObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class']
+});
+
+console.log('✅ BadgeObserver activo - monitoreando cambios en el DOM');
+
+// ============================================================
+// 2. EJECUTAR DESPUÉS DE CADA EVENTO IMPORTANTE
+// ============================================================
+
+// Cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(forzarBadgeActivo, 100);
+    setTimeout(forzarBadgeActivo, 300);
+    setTimeout(forzarBadgeActivo, 800);
+    setTimeout(forzarBadgeActivo, 1500);
+});
+
+// Cuando se hace clic en cualquier pestaña
+document.addEventListener('click', function(e) {
+    const tabBtn = e.target.closest('.tab-btn');
+    if (tabBtn) {
+        console.log('🖱️ Click en pestaña - forzando badge');
+        setTimeout(forzarBadgeActivo, 20);
+        setTimeout(forzarBadgeActivo, 100);
+        setTimeout(forzarBadgeActivo, 300);
+    }
+});
+
+// ============================================================
+// 3. INTERCEPTAR FUNCIONES QUE PUEDEN AFECTAR LAS PESTAÑAS
+// ============================================================
+
+// Interceptar switchTab si existe
+if (typeof window.switchTab === 'function') {
+    const originalSwitchTab = window.switchTab;
+    window.switchTab = function(tabId) {
+        console.log('🔄 switchTab interceptado - tab:', tabId);
+        originalSwitchTab(tabId);
+        setTimeout(forzarBadgeActivo, 50);
+        setTimeout(forzarBadgeActivo, 200);
+        setTimeout(forzarBadgeActivo, 500);
+    };
+}
+
+// Interceptar highlightActiveModule si existe
+if (typeof window.highlightActiveModule === 'function') {
+    const originalHighlight = window.highlightActiveModule;
+    window.highlightActiveModule = function() {
+        console.log('🔄 highlightActiveModule interceptado');
+        originalHighlight();
+        setTimeout(forzarBadgeActivo, 50);
+        setTimeout(forzarBadgeActivo, 200);
+    };
+}
+
+// Interceptar initVentas si existe
+if (typeof window.initVentas === 'function') {
+    const originalInit = window.initVentas;
+    window.initVentas = async function(tab) {
+        console.log('🔄 initVentas interceptado - tab:', tab);
+        await originalInit(tab);
+        setTimeout(forzarBadgeActivo, 100);
+        setTimeout(forzarBadgeActivo, 300);
+        setTimeout(forzarBadgeActivo, 600);
+        setTimeout(forzarBadgeActivo, 1000);
+    };
+}
+
+// ============================================================
+// 4. EJECUTAR DESPUÉS DE CADA CARGA DE DATOS
+// ============================================================
+
+// Interceptar loadPedidos
+if (typeof window.loadPedidos === 'function') {
+    const originalLoadPedidos = window.loadPedidos;
+    window.loadPedidos = async function() {
+        console.log('🔄 loadPedidos interceptado');
+        const result = await originalLoadPedidos();
+        setTimeout(forzarBadgeActivo, 100);
+        setTimeout(forzarBadgeActivo, 300);
+        return result;
+    };
+}
+
+// Interceptar renderPedidos
+if (typeof window.renderPedidos === 'function') {
+    const originalRenderPedidos = window.renderPedidos;
+    window.renderPedidos = function() {
+        console.log('🔄 renderPedidos interceptado');
+        const result = originalRenderPedidos();
+        setTimeout(forzarBadgeActivo, 50);
+        setTimeout(forzarBadgeActivo, 150);
+        return result;
+    };
+}
+
+// ============================================================
+// 5. EJECUTAR PERIÓDICAMENTE (POR SI ACASO)
+// ============================================================
+
+// Cada 2 segundos verificar y forzar el badge (solo si la página está visible)
+let badgeInterval = setInterval(function() {
+    if (!document.hidden) {
+        // Solo verificar si el badge está visible en la pestaña activa
+        const activeTab = document.querySelector('.tab-btn.active');
+        if (activeTab) {
+            const badge = activeTab.querySelector('.tab-badge');
+            if (badge) {
+                const computedStyle = window.getComputedStyle(badge);
+                if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
+                    console.log('🔄 Badge oculto detectado - forzando...');
+                    forzarBadgeActivo();
+                }
+            }
+        }
+    }
+}, 2000);
+
+// Detener el intervalo si la página se cierra
+window.addEventListener('beforeunload', function() {
+    if (badgeInterval) {
+        clearInterval(badgeInterval);
+        badgeInterval = null;
+    }
+});
+
+// Exportar al window
+window.forzarBadgeActivo = forzarBadgeActivo;
+
+console.log('✅ Sistema de badge persistente inicializado');
+
+
 function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
      forzarLimpiezaModalPC();
