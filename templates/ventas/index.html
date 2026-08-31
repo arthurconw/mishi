@@ -2743,7 +2743,17 @@
     transform: scale(1.02) !important;
 }
 
-
+/* Animación para el indicador de módulo activo */
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+}
 
 </style>
 {% endblock %}
@@ -2821,6 +2831,56 @@
 <!-- PC PEDIDO COMPRAS - Estilo SAP -->
 <!-- ============================================================ -->
 <div id="pedido_compra" class="section">
+    <!-- 🔽 INDICADOR DE MÓDULO ACTIVO 🔽 -->
+    <div style="
+        background: #FEF2F2;
+        border: 1px solid #FCA5A5;
+        border-radius: 8px;
+        padding: 8px 14px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 2px 8px rgba(239, 35, 60, 0.15);
+        flex-wrap: wrap;
+    ">
+        <span style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #EF233C;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+            flex-shrink: 0;
+        "></span>
+        <span style="
+            font-weight: 900;
+            color: #991B1B;
+            font-size: 13px;
+        ">
+            📍 Módulo activo:
+        </span>
+        <span style="
+            font-weight: 900;
+            color: #EF233C;
+            font-size: 14px;
+            background: #FFFFFF;
+            padding: 2px 12px;
+            border-radius: 4px;
+            border: 1px solid #FCA5A5;
+        ">
+            PC Pedido Compras
+        </span>
+        <span style="
+            font-size: 11px;
+            color: #64748B;
+            margin-left: auto;
+            font-weight: 700;
+        " id="pcStatusIndicator">
+            📋 Listo para trabajar
+        </span>
+    </div>
+    
     <div class="panel">
         <div class="clean-header sap-head">
             <div class="master-title-wrap">
