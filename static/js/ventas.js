@@ -13253,6 +13253,49 @@ function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
     
     // ============================================================
+    // 🔽 LIMPIAR CONDICIÓN DE PAGO (FORZAR CONTADO) 🔽
+    // ============================================================
+    const condSelect = document.getElementById('pcCondicion');
+    if (condSelect) {
+        // Buscar y seleccionar "Contado"
+        let found = false;
+        for (let opt of condSelect.options) {
+            if (opt.value === 'Contado') {
+                opt.selected = true;
+                found = true;
+                break;
+            }
+        }
+        if (!found && condSelect.options.length > 0) {
+            condSelect.selectedIndex = 0;
+        }
+        condSelect.disabled = false;
+        condSelect.style.background = '#FFFFFF';
+        condSelect.style.cursor = 'pointer';
+    }
+    
+    // ============================================================
+    // 🔽 LIMPIAR CAMPO PERSONALIZADO DE CONDICIÓN 🔽
+    // ============================================================
+    const condCustom = document.getElementById('pcCondicionCustom');
+    if (condCustom) {
+        condCustom.value = '';
+        condCustom.style.display = 'none';
+        condCustom.style.background = '#FFFFFF';
+        condCustom.style.color = '#0F172A';
+    }
+    
+    // ============================================================
+    // 🔽 LIMPIAR DIFERENCIA (S/IGV) 🔽
+    // ============================================================
+    const diferenciaBox = document.getElementById('pcDiferenciaSinIgv');
+    if (diferenciaBox) {
+        diferenciaBox.textContent = 'S/ 0.00';
+        diferenciaBox.style.color = '#6B7280';
+        diferenciaBox.style.background = '#f8f9fa';
+    }
+    
+    // ============================================================
     // FUNCIÓN AUXILIAR PARA LIMPIAR CAMPOS
     // ============================================================
     const setReadonlyValue = (id, value) => {
@@ -13343,40 +13386,7 @@ function clearPedidoModalSAP() {
     setEditableValue('pcEditId', '');
     
     // ============================================================
-    // 7. 🔽 LIMPIAR SELECT DE CONDICIÓN DE PAGO 🔽
-    // ============================================================
-    const condSelect = document.getElementById('pcCondicion');
-    if (condSelect) {
-        // Buscar y seleccionar "Contado"
-        let found = false;
-        for (let opt of condSelect.options) {
-            if (opt.value === 'Contado') {
-                opt.selected = true;
-                found = true;
-                break;
-            }
-        }
-        if (!found && condSelect.options.length > 0) {
-            condSelect.selectedIndex = 0;
-        }
-        condSelect.disabled = false;
-        condSelect.style.background = '#FFFFFF';
-        condSelect.style.cursor = 'pointer';
-    }
-    
-    // ============================================================
-    // 8. 🔽 LIMPIAR CAMPO PERSONALIZADO DE CONDICIÓN 🔽
-    // ============================================================
-    const condCustom = document.getElementById('pcCondicionCustom');
-    if (condCustom) {
-        condCustom.value = '';
-        condCustom.style.display = 'none';
-        condCustom.style.background = '#FFFFFF';
-        condCustom.style.color = '#0F172A';
-    }
-    
-    // ============================================================
-    // 9. 🔽 LIMPIAR SELECT DE MONEDA - FORZAR SOLES 🔽
+    // 7. 🔽 LIMPIAR SELECT DE MONEDA - FORZAR SOLES 🔽
     // ============================================================
     const monedaSelect = document.getElementById('pcMoneda');
     if (monedaSelect) {
@@ -13397,7 +13407,7 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 10. 🔽 LIMPIAR SELECT DE MEDIO 🔽
+    // 8. 🔽 LIMPIAR SELECT DE MEDIO 🔽
     // ============================================================
     const medioSelect = document.getElementById('pcMedio');
     if (medioSelect) {
@@ -13410,17 +13420,7 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 11. 🔽 LIMPIAR DIFERENCIA (S/IGV) 🔽
-    // ============================================================
-    const diferenciaBox = document.getElementById('pcDiferenciaSinIgv');
-    if (diferenciaBox) {
-        diferenciaBox.textContent = 'S/ 0.00';
-        diferenciaBox.style.color = '#6B7280';
-        diferenciaBox.style.background = '#f8f9fa';
-    }
-    
-    // ============================================================
-    // 12. OCULTAR CAMPOS DE PAGO (Contado)
+    // 9. OCULTAR CAMPOS DE PAGO (Contado)
     // ============================================================
     const pagoContainer = document.getElementById('pagoCamposContainer');
     if (pagoContainer) {
@@ -13434,7 +13434,7 @@ function clearPedidoModalSAP() {
     if (cuenta) cuenta.value = '';
     
     // ============================================================
-    // 13. LIMPIAR TABLA DE ITEMS (SOLO UNA FILA VACÍA)
+    // 10. LIMPIAR TABLA DE ITEMS (SOLO UNA FILA VACÍA)
     // ============================================================
     const tbody = document.getElementById('pcItemsBody');
     if (tbody) {
@@ -13443,7 +13443,7 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 14. RESETEAR SWITCHES DE VALIDACIÓN A "NO VÁLIDO"
+    // 11. RESETEAR SWITCHES DE VALIDACIÓN A "NO VÁLIDO"
     // ============================================================
     const validations = ['vPrecio', 'vProducto', 'vEntrega', 'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'];
     validations.forEach(id => {
@@ -13459,7 +13459,7 @@ function clearPedidoModalSAP() {
     });
     
     // ============================================================
-    // 15. RESETEAR SEMÁFORO DE VALIDACIÓN
+    // 12. RESETEAR SEMÁFORO DE VALIDACIÓN
     // ============================================================
     const semaphore = document.getElementById('validationSemaphore');
     if (semaphore) {
@@ -13486,7 +13486,7 @@ function clearPedidoModalSAP() {
     if (chips) chips.innerHTML = '';
     
     // ============================================================
-    // 16. RESETEAR RESUMEN LATERAL A CEROS
+    // 13. RESETEAR RESUMEN LATERAL A CEROS
     // ============================================================
     const resumenSubtotal = document.getElementById('pcResumenSubtotal');
     const resumenValorVenta = document.getElementById('pcResumenValorVenta');
@@ -13503,14 +13503,14 @@ function clearPedidoModalSAP() {
     if (resumenMoneda) resumenMoneda.textContent = 'S/';
     
     // ============================================================
-    // 17. RESETEAR VARIABLES GLOBALES
+    // 14. RESETEAR VARIABLES GLOBALES
     // ============================================================
     cotizacionSeleccionada = null;
     modalMode = 'cot';
     editingId = null;
     
     // ============================================================
-    // 18. FORZAR ACTUALIZACIÓN DEL RESUMEN
+    // 15. FORZAR ACTUALIZACIÓN DEL RESUMEN
     // ============================================================
     setTimeout(() => {
         if (typeof actualizarResumenPC === 'function') {
