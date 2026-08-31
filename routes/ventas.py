@@ -1349,6 +1349,8 @@ def api_cotizaciones_guardar():
         print(f"  - estado: {data.get('estado')}")
         print(f"  - total: {data.get('total')}")
         print(f"  - productos: {len(data.get('productos', []))}")
+        # 🔽 LOG DEL REQUERIMIENTO
+        print(f"  - REQUERIMIENTO RECIBIDO: '{data.get('requerimiento')}'")
         print("=" * 80)
         
         # ============================================================
@@ -1453,10 +1455,20 @@ def api_cotizaciones_guardar():
                     descuento_tipo = %s,
                     contacto_cliente = %s,
                     telefono_cliente = %s,
-                    email_cliente = %s
+                    email_cliente = %s,
+                    seguimiento = %s,
+                    motivo = %s,
+                    transporte = %s,
+                    parihuela = %s,
+                    nota_interna = %s,
+                    vendedor = %s
                 WHERE id = %s
                 RETURNING id, numero_cotizacion
             """
+            
+            # 🔽 OBTENER REQUERIMIENTO (asegurar que no sea None)
+            requerimiento = data.get('requerimiento') or ''
+            print(f"📝 REQUERIMIENTO A GUARDAR (UPDATE): '{requerimiento}'")
             
             params_update = (
                 cliente_id,
@@ -1466,19 +1478,25 @@ def api_cotizaciones_guardar():
                 total,
                 usuario_id,
                 data.get('notas', ''),
-                data.get('condicion_pago'),
+                data.get('forma_pago'),
                 data.get('tiempo_entrega'),
-                data.get('validez'),
+                data.get('validez_oferta'),
                 data.get('condicion_pago'),
                 data.get('direccion_entrega'),
-                data.get('requerimiento'),
-                data.get('nota_comercial', ''),
+                requerimiento,  # ← REQUERIMIENTO
+                data.get('nota_cotizacion', ''),
                 float(data.get('descuento_porcentaje', 0)),
                 float(data.get('descuento_monto', 0)),
                 data.get('descuento_tipo', 'porcentaje'),
-                data.get('contacto'),
-                data.get('telefono'),
-                data.get('email'),
+                data.get('contacto_cliente'),
+                data.get('telefono_cliente'),
+                data.get('email_cliente'),
+                data.get('seguimiento', 'Asesor'),
+                data.get('motivo', 'Proyecto nuevo'),
+                data.get('transporte', 'Seleccione'),
+                data.get('parihuela', 'Seleccione'),
+                data.get('nota_interna', ''),
+                data.get('vendedor', 'Helen Blas Príncipe'),
                 cotizacion_id
             )
             
@@ -1586,6 +1604,10 @@ def api_cotizaciones_guardar():
             # ============================================================
             print("➕ Insertando nueva cotización...")
             
+            # 🔽 OBTENER REQUERIMIENTO
+            requerimiento = data.get('requerimiento') or ''
+            print(f"📝 REQUERIMIENTO A GUARDAR (INSERT): '{requerimiento}'")
+            
             # Preparar parámetros para la cotización
             params = (
                 numero,
@@ -1599,19 +1621,25 @@ def api_cotizaciones_guardar():
                 data.get('notas', ''),
                 data.get('condicion_pago'),
                 data.get('tiempo_entrega'),
-                data.get('validez'),
+                data.get('validez_oferta'),
                 codigo,
                 correlativo,
                 data.get('condicion_pago'),
                 data.get('direccion_entrega'),
-                data.get('requerimiento'),
-                data.get('nota_comercial', ''),
+                requerimiento,  # ← REQUERIMIENTO
+                data.get('nota_cotizacion', ''),
                 float(data.get('descuento_porcentaje', 0)),
                 float(data.get('descuento_monto', 0)),
                 data.get('descuento_tipo', 'porcentaje'),
-                data.get('contacto'),
-                data.get('telefono'),
-                data.get('email')
+                data.get('contacto_cliente'),
+                data.get('telefono_cliente'),
+                data.get('email_cliente'),
+                data.get('seguimiento', 'Asesor'),
+                data.get('motivo', 'Proyecto nuevo'),
+                data.get('transporte', 'Seleccione'),
+                data.get('parihuela', 'Seleccione'),
+                data.get('nota_interna', ''),
+                data.get('vendedor', 'Helen Blas Príncipe')
             )
             
             try:
@@ -1628,10 +1656,13 @@ def api_cotizaciones_guardar():
                             codigo_cotizacion, correlativo, condicion_pago,
                             direccion_entrega, requerimiento, nota_cotizacion,
                             descuento_porcentaje, descuento_monto, descuento_tipo,
-                            contacto_cliente, telefono_cliente, email_cliente
+                            contacto_cliente, telefono_cliente, email_cliente,
+                            seguimiento, motivo, transporte, parihuela, nota_interna,
+                            vendedor
                         ) VALUES (
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                            %s, %s, %s, %s, %s, %s
                         )
                         RETURNING id, numero_cotizacion
                     """, params)
@@ -1739,6 +1770,7 @@ def api_cotizaciones_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>', methods=['GET'])
 @login_required
