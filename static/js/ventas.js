@@ -4879,8 +4879,12 @@ window.createDocFromCotizacion = async function(id, tipo) {
 };
 
 function switchTab(tabId) {
-    const tabs = document.querySelectorAll('.tab-btn');
-    const sections = document.querySelectorAll('.section');
+    console.log(`🔄 Cambiando a tab: ${tabId}`);
+    
+    // Actualizar URL
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabId);
+    window.history.pushState({}, '', url);
     
     // Actualizar tabs
     tabs.forEach(btn => {
@@ -4891,58 +4895,66 @@ function switchTab(tabId) {
     });
     
     // Actualizar secciones
-    sections.forEach(section => {
-        section.classList.remove('active');
-        if (section.id === tabId) {
-            section.classList.add('active');
+    Object.keys(sections).forEach(key => {
+        if (sections[key]) {
+            sections[key].classList.remove('active');
         }
     });
-    
-    // Actualizar URL
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tabId);
-    window.history.pushState({}, '', url);
-    
-    // Cargar datos del módulo
-    currentModule = tabId;
-    
-    // ============================================================
-    // 🔽 SIEMPRE CARGAR COTIZACIONES PRIMERO
-    // ============================================================
-    async function cargarDatos() {
-        // Primero cargar cotizaciones si no están cargadas
-        if (typeof cotizacionesData === 'undefined' || cotizacionesData.length === 0) {
-            await loadCotizaciones();
-        }
-        
-        // Luego cargar el módulo específico
-        switch(tabId) {
-            case 'cotizaciones':
-                // Ya están cargadas
-                break;
-            case 'pedido_compra':
-                await loadPedidos();
-                break;
-            case 'despachar':
-                await loadDespachos();
-                break;
-            case 'guias':
-                await loadGuias();
-                break;
-            case 'comprobantes':
-                await loadComprobantes();
-                break;
-            case 'notas_credito':
-                await loadComprobantes();
-                await loadNotas();
-                break;
-            case 'devoluciones':
-                await loadDevoluciones();
-                break;
-        }
+    if (sections[tabId]) {
+        sections[tabId].classList.add('active');
+        console.log(`✅ Sección activada: ${tabId}`);
+    } else {
+        console.warn(`⚠️ Sección no encontrada: ${tabId}`);
     }
     
-    cargarDatos();
+    // 🔽 FORZAR BADGE DESPUÉS DE CAMBIAR DE TAB 🔽
+    setTimeout(forzarBadgeActivo, 50);
+    setTimeout(forzarBadgeActivo, 200);
+    setTimeout(forzarBadgeActivo, 500);
+    
+    // Cargar datos del módulo
+    cargarModulo(tabId);
+}
+
+
+// 🔽 OBSERVADOR PARA MANTENER EL BADGE VISIBLE 🔽
+// Observar cambios en las clases de los tabs
+const observer = new MutationObserver(function(mutations) {
+    let necesitaActualizar = false;
+    mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'class') {
+            const btn = mutation.target;
+            if (btn.classList.contains('tab-btn')) {
+                necesitaActualizar = true;
+            }
+        }
+    });
+    if (necesitaActualizar) {
+        setTimeout(forzarBadgeActivo, 10);
+    }
+});
+
+// Observar todos los tabs
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    observer.observe(btn, { attributes: true, attributeFilter: ['class'] });
+});
+
+console.log('✅ Badge observer inicializado');
+
+// También ejecutar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(forzarBadgeActivo, 300);
+    setTimeout(forzarBadgeActivo, 800);
+});
+
+// Ejecutar después de que se carguen los datos
+if (typeof window.initVentas === 'function') {
+    const originalInit = window.initVentas;
+    window.initVentas = async function(tab) {
+        await originalInit(tab);
+        setTimeout(forzarBadgeActivo, 300);
+        setTimeout(forzarBadgeActivo, 600);
+    };
 }
 
 // ============================================================
@@ -13260,6 +13272,34 @@ function actualizarPrecioPCSAP(input, index) {
 }
 
 
+/**
+ * Fuerza la visibilidad del badge en la pestaña activa
+ * Esta función se ejecuta cada vez que se cambia de pestaña
+ */
+function forzarBadgeActivo() {
+    console.log('🔴 Forzando badge en pestaña activa...');
+    
+    // Buscar todas las pestañas
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        const badge = btn.querySelector('.tab-badge');
+        if (!badge) return;
+        
+        if (btn.classList.contains('active')) {
+            // Pestaña activa - mostrar badge
+            badge.style.display = 'inline-block';
+            badge.style.visibility = 'visible';
+            badge.style.opacity = '1';
+            badge.style.animation = 'pulse-badge 1.5s ease-in-out infinite';
+            console.log('✅ Badge mostrado en:', btn.textContent.trim());
+        } else {
+            // Pestaña inactiva - ocultar badge
+            badge.style.display = 'none';
+            badge.style.visibility = 'hidden';
+            badge.style.opacity = '0';
+            badge.style.animation = 'none';
+        }
+    });
+}
 function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
      forzarLimpiezaModalPC();

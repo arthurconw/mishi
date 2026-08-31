@@ -2754,7 +2754,7 @@
 }
 
 .tab-badge {
-    display: none !important; /* Oculto por defecto */
+    display: none !important;
     font-size: 10px !important;
     background: #EF233C !important;
     color: #FFFFFF !important;
@@ -2763,10 +2763,23 @@
     font-weight: 900 !important;
     margin-left: 2px !important;
     animation: pulse-badge 1.5s ease-in-out infinite !important;
+    /* 🔽 AGREGAR ESTO PARA QUE NO SEA AFECTADO */
+    position: relative !important;
+    z-index: 10 !important;
 }
 
+/* 🔽 CUANDO LA PESTAÑA ESTÁ ACTIVA */
 .tab-btn.active .tab-badge {
-    display: inline-block !important; /* Solo visible en la pestaña activa */
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 🔽 CUANDO LA PESTAÑA NO ESTÁ ACTIVA */
+.tab-btn:not(.active) .tab-badge {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
 }
 
 @keyframes pulse-badge {
