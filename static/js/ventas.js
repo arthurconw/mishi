@@ -13474,6 +13474,234 @@ window.forzarBadgeActivo = forzarBadgeActivo;
 
 console.log('✅ Sistema de badge persistente inicializado');
 
+// ============================================================
+// 🔴 SISTEMA DE BADGE AUTOMÁTICO - VERSIÓN FINAL 🔴
+// ============================================================
+
+/**
+ * Activa la pestaña y crea el badge automáticamente
+ */
+function activarPestanaConBadge(tabId) {
+    console.log('🔴 Activando pestaña con badge:', tabId);
+    
+    // 1. Buscar la pestaña
+    const pestaña = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (!pestaña) {
+        console.log('❌ Pestaña no encontrada:', tabId);
+        return false;
+    }
+    
+    // 2. Remover active de todas las pestañas
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    
+    // 3. Agregar active a la pestaña seleccionada
+    pestaña.classList.add('active');
+    console.log('✅ Pestaña activada:', pestaña.textContent.trim());
+    
+    // 4. Crear o asegurar el badge
+    let badge = pestaña.querySelector('.tab-badge');
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'tab-badge';
+        badge.textContent = '📍';
+        badge.style.cssText = `
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            font-size: 10px !important;
+            background: #EF233C !important;
+            color: #FFFFFF !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            font-weight: 900 !important;
+            margin-left: 4px !important;
+            animation: pulse-badge 1.5s ease-in-out infinite !important;
+            position: relative !important;
+            z-index: 10 !important;
+        `;
+        pestaña.appendChild(badge);
+        console.log('✅ Badge creado');
+    } else {
+        badge.style.display = 'inline-block';
+        badge.style.visibility = 'visible';
+        badge.style.opacity = '1';
+        console.log('✅ Badge asegurado');
+    }
+    
+    // 5. Activar la sección correspondiente
+    const seccion = document.getElementById(tabId);
+    if (seccion) {
+        document.querySelectorAll('.section').forEach(function(s) {
+            s.classList.remove('active');
+        });
+        seccion.classList.add('active');
+        console.log('✅ Sección activada:', tabId);
+    }
+    
+    // 6. Actualizar la URL
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabId);
+    window.history.pushState({}, '', url);
+    
+    return true;
+}
+
+// ============================================================
+// INTERCEPTAR TODOS LOS MÉTODOS QUE CAMBIAN DE PESTAÑA
+// ============================================================
+
+// 1. Interceptar el click en las pestañas
+document.addEventListener('click', function(e) {
+    const pestaña = e.target.closest('.tab-btn');
+    if (pestaña && pestaña.dataset.tab) {
+        console.log('🖱️ Click en pestaña:', pestaña.dataset.tab);
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Usar nuestro método en lugar del original
+        activarPestanaConBadge(pestaña.dataset.tab);
+    }
+}, true); // Usar true para capturar antes que otros event listeners
+
+// 2. Interceptar switchTab si existe
+if (typeof window.switchTab === 'function') {
+    const originalSwitchTab = window.switchTab;
+    window.switchTab = function(tabId) {
+        console.log('🔄 switchTab interceptado:', tabId);
+        // Llamar al original si es necesario
+        if (typeof originalSwitchTab === 'function') {
+            // Pero también activar nuestro sistema
+            activarPestanaConBadge(tabId);
+            // Llamar al original después
+            setTimeout(function() {
+                originalSwitchTab(tabId);
+            }, 50);
+        } else {
+            activarPestanaConBadge(tabId);
+        }
+    };
+}
+
+// 3. Interceptar highlightActiveModule
+if (typeof window.highlightActiveModule === 'function') {
+    const originalHighlight = window.highlightActiveModule;
+    window.highlightActiveModule = function() {
+        console.log('🔄 highlightActiveModule interceptado');
+        if (typeof originalHighlight === 'function') {
+            originalHighlight();
+        }
+        // Después de highlight, asegurar el badge
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab') || 'cotizaciones';
+        setTimeout(function() {
+            activarPestanaConBadge(tab);
+        }, 100);
+    };
+}
+
+// 4. Interceptar initVentas
+if (typeof window.initVentas === 'function') {
+    const originalInit = window.initVentas;
+    window.initVentas = async function(tab) {
+        console.log('🔄 initVentas interceptado:', tab);
+        if (typeof originalInit === 'function') {
+            await originalInit(tab);
+        }
+        // Después de init, activar la pestaña correcta
+        const tabId = tab || 'cotizaciones';
+        setTimeout(function() {
+            activarPestanaConBadge(tabId);
+        }, 200);
+        setTimeout(function() {
+            activarPestanaConBadge(tabId);
+        }, 500);
+    };
+}
+
+// ============================================================
+// OBSERVADOR PARA DETECTAR CAMBIOS EN LA URL (popstate)
+// ============================================================
+
+window.addEventListener('popstate', function() {
+    console.log('🔄 popstate detectado');
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab') || 'cotizaciones';
+    setTimeout(function() {
+        activarPestanaConBadge(tab);
+    }, 50);
+});
+
+// ============================================================
+// INICIALIZACIÓN AL CARGAR LA PÁGINA
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM cargado - inicializando badge');
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab') || 'cotizaciones';
+    
+    // Activar la pestaña correcta
+    setTimeout(function() {
+        activarPestanaConBadge(tab);
+    }, 200);
+    setTimeout(function() {
+        activarPestanaConBadge(tab);
+    }, 500);
+    setTimeout(function() {
+        activarPestanaConBadge(tab);
+    }, 1000);
+});
+
+// ============================================================
+// VERIFICACIÓN PERIÓDICA (cada 3 segundos)
+// ============================================================
+
+setInterval(function() {
+    if (!document.hidden) {
+        const pestañaActiva = document.querySelector('.tab-btn.active');
+        if (!pestañaActiva) {
+            console.log('⚠️ No hay pestaña activa - restaurando...');
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab') || 'cotizaciones';
+            activarPestanaConBadge(tab);
+        } else {
+            // Verificar que el badge existe
+            const badge = pestañaActiva.querySelector('.tab-badge');
+            if (!badge) {
+                console.log('⚠️ Badge desapareció - restaurando...');
+                const badgeNuevo = document.createElement('span');
+                badgeNuevo.className = 'tab-badge';
+                badgeNuevo.textContent = '📍';
+                badgeNuevo.style.cssText = `
+                    display: inline-block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    font-size: 10px !important;
+                    background: #EF233C !important;
+                    color: #FFFFFF !important;
+                    padding: 1px 6px !important;
+                    border-radius: 4px !important;
+                    font-weight: 900 !important;
+                    margin-left: 4px !important;
+                    animation: pulse-badge 1.5s ease-in-out infinite !important;
+                `;
+                pestañaActiva.appendChild(badgeNuevo);
+                console.log('✅ Badge recreado');
+            }
+        }
+    }
+}, 3000);
+
+// ============================================================
+// EXPORTAR FUNCIONES
+// ============================================================
+
+window.activarPestanaConBadge = activarPestanaConBadge;
+
+console.log('✅ Sistema de badge automático V2 inicializado');
+
 
 function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
