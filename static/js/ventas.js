@@ -12894,10 +12894,8 @@ function seleccionarCotizacionSAP(cotizacionId) {
         return;
     }
     
-    // Mostrar loading
     showToast('⏳ Cargando productos de la cotización...', 'info');
     
-    // CARGAR DATOS COMPLETOS (CON PRODUCTOS)
     apiFetch(`/ventas/api/cotizaciones/${cotizacionId}/completa`)
         .then(response => {
             if (!response.success) {
@@ -12938,7 +12936,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 }
             };
             
-            // Función para setear valor editable
             const setEditableValue = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -12951,7 +12948,7 @@ function seleccionarCotizacionSAP(cotizacionId) {
             };
             
             // ============================================================
-            // CARGAR DATOS BÁSICOS - TODOS EN MODO READONLY
+            // CARGAR DATOS BÁSICOS
             // ============================================================
             setReadonlyValue('pcCotNumero', data.numero_cotizacion || '');
             setReadonlyValue('pcCotFecha', data.fecha_creacion ? formatFecha(data.fecha_creacion) : '');
@@ -12963,63 +12960,13 @@ function seleccionarCotizacionSAP(cotizacionId) {
             setReadonlyValue('pcVendedor', data.vendedor || 'Helen Blas Príncipe');
             
             // ============================================================
-            // 🔽 ACTUALIZAR LA MONEDA CORRECTAMENTE 🔽
+            // 🔽 ACTUALIZAR LA MONEDA 🔽
             // ============================================================
-            const monedaSelect = document.getElementById('pcMoneda');
-            const monedaDeLaCotizacion = data.moneda || data.moneda_cotizacion || '';
-            
-            console.log('💰 Moneda de la cotización:', monedaDeLaCotizacion);
-            
-            if (monedaSelect) {
-                let found = false;
-                
-                // Intentar encontrar la moneda en las opciones del select
-                for (let opt of monedaSelect.options) {
-                    const optValue = opt.value || '';
-                    const optText = opt.textContent || '';
-                    
-                    // Comparación flexible
-                    if (optValue === monedaDeLaCotizacion || 
-                        optText.includes(monedaDeLaCotizacion) || 
-                        monedaDeLaCotizacion.includes(optValue) ||
-                        (monedaDeLaCotizacion.includes('$') && optValue.includes('$')) ||
-                        (monedaDeLaCotizacion.includes('Soles') && optValue.includes('S/')) ||
-                        (monedaDeLaCotizacion.includes('USD') && optValue.includes('$')) ||
-                        (monedaDeLaCotizacion.includes('PEN') && optValue.includes('S/'))) {
-                        opt.selected = true;
-                        found = true;
-                        console.log('✅ Moneda seleccionada:', optValue);
-                        break;
-                    }
-                }
-                
-                // Si no se encuentra, seleccionar Soles por defecto
-                if (!found) {
-                    for (let opt of monedaSelect.options) {
-                        if (opt.value.includes('S/') || opt.value.includes('Soles') || opt.value.includes('PEN')) {
-                            opt.selected = true;
-                            console.log('⚠️ Moneda no encontrada, usando Soles por defecto');
-                            break;
-                        }
-                    }
-                }
-            }
+            const monedaCotizacion = data.moneda || data.moneda_cotizacion || 'Soles (S/)';
+            actualizarMonedaPC(monedaCotizacion);
             
             // ============================================================
-            // 🔽 ACTUALIZAR EL SÍMBOLO EN EL RESUMEN LATERAL
-            // ============================================================
-            const resumenMoneda = document.getElementById('pcResumenMoneda');
-            if (resumenMoneda) {
-                const monedaActual = monedaSelect ? monedaSelect.value : 'Soles (S/)';
-                if (monedaActual.includes('$') || monedaActual.includes('Dólar') || monedaActual.includes('USD')) {
-                    resumenMoneda.textContent = '$';
-                } else {
-                    resumenMoneda.textContent = 'S/';
-                }
-            }
-            
-            // ============================================================
-            // 🔽 ACTUALIZAR CONDICIÓN DE PAGO EN EL SELECT
+            // ACTUALIZAR CONDICIÓN DE PAGO
             // ============================================================
             const condSelect = document.getElementById('pcCondicion');
             if (condSelect && data.condicion_pago) {
@@ -13042,17 +12989,10 @@ function seleccionarCotizacionSAP(cotizacionId) {
             }
             
             // ============================================================
-            // 🔽 DIRECCIÓN DE ENTREGA (EDITABLE)
+            // DIRECCIÓN DE ENTREGA
             // ============================================================
             if (data.direccion_entrega) {
                 setEditableValue('pcEntrega', data.direccion_entrega);
-            }
-            
-            // ============================================================
-            // 🔽 FORZAR ACTUALIZACIÓN DE CAMPOS DE PAGO (Contado)
-            // ============================================================
-            if (typeof togglePagoCampos === 'function') {
-                togglePagoCampos();
             }
             
             // ============================================================
@@ -13063,9 +13003,8 @@ function seleccionarCotizacionSAP(cotizacionId) {
             
             tbody.innerHTML = '';
             
-            // Obtener productos de la respuesta completa
             const productos = data.productos || [];
-            console.log(`📦 ${productos.length} productos encontrados en la cotización`);
+            console.log(`📦 ${productos.length} productos encontrados`);
             
             if (productos.length === 0) {
                 if (typeof addPedidoItemSAP === 'function') {
@@ -13082,11 +13021,6 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 const faltante = Math.max(cantidadCotizada - stock, 0);
                 const valorTotal = cantidadCotizada * precioCotizado;
                 
-                const marca = p.marca || '';
-                const modelo = p.modelo || '';
-                const codigo = p.codigo || '';
-                const descripcion = p.producto || p.descripcion || 'Sin descripción';
-                
                 const tr = document.createElement('tr');
                 tr.id = `item-row-${i + 1}`;
                 tr.style.borderBottom = '1px solid #E2E8F0';
@@ -13094,19 +13028,19 @@ function seleccionarCotizacionSAP(cotizacionId) {
                 tr.innerHTML = `
                     <td style="padding:2px 3px; text-align:center; font-weight:800; font-size:9px; background:#F8FAFC;">${i + 1}</td>
                     <td style="padding:2px 3px;">
-                        <input value="${esc(codigo)}" 
+                        <input value="${esc(p.codigo || '')}" 
                                style="width:100%; border:none; background:#F1F5F9; font-size:8px; padding:0 2px; outline:none; font-weight:800; color:#1D4ED8; cursor:not-allowed; max-width:70px;" readonly>
                     </td>
                     <td style="padding:2px 3px;">
-                        <input value="${esc(descripcion)}" 
+                        <input value="${esc(p.producto || p.descripcion || 'Sin descripción')}" 
                                style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:800; cursor:not-allowed;" readonly>
                     </td>
                     <td style="padding:2px 3px;">
-                        <input value="${esc(modelo)}" 
+                        <input value="${esc(p.modelo || '')}" 
                                style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;" readonly>
                     </td>
                     <td style="padding:2px 3px;">
-                        <input value="${esc(marca)}" 
+                        <input value="${esc(p.marca || '')}" 
                                style="width:100%; border:none; background:#F1F5F9; font-size:9px; padding:0; outline:none; font-weight:700; color:#0F172A; cursor:not-allowed;" readonly>
                     </td>
                     <td style="padding:2px 3px; width:55px;">
@@ -13132,14 +13066,13 @@ function seleccionarCotizacionSAP(cotizacionId) {
                     </td>
                     <td style="padding:2px 3px; text-align:center; font-size:8px; color:#64748B; font-weight:800;">${stock}</td>
                     <td style="padding:2px 3px; text-align:center; font-size:8px; font-weight:900; color:${faltante > 0 ? '#DC2626' : '#16A34A'};">${faltante}</td>
-                    <!-- ⚠️ LA COLUMNA DE LA "X" HA SIDO ELIMINADA -->
                 `;
                 
                 tbody.appendChild(tr);
             });
             
             // ============================================================
-            // 🔽 ACTUALIZAR EL RESUMEN LATERAL
+            // ACTUALIZAR RESUMEN Y VALIDACIONES
             // ============================================================
             setTimeout(() => {
                 if (typeof actualizarResumenPC === 'function') {
@@ -13159,6 +13092,90 @@ function seleccionarCotizacionSAP(cotizacionId) {
             console.error('❌ Error cargando cotización completa:', error);
             showToast('❌ Error al cargar los productos de la cotización', 'error');
         });
+}
+
+
+/**
+ * Actualiza la moneda en el modal de PC basado en la cotización seleccionada
+ * @param {string} moneda - Moneda de la cotización (ej: "Soles (S/.)", "Dólares ($)", "S/", "$")
+ */
+function actualizarMonedaPC(moneda) {
+    console.log('💰 Actualizando moneda PC a:', moneda);
+    
+    const monedaSelect = document.getElementById('pcMoneda');
+    const resumenMoneda = document.getElementById('pcResumenMoneda');
+    
+    if (!monedaSelect) {
+        console.warn('⚠️ Select de moneda no encontrado');
+        return;
+    }
+    
+    // Determinar el símbolo y el texto de la moneda
+    let monedaTexto = '';
+    let simbolo = 'S/';
+    
+    // Limpiar y normalizar la moneda recibida
+    const monedaLower = (moneda || '').toLowerCase().trim();
+    
+    // Detectar si es Dólares
+    if (monedaLower.includes('$') || 
+        monedaLower.includes('dólar') || 
+        monedaLower.includes('dolar') || 
+        monedaLower.includes('usd') ||
+        monedaLower === '$') {
+        monedaTexto = 'Dólares ($)';
+        simbolo = '$';
+    } 
+    // Detectar si es Soles (por defecto)
+    else {
+        monedaTexto = 'Soles (S/)';
+        simbolo = 'S/';
+    }
+    
+    console.log('📌 Moneda a seleccionar:', monedaTexto, 'Símbolo:', simbolo);
+    
+    // Buscar y seleccionar la opción correcta en el select
+    let found = false;
+    for (let opt of monedaSelect.options) {
+        const optValue = (opt.value || '').toLowerCase();
+        const optText = (opt.textContent || '').toLowerCase();
+        
+        // Comparar con la moneda detectada
+        if (optValue.includes(monedaLower) || 
+            optText.includes(monedaLower) ||
+            (monedaLower.includes('$') && (optValue.includes('$') || optText.includes('$'))) ||
+            (monedaLower.includes('s/') && (optValue.includes('s/') || optText.includes('s/')))) {
+            opt.selected = true;
+            found = true;
+            console.log('✅ Opción seleccionada:', opt.value);
+            break;
+        }
+    }
+    
+    // Si no se encontró, seleccionar Soles por defecto
+    if (!found) {
+        for (let opt of monedaSelect.options) {
+            const optValue = (opt.value || '').toLowerCase();
+            if (optValue.includes('s/') || optValue.includes('soles')) {
+                opt.selected = true;
+                console.log('⚠️ Usando Soles por defecto');
+                break;
+            }
+        }
+    }
+    
+    // Actualizar el símbolo en el resumen
+    if (resumenMoneda) {
+        resumenMoneda.textContent = simbolo;
+        console.log('✅ Símbolo de resumen actualizado a:', simbolo);
+    }
+    
+    // Actualizar el resumen con la nueva moneda
+    if (typeof actualizarResumenPC === 'function') {
+        setTimeout(() => {
+            actualizarResumenPC();
+        }, 100);
+    }
 }
 
 // Funciones auxiliares para la tabla de productos
