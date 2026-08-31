@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN COMPLETA CORREGIDA
+# pdf_generator.py - VERSIÓN BLANCO Y NEGRO SUAVE
 
 import os
 from jinja2 import Template
@@ -69,7 +69,7 @@ class PDFGenerator:
             return self._generar_cotizacion(datos)
 
     # ============================================================
-    # GENERAR GUÍA DE REMISIÓN
+    # GENERAR GUÍA DE REMISIÓN - BLANCO Y NEGRO SUAVE
     # ============================================================
     def _generar_guia_remision(self, datos_guia):
         try:
@@ -106,9 +106,10 @@ class PDFGenerator:
         body { 
             font-family: 'Helvetica', Arial, sans-serif; 
             font-size: 9.5px; 
-            color: #000000; 
+            color: #333333;
             line-height: 1.8; 
             margin-top: 15px;
+            background: #ffffff;
         }
         .header-superior { 
             display: flex; 
@@ -140,33 +141,39 @@ class PDFGenerator:
         .empresa-izquierda .info-texto { 
             font-size: 8px; 
             line-height: 1.4; 
+            color: #555555;
         }
         .empresa-izquierda .info-texto .nombre { 
             font-size: 11px; 
             font-weight: bold; 
             text-transform: uppercase; 
+            color: #333333;
         }
         .recuadro-derecha { 
             flex-shrink: 0; 
-            border: 1px solid #000; 
+            border: 1px solid #cccccc;
             border-radius: 10px; 
             padding: 8px 18px; 
             text-align: center; 
             min-width: 180px; 
+            background: #fafafa;
         }
         .recuadro-derecha .ruc { 
             font-size: 10px; 
             font-weight: bold; 
+            color: #333333;
         }
         .recuadro-derecha .titulo { 
             font-size: 11px; 
             font-weight: bold; 
             letter-spacing: 1px; 
             margin: 2px 0; 
+            color: #333333;
         }
         .recuadro-derecha .numero { 
             font-size: 13px; 
             font-weight: bold; 
+            color: #333333;
         }
         
         .seccion { 
@@ -174,7 +181,7 @@ class PDFGenerator:
         }
         
         .seccion-con-borde {
-            border: 1px solid #000;
+            border: 1px solid #d5d5d5;
             border-radius: 6px;
             padding: 0;
             margin-bottom: 5px;
@@ -184,11 +191,11 @@ class PDFGenerator:
             font-weight: bold;
             font-size: 8.5px;
             text-transform: uppercase;
-            background: #000000;
-            color: #ffffff;
+            background: #f0f0f0;
+            color: #444444;
             padding: 3px 10px;
             margin: 0;
-            border-bottom: 1px solid #000;
+            border-bottom: 1px solid #d5d5d5;
             letter-spacing: 0.5px;
         }
         .seccion-con-borde .seccion-contenido {
@@ -211,11 +218,13 @@ class PDFGenerator:
             font-weight: bold; 
             min-width: 200px; 
             flex-shrink: 0; 
+            color: #555555;
         }
         .fila .value { 
             flex: 1; 
             text-align: left; 
             padding-left: 5px; 
+            color: #333333;
         }
         .products-table { 
             width: 100%; 
@@ -224,28 +233,32 @@ class PDFGenerator:
             font-size: 8px; 
         }
         .products-table th { 
-            background: #000000; 
-            color: white; 
+            background: #e8e8e8;
+            color: #444444;
             padding: 3px 5px; 
             text-align: center; 
-            border: 1px solid #000; 
+            border: 1px solid #cccccc;
             font-weight: bold;
         }
         .products-table td { 
             padding: 2px 5px; 
-            border: 1px solid #ccc; 
+            border: 1px solid #d5d5d5;
             text-align: center; 
+            color: #333333;
         }
         .products-table td.descripcion { 
             text-align: left; 
+        }
+        .products-table tr:nth-child(even) td {
+            background: #f8f8f8;
         }
         .qr-container { 
             text-align: center; 
             margin: 8px 0 5px 0; 
             padding: 6px; 
-            border: 1px solid #000; 
+            border: 1px solid #d5d5d5;
             border-radius: 6px; 
-            background: #ffffff; 
+            background: #fafafa;
         }
         .qr-container img { 
             width: 80px; 
@@ -253,15 +266,15 @@ class PDFGenerator:
         }
         .qr-container .qr-text { 
             font-size: 6.5px; 
-            color: #000000; 
+            color: #666666;
             margin-top: 2px; 
         }
         .footer { 
             margin-top: 12px; 
             text-align: center; 
             font-size: 7px; 
-            color: #000000; 
-            border-top: 1px solid #ccc; 
+            color: #888888;
+            border-top: 1px solid #e0e0e0;
             padding-top: 6px; 
         }
         .referencias-grid { 
@@ -277,13 +290,14 @@ class PDFGenerator:
             font-weight: bold; 
             display: block; 
             font-size: 7px; 
-            color: #000000; 
+            color: #777777;
             text-transform: uppercase; 
             letter-spacing: 0.3px; 
         }
         .ref-item .ref-value { 
             font-size: 8.5px; 
             font-weight: 600; 
+            color: #333333;
         }
     </style>
 </head>
@@ -550,14 +564,12 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return template
         
     # ============================================================
-    # GENERAR FACTURA / BOLETA (COMPROBANTE)
+    # GENERAR FACTURA / BOLETA - BLANCO Y NEGRO SUAVE
     # ============================================================
     def _generar_comprobante(self, datos_comprobante):
         try:
             print("📄 Generando PDF de comprobante...")
-            print(f"📦 Datos recibidos (keys): {list(datos_comprobante.keys())}")
 
-            # --- DATOS DE LA EMPRESA ---
             EMPRESA = {
                 'ruc': '20602095704',
                 'nombre': 'KCF CORPORACION E.I.R.L',
@@ -567,11 +579,9 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'web': 'https://kcfcorporacion.com/'
             }
 
-            # --- OBTENER LOGO ---
             logo_base64 = self._obtener_logo_base64()
             logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
 
-            # --- MAPEAR ITEMS ---
             items = datos_comprobante.get('items', [])
             
             if not items and 'items_json' in datos_comprobante:
@@ -596,7 +606,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                     {'codigo': 'PRD-002', 'producto': 'Producto de ejemplo 2', 'cantidad': 1, 'valorVenta': 250.00}
                 ]
 
-            # --- FORMATEAR ITEMS ---
             items_formateados = []
             for idx, item in enumerate(items, 1):
                 try:
@@ -640,7 +649,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                     print(f"❌ Error procesando item {idx}: {e}")
                     continue
 
-            # --- CALCULAR MONTOS ---
             subtotal = float(datos_comprobante.get('subtotal', 0))
             igv = float(datos_comprobante.get('igv', 0))
             total = float(datos_comprobante.get('total', datos_comprobante.get('monto', 0)))
@@ -650,7 +658,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 igv = subtotal * 0.18
                 total = subtotal + igv
 
-            # --- DOCUMENTOS RELACIONADOS ---
             orden_compra_cliente = datos_comprobante.get('orden_compra_cliente', '—')
             factura = datos_comprobante.get('factura', '—')
             nro_cotizacion = datos_comprobante.get('nro_cotizacion', '—')
@@ -664,10 +671,8 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                     '—'
                 )
 
-            # --- GENERAR QR ---
             qr_base64 = self._generar_qr_comprobante(datos_comprobante)
 
-            # --- PREPARAR DATOS PARA EL TEMPLATE ---
             datos_mapeados = {
                 'logo_src': logo_src,
                 'empresa_ruc': EMPRESA['ruc'],
@@ -696,14 +701,11 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'factura': factura if factura else '—',
                 'nro_cotizacion': nro_cotizacion if nro_cotizacion else '—',
                 'items': items_formateados,
-                'qr_base64': qr_base64
-            }
+                'qr_base64': qr_base64            }
 
-            # --- RENDERIZAR TEMPLATE ---
             template_content = self._obtener_template_comprobante()
             html_content = self._reemplazar_variables_template_comprobante(template_content, datos_mapeados)
 
-            # --- GENERAR PDF ---
             fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
             nombre_archivo = f"{datos_mapeados['tipo']}_{datos_mapeados['serie']}_{datos_mapeados['numero']}_{fecha}.pdf"
             
@@ -727,39 +729,225 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     <title>{{ tipo }} {{ serie }}-{{ numero }}</title>
     <style>
         @page { size: A4; margin: 1.2cm 1.5cm; }
-        body { font-family: 'Helvetica', Arial, sans-serif; font-size: 9.5px; color: #1a1a1a; line-height: 1.8; }
-        .header-superior { display: flex; justify-content: space-between; align-items: stretch; margin-bottom: 10px; gap: 15px; }
-        .empresa-izquierda { flex: 1; display: flex; align-items: center; gap: 12px; }
-        .empresa-izquierda .logo-container { flex-shrink: 0; width: 80px; height: 60px; display: flex; align-items: center; justify-content: center; }
-        .empresa-izquierda .logo-container img { max-height: 60px; max-width: 100px; object-fit: contain; }
-        .empresa-izquierda .info-texto { font-size: 8px; line-height: 1.4; }
-        .empresa-izquierda .info-texto .nombre { font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .recuadro-derecha { flex-shrink: 0; border: 2px solid #000; border-radius: 12px; padding: 10px 20px; text-align: center; min-width: 200px; }
-        .recuadro-derecha .ruc { font-size: 10px; font-weight: bold; }
-        .recuadro-derecha .titulo { font-size: 13px; font-weight: bold; letter-spacing: 1px; margin: 2px 0; }
-        .recuadro-derecha .numero { font-size: 15px; font-weight: bold; }
-        .seccion { margin-bottom: 8px; }
-        .seccion-titulo { font-weight: bold; font-size: 9.5px; margin-bottom: 3px; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px; }
-        .info-cliente { border: 1px solid #ccc; border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; background: #f9f9f9; }
-        .fila { display: flex; padding: 1px 0; align-items: baseline; }
-        .fila .label { font-weight: bold; min-width: 120px; flex-shrink: 0; }
-        .fila .value { flex: 1; text-align: left; padding-left: 5px; }
-        .products-table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 8.5px; }
-        .products-table th { background: #333; color: white; padding: 4px 5px; text-align: center; border: 1px solid #000; }
-        .products-table td { padding: 3px 5px; border: 1px solid #ccc; text-align: center; }
-        .products-table td.descripcion { text-align: left; }
-        .totales-box { border: 1px solid #ccc; border-radius: 8px; padding: 8px 12px; background: #f9f9f9; margin-top: 6px; display: flex; flex-direction: column; align-items: flex-end; }
-        .totales-box .linea { display: flex; justify-content: space-between; width: 220px; padding: 2px 0; }
-        .totales-box .linea.total { font-weight: bold; font-size: 12px; border-top: 2px solid #000; padding-top: 4px; margin-top: 4px; }
-        .referencias { border: 1px solid #ccc; border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; background: #f9f9f9; }
-        .referencias-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 6px 0; }
-        .ref-item { text-align: center; }
-        .ref-item .ref-label { font-weight: bold; display: block; font-size: 7.5px; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
-        .ref-item .ref-value { font-size: 9px; font-weight: 600; }
-        .qr-container { text-align: center; margin: 8px 0 5px 0; padding: 6px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
-        .qr-container img { width: 90px; height: 90px; }
-        .footer { margin-top: 12px; text-align: center; font-size: 7.5px; color: #555; border-top: 1px solid #ddd; padding-top: 6px; }
-        .observaciones { margin-top: 6px; padding: 6px 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa; font-size: 8.5px; }
+        body { 
+            font-family: 'Helvetica', Arial, sans-serif; 
+            font-size: 9.5px; 
+            color: #333333;
+            line-height: 1.8; 
+            background: #ffffff;
+        }
+        .header-superior { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: stretch; 
+            margin-bottom: 10px; 
+            gap: 15px; 
+        }
+        .empresa-izquierda { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        .empresa-izquierda .logo-container { 
+            flex-shrink: 0; 
+            width: 80px; 
+            height: 60px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .empresa-izquierda .logo-container img { 
+            max-height: 60px; 
+            max-width: 100px; 
+            object-fit: contain; 
+        }
+        .empresa-izquierda .info-texto { 
+            font-size: 8px; 
+            line-height: 1.4; 
+            color: #555555;
+        }
+        .empresa-izquierda .info-texto .nombre { 
+            font-size: 10px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            color: #333333;
+        }
+        .recuadro-derecha { 
+            flex-shrink: 0; 
+            border: 1px solid #cccccc;
+            border-radius: 12px; 
+            padding: 10px 20px; 
+            text-align: center; 
+            min-width: 200px; 
+            background: #fafafa;
+        }
+        .recuadro-derecha .ruc { 
+            font-size: 10px; 
+            font-weight: bold; 
+            color: #333333;
+        }
+        .recuadro-derecha .titulo { 
+            font-size: 13px; 
+            font-weight: bold; 
+            letter-spacing: 1px; 
+            margin: 2px 0; 
+            color: #333333;
+        }
+        .recuadro-derecha .numero { 
+            font-size: 15px; 
+            font-weight: bold; 
+            color: #333333;
+        }
+        .seccion { 
+            margin-bottom: 8px; 
+        }
+        .seccion-titulo { 
+            font-weight: bold; 
+            font-size: 9.5px; 
+            margin-bottom: 3px; 
+            text-transform: uppercase; 
+            border-bottom: 1px solid #d5d5d5;
+            padding-bottom: 2px; 
+            color: #444444;
+        }
+        .info-cliente { 
+            border: 1px solid #d5d5d5;
+            border-radius: 8px; 
+            padding: 6px 12px; 
+            margin-bottom: 6px; 
+            background: #f9f9f9;
+        }
+        .fila { 
+            display: flex; 
+            padding: 1px 0; 
+            align-items: baseline; 
+        }
+        .fila .label { 
+            font-weight: bold; 
+            min-width: 120px; 
+            flex-shrink: 0; 
+            color: #555555;
+        }
+        .fila .value { 
+            flex: 1; 
+            text-align: left; 
+            padding-left: 5px; 
+            color: #333333;
+        }
+        .products-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 4px 0; 
+            font-size: 8.5px; 
+        }
+        .products-table th { 
+            background: #e8e8e8;
+            color: #444444;
+            padding: 4px 5px; 
+            text-align: center; 
+            border: 1px solid #cccccc;
+        }
+        .products-table td { 
+            padding: 3px 5px; 
+            border: 1px solid #d5d5d5;
+            text-align: center; 
+            color: #333333;
+        }
+        .products-table td.descripcion { 
+            text-align: left; 
+        }
+        .products-table tr:nth-child(even) td {
+            background: #f8f8f8;
+        }
+        .totales-box { 
+            border: 1px solid #d5d5d5;
+            border-radius: 8px; 
+            padding: 8px 12px; 
+            background: #f9f9f9;
+            margin-top: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+        }
+        .totales-box .linea { 
+            display: flex; 
+            justify-content: space-between; 
+            width: 220px; 
+            padding: 2px 0; 
+            color: #444444;
+        }
+        .totales-box .linea.total { 
+            font-weight: bold; 
+            font-size: 12px; 
+            border-top: 1px solid #cccccc;
+            padding-top: 4px; 
+            margin-top: 4px; 
+            color: #333333;
+        }
+        .referencias { 
+            border: 1px solid #d5d5d5;
+            border-radius: 8px; 
+            padding: 6px 12px; 
+            margin-bottom: 6px; 
+            background: #f9f9f9;
+        }
+        .referencias-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 8px; 
+            padding: 6px 0; 
+        }
+        .ref-item { 
+            text-align: center; 
+        }
+        .ref-item .ref-label { 
+            font-weight: bold; 
+            display: block; 
+            font-size: 7.5px; 
+            color: #777777;
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+        }
+        .ref-item .ref-value { 
+            font-size: 9px; 
+            font-weight: 600; 
+            color: #333333;
+        }
+        .qr-container { 
+            text-align: center; 
+            margin: 8px 0 5px 0; 
+            padding: 6px; 
+            border: 1px solid #d5d5d5;
+            border-radius: 8px; 
+            background: #fafafa;
+        }
+        .qr-container img { 
+            width: 90px; 
+            height: 90px; 
+        }
+        .qr-container .qr-text { 
+            font-size: 7px; 
+            color: #888888;
+            margin-top: 2px; 
+        }
+        .footer { 
+            margin-top: 12px; 
+            text-align: center; 
+            font-size: 7.5px; 
+            color: #888888;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 6px; 
+        }
+        .observaciones { 
+            margin-top: 6px; 
+            padding: 6px 10px; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 6px; 
+            background: #fafafa; 
+            font-size: 8.5px; 
+            color: #555555;
+        }
     </style>
 </head>
 <body>
@@ -956,7 +1144,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return ""
 
     # ============================================================
-    # GENERAR COTIZACIÓN
+    # GENERAR COTIZACIÓN - BLANCO Y NEGRO SUAVE
     # ============================================================
     def _generar_cotizacion(self, datos):
         try:
@@ -964,7 +1152,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             
             logo_base64 = self._obtener_logo_base64()
             logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
-            print(f"📷 Logo cargado: {'Sí' if logo_base64 else 'No'}")
             
             EMPRESA = {
                 'ruc': '20602095704',
@@ -1018,7 +1205,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 igv = subtotal * 0.18
                 total = subtotal + igv
             
-            # Documentos relacionados
             orden_compra_cliente = datos.get('orden_compra_cliente', '—')
             nro_cotizacion = datos.get('nro_cotizacion', datos.get('numero_cotizacion', '—'))
             
@@ -1087,8 +1273,9 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         body {
             font-family: 'Helvetica', Arial, sans-serif;
             font-size: 9.5px;
-            color: #1a1a1a;
+            color: #333333;
             line-height: 1.8;
+            background: #ffffff;
         }
         
         .header-superior {
@@ -1120,33 +1307,39 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         .empresa-izquierda .info-texto {
             font-size: 8px;
             line-height: 1.4;
+            color: #555555;
         }
         .empresa-izquierda .info-texto .nombre {
             font-size: 10px;
             font-weight: bold;
             text-transform: uppercase;
+            color: #333333;
         }
         .recuadro-derecha {
             flex-shrink: 0;
-            border: 2px solid #000;
+            border: 1px solid #cccccc;
             border-radius: 12px;
             padding: 10px 20px;
             text-align: center;
             min-width: 200px;
+            background: #fafafa;
         }
         .recuadro-derecha .ruc {
             font-size: 10px;
             font-weight: bold;
+            color: #333333;
         }
         .recuadro-derecha .titulo {
             font-size: 13px;
             font-weight: bold;
             letter-spacing: 1px;
             margin: 2px 0;
+            color: #333333;
         }
         .recuadro-derecha .numero {
             font-size: 15px;
             font-weight: bold;
+            color: #333333;
         }
         
         .seccion {
@@ -1157,11 +1350,12 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             font-size: 9.5px;
             margin-bottom: 3px;
             text-transform: uppercase;
-            border-bottom: 1px solid #000;
+            border-bottom: 1px solid #d5d5d5;
             padding-bottom: 2px;
+            color: #444444;
         }
         .info-cliente {
-            border: 1px solid #ccc;
+            border: 1px solid #d5d5d5;
             border-radius: 8px;
             padding: 6px 12px;
             margin-bottom: 6px;
@@ -1176,11 +1370,13 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             font-weight: bold;
             min-width: 120px;
             flex-shrink: 0;
+            color: #555555;
         }
         .fila .value {
             flex: 1;
             text-align: left;
             padding-left: 5px;
+            color: #333333;
         }
         
         .products-table {
@@ -1190,23 +1386,27 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             font-size: 8.5px;
         }
         .products-table th {
-            background: #333;
-            color: white;
+            background: #e8e8e8;
+            color: #444444;
             padding: 4px 5px;
             text-align: center;
-            border: 1px solid #000;
+            border: 1px solid #cccccc;
         }
         .products-table td {
             padding: 3px 5px;
-            border: 1px solid #ccc;
+            border: 1px solid #d5d5d5;
             text-align: center;
+            color: #333333;
         }
         .products-table td.descripcion {
             text-align: left;
         }
+        .products-table tr:nth-child(even) td {
+            background: #f8f8f8;
+        }
         
         .totales-box {
-            border: 1px solid #ccc;
+            border: 1px solid #d5d5d5;
             border-radius: 8px;
             padding: 8px 12px;
             background: #f9f9f9;
@@ -1220,17 +1420,19 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             justify-content: space-between;
             width: 220px;
             padding: 2px 0;
+            color: #444444;
         }
         .totales-box .linea.total {
             font-weight: bold;
             font-size: 12px;
-            border-top: 2px solid #000;
+            border-top: 1px solid #cccccc;
             padding-top: 4px;
             margin-top: 4px;
+            color: #333333;
         }
         
         .referencias {
-            border: 1px solid #ccc;
+            border: 1px solid #d5d5d5;
             border-radius: 8px;
             padding: 6px 12px;
             margin-bottom: 6px;
@@ -1249,20 +1451,21 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             font-weight: bold;
             display: block;
             font-size: 7.5px;
-            color: #555;
+            color: #777777;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
         .ref-item .ref-value {
             font-size: 9px;
             font-weight: 600;
+            color: #333333;
         }
         
         .qr-container {
             text-align: center;
             margin: 8px 0 5px 0;
             padding: 6px;
-            border: 1px solid #ddd;
+            border: 1px solid #d5d5d5;
             border-radius: 8px;
             background: #fafafa;
         }
@@ -1272,22 +1475,22 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         }
         .qr-container .qr-text {
             font-size: 7px;
-            color: #64748B;
+            color: #888888;
             margin-top: 2px;
         }
         .footer {
             margin-top: 12px;
             text-align: center;
             font-size: 7.5px;
-            color: #555;
-            border-top: 1px solid #ddd;
+            color: #888888;
+            border-top: 1px solid #e0e0e0;
             padding-top: 6px;
         }
         .footer .condicion-pago {
             margin: 4px 0;
             font-size: 8.5px;
             font-weight: bold;
-            color: #0F172A;
+            color: #444444;
         }
         .observaciones {
             margin-top: 6px;
@@ -1296,6 +1499,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             border-radius: 6px;
             background: #fafafa;
             font-size: 8.5px;
+            color: #555555;
         }
         .condiciones {
             display: grid;
@@ -1310,11 +1514,11 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         }
         .condiciones .cond-label {
             font-weight: bold;
-            color: #475569;
+            color: #555555;
         }
         .condiciones .cond-value {
             font-weight: 600;
-            color: #0F172A;
+            color: #333333;
         }
     </style>
 </head>
