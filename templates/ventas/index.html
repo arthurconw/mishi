@@ -2755,23 +2755,88 @@
     }
 }
 
+
+/* ============================================================
+   BADGE PARA PESTAÑA ACTIVA - INDICADOR "ESTÁS AQUÍ"
+   ============================================================ */
+.tab-btn {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.tab-badge {
+    display: inline-block !important;
+    font-size: 10px !important;
+    background: #EF233C !important;
+    color: #FFFFFF !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    font-weight: 900 !important;
+    margin-left: 2px !important;
+    animation: pulse-badge 1.5s ease-in-out infinite !important;
+}
+
+.tab-btn.active .tab-badge {
+    display: inline-block !important;
+}
+
+.tab-btn:not(.active) .tab-badge {
+    display: none !important;
+}
+
+/* Animación de parpadeo para el badge */
+@keyframes pulse-badge {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(0.95);
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <!-- TABS -->
 <!-- TABS -->
+<!-- TABS CON INDICADOR DE MÓDULO ACTIVO -->
 <div class="tabs" id="tabsRow">
-    <button class="tab-btn active" data-tab="cotizaciones">📋 Cotizaciones</button>
-    <button class="tab-btn" data-tab="pedido_compra">📋 PC Pedido Compras</button>
-    <!-- <button class="tab-btn" data-tab="despachar">🚚 Entregas</button> -->  <!-- OCULTO -->
-    <button class="tab-btn" data-tab="despachar">🚚 Entregas</button>
-    <button class="tab-btn" data-tab="guias">📦 Guías Remisión</button>
-    <button class="tab-btn" data-tab="comprobantes">🧾 Facturas</button>
-    <button class="tab-btn" data-tab="notas_credito">📝 Notas Crédito</button>
-    <button class="tab-btn" data-tab="devoluciones">🔄 Devoluciones</button>
-    <!-- 👇 AGREGA ESTA LÍNEA -->
-    <button class="tab-btn" data-tab="eliminadas">🗑️ Eliminadas</button>
+    <button class="tab-btn active" data-tab="cotizaciones">
+        📋 Cotizaciones
+        <span class="tab-badge" style="display:none;">📍</span>
+    </button>
+    <button class="tab-btn" data-tab="pedido_compra">
+        📋 PC Pedido Compras
+        <span class="tab-badge" style="display:none;">📍</span>
+    </button>
+    <button class="tab-btn" data-tab="despachar">
+        🚚 Entregas
+        <span class="tab-badge" style="display:none;">📍</span>
+    </button>
+    <button class="tab-btn" data-tab="guias">
+        📦 Guías Remisión
+        <span class="tab-badge" style="display:none;">📍</span>
+    </button>
+    <button class="tab-btn" data-tab="comprobantes">
+        🧾 Facturas
+        <span class="tab-badge" style="display:none;">📍</span>
+    </button>
+    <button class="tab-btn" data-tab="notas_credito">
+        📝 Notas Crédito
+        <span class="tab-badge" style="display:none;">📍</span>
+    </button>
+    <button class="tab-btn" data-tab="devoluciones">
+        🔄 Devoluciones
+        <span class="tab-badge" style="display:none;">📍</span>
+    </button>
+    <button class="tab-btn" data-tab="eliminadas">
+        🗑️ Eliminadas
+        <span class="tab-badge" style="display:none;">📍</span>
+    </button>
 </div>
 
 <!-- COTIZACIONES -->
