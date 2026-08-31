@@ -13267,7 +13267,9 @@ function actualizarPrecioPCSAP(input, index) {
 function clearPedidoModalSAP() {
     console.log('🧹 Limpiando modal de PC a estado inicial...');
     
-    // Función auxiliar para establecer valor en readonly
+    // ============================================================
+    // FUNCIÓN AUXILIAR PARA LIMPIAR CAMPOS
+    // ============================================================
     const setReadonlyValue = (id, value) => {
         const el = document.getElementById(id);
         if (el) {
@@ -13279,14 +13281,31 @@ function clearPedidoModalSAP() {
         }
     };
     
-
-    // Fecha actual
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    const fechaStr = now.toISOString().slice(0, 16);
+    const setEditableValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value !== undefined ? value : '';
+            el.readOnly = false;
+            el.style.background = '#FFFFFF';
+            el.style.color = '#0F172A';
+            el.style.cursor = 'text';
+        }
+    };
+    
+    const setSelectValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            for (let opt of el.options) {
+                if (opt.value === value) {
+                    opt.selected = true;
+                    break;
+                }
+            }
+        }
+    };
     
     // ============================================================
-    // 1. RESTAURAR TÍTULO Y SUBTÍTULO (para modo creación)
+    // 1. RESTAURAR TÍTULO Y SUBTÍTULO
     // ============================================================
     const title = document.getElementById('pedidoCompraModalTitle');
     if (title) {
@@ -13299,39 +13318,26 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 2. RESTAURAR NOTA DE MODO
+    // 2. FECHA ACTUAL
     // ============================================================
-    const note = document.getElementById('modeNote');
-    if (note) {
-        note.className = 'mini-note';
-        note.textContent = '✅ Recomendado: jalar la cotización, crear PC espejo y validar contra el documento real del cliente.';
-        note.style.background = '#EFF6FF';
-        note.style.border = '1px solid #BFDBFE';
-        note.style.color = '#1E3A8A';
-    }
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const fechaStr = now.toISOString().slice(0, 16);
     
     // ============================================================
-    // 3. RESTAURAR BLOQUE DE COTIZACIÓN (visible) - TODOS READONLY
-    // ============================================================
-    const cotBlock = document.getElementById('cotBlock');
-    if (cotBlock) {
-        cotBlock.style.display = 'block';
-    }
-    
-    // ============================================================
-    // 4. LIMPIAR CAMPOS DE COTIZACIÓN (READONLY)
+    // 3. LIMPIAR CAMPOS DE COTIZACIÓN (READONLY)
     // ============================================================
     setReadonlyValue('pcCotNumero', '');
     setReadonlyValue('pcCotFecha', '');
     setReadonlyValue('pcCliente', '');
     setReadonlyValue('pcRuc', '');
     setReadonlyValue('pcMonto', '0');
-     setReadonlyValue('pcMontoConIgv', '0');
+    setReadonlyValue('pcMontoConIgv', '0');
     setReadonlyValue('pcCondicionPago', '');
     setReadonlyValue('pcVendedor', '');
-    setEditableValue('pcEntrega', '');
+    
     // ============================================================
-    // 5. LIMPIAR BUSCADOR (EDITABLE)
+    // 4. LIMPIAR BUSCADOR (EDITABLE)
     // ============================================================
     const searchInput = document.getElementById('pcCotSearch');
     if (searchInput) {
@@ -13344,7 +13350,7 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 6. LIMPIAR RESULTADOS DE BÚSQUEDA
+    // 5. LIMPIAR RESULTADOS DE BÚSQUEDA
     // ============================================================
     const resultsContainer = document.getElementById('cotizacionSearchResults');
     if (resultsContainer) {
@@ -13353,26 +13359,66 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 7. CAMPOS DE FECHA Y NÚMERO (EDITABLES)
+    // 6. LIMPIAR CAMPOS DEL PC (EDITABLES) - ¡LOS QUE FALTABAN!
     // ============================================================
     setEditableValue('pcFecha', fechaStr);
-  setEditableValue('pcNumero', ''); // Dejar vacío para que el usuario escriba
+    setEditableValue('pcNumero', '');
+    setEditableValue('pcContacto', '');
+    setEditableValue('pcEntrega', '');
+    setEditableValue('pcObs', '');
+    setEditableValue('pcMontoPC', '');
+    setEditableValue('pcEditId', '');
+    
     // ============================================================
-    // 8. RESTAURAR SELECTS
+    // 7. RESTAURAR SELECTS
     // ============================================================
     const selects = ['pcMedio', 'pcCondicion', 'pcMoneda'];
     selects.forEach(id => {
         const el = document.getElementById(id);
         if (el && el.options.length > 0) {
             el.disabled = false;
-            el.selectedIndex = 0;
+            el.selectedIndex = 0; // Primera opción
             el.style.background = '#FFFFFF';
             el.style.cursor = 'pointer';
         }
     });
     
+    // Select de moneda - forzar Soles
+    const monedaSelect = document.getElementById('pcMoneda');
+    if (monedaSelect) {
+        for (let opt of monedaSelect.options) {
+            if (opt.value === 'S/)' || opt.value === 'S/') {
+                opt.selected = true;
+                break;
+            }
+        }
+    }
+    
     // ============================================================
-    // 9. LIMPIAR TABLA DE ITEMS
+    // 8. LIMPIAR CAMPO PERSONALIZADO DE CONDICIÓN
+    // ============================================================
+    const condCustom = document.getElementById('pcCondicionCustom');
+    if (condCustom) {
+        condCustom.value = '';
+        condCustom.style.display = 'none';
+    }
+    
+    // ============================================================
+    // 9. OCULTAR CAMPOS DE PAGO (Contado)
+    // ============================================================
+    const pagoContainer = document.getElementById('pagoCamposContainer');
+    if (pagoContainer) {
+        pagoContainer.style.display = 'none';
+    }
+    const numOp = document.getElementById('pcNumOperacion');
+    const banco = document.getElementById('pcBanco');
+    const cuenta = document.getElementById('pcCuentaOCCI');
+    if (numOp) numOp.value = '';
+    if (banco) banco.value = '';
+    if (cuenta) cuenta.value = '';
+    
+    // ============================================================
+    // 10. LIMPIAR TABLA DE ITEMS (SOLO UNA FILA VACÍA)
     // ============================================================
     const tbody = document.getElementById('pcItemsBody');
     if (tbody) {
@@ -13381,27 +13427,26 @@ function clearPedidoModalSAP() {
     }
     
     // ============================================================
-    // 10. RESETEAR SWITCHES DE VALIDACIÓN A "Sí"
+    // 11. RESETEAR SWITCHES DE VALIDACIÓN A "NO VÁLIDO"
     // ============================================================
     const validations = ['vPrecio', 'vProducto', 'vEntrega', 'vTransporte', 'vCantidad', 'vMoneda', 'vVigencia'];
     validations.forEach(id => {
         const checkbox = document.getElementById(id);
         if (checkbox) {
-            checkbox.checked = true;
+            checkbox.checked = false;
             const label = document.getElementById(id + 'Label');
             if (label) {
-                label.textContent = '✅ Válido';
-                label.style.color = '#16A34A';
+                label.textContent = '❌ NO VÁLIDO';
+                label.style.color = '#DC2626';
             }
         }
     });
     
     // ============================================================
-    // 11. RESETEAR SEMÁFORO (estado inicial)
+    // 12. RESETEAR SEMÁFORO DE VALIDACIÓN
     // ============================================================
     const semaphore = document.getElementById('validationSemaphore');
     if (semaphore) {
-        semaphore.style.display = 'block';
         semaphore.style.borderColor = '#F59E0B';
         semaphore.style.background = '#FFFBEB';
     }
@@ -13425,44 +13470,8 @@ function clearPedidoModalSAP() {
     if (chips) chips.innerHTML = '';
     
     // ============================================================
-    // 12. RESETEAR RESULTADO DE VALIDACIÓN
+    // 13. RESETEAR RESUMEN LATERAL A CEROS
     // ============================================================
-    const validationResult = document.getElementById('validationResult');
-    if (validationResult) {
-        validationResult.innerHTML = 'ℹ️ Si algún punto es <b>"No"</b>, el PC quedará <b>observado y bloqueado</b>.';
-        validationResult.style.background = '#EFF6FF';
-        validationResult.style.color = '#1E3A8A';
-        validationResult.style.border = '1px solid #BFDBFE';
-    }
-    
-    // ============================================================
-    // 13. RESETEAR ÍCONOS DE VALIDACIÓN ⚪
-    // ============================================================
-    const iconMap = {
-        'vPrecio': 'vPrecioIcon',
-        'vCantidad': 'vCantidadIcon',
-        'vProducto': 'vProductoIcon',
-        'vEntrega': 'vEntregaIcon',
-        'vMoneda': 'vMonedaIcon',
-        'vTransporte': 'vTransporteIcon',
-        'vVigencia': 'vVigenciaIcon'
-    };
-    
-    Object.keys(iconMap).forEach(id => {
-        const iconEl = document.getElementById(iconMap[id]);
-        if (iconEl) {
-            iconEl.textContent = '⚪';
-            iconEl.style.color = '';
-        }
-    });
-    
-    // ============================================================
-    // 14. RESETEAR VARIABLES GLOBALES
-    // ============================================================
-    cotizacionSeleccionada = null;
-    modalMode = 'cot';
-    editingId = null;
-
     const resumenSubtotal = document.getElementById('pcResumenSubtotal');
     const resumenValorVenta = document.getElementById('pcResumenValorVenta');
     const resumenIgv = document.getElementById('pcResumenIgv');
@@ -13470,8 +13479,7 @@ function clearPedidoModalSAP() {
     const resumenProductos = document.getElementById('pcResumenProductos');
     const resumenMoneda = document.getElementById('pcResumenMoneda');
     const diferenciaBox = document.getElementById('pcDiferenciaSinIgv');
-    const montoPCInput = document.getElementById('pcMontoPC');
-
+    
     if (resumenSubtotal) resumenSubtotal.textContent = 'S/ 0.00';
     if (resumenValorVenta) resumenValorVenta.textContent = 'S/ 0.00';
     if (resumenIgv) resumenIgv.textContent = 'S/ 0.00';
@@ -13482,9 +13490,28 @@ function clearPedidoModalSAP() {
         diferenciaBox.textContent = 'S/ 0.00';
         diferenciaBox.style.color = '#DC2626';
     }
-    if (montoPCInput) montoPCInput.value = '';
     
-   
+    // ============================================================
+    // 14. RESETEAR VARIABLES GLOBALES
+    // ============================================================
+    cotizacionSeleccionada = null;
+    modalMode = 'cot';
+    editingId = null;
+    
+    // ============================================================
+    // 15. FORZAR ACTUALIZACIÓN DEL RESUMEN
+    // ============================================================
+    setTimeout(() => {
+        if (typeof actualizarResumenPC === 'function') {
+            actualizarResumenPC();
+        }
+        if (typeof updateValidationSemaphore === 'function') {
+            updateValidationSemaphore();
+        }
+        if (typeof togglePagoCampos === 'function') {
+            togglePagoCampos();
+        }
+    }, 100);
     
     console.log('✅ Modal de PC restaurado a estado inicial');
 }
