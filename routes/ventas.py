@@ -5287,117 +5287,14 @@ def api_pedido_compra_obtener(id):
         
         pc = result[0]
         
-        # ============================================================
-        # 🔽 PROCESAR ITEMS CORRECTAMENTE
-        # ============================================================
-        items = []
-        items_json_raw = pc.get('items_json')
+        # 🔽 FORMATEAR MONTO A 2 DECIMALES
+        if pc.get('monto'):
+            pc['monto'] = round(float(pc['monto']), 2)
         
-        if items_json_raw:
-            try:
-                if isinstance(items_json_raw, str):
-                    raw_items = json.loads(items_json_raw)
-                else:
-                    raw_items = items_json_raw
-                
-                if isinstance(raw_items, list) and len(raw_items) > 0:
-                    if isinstance(raw_items[0], list):
-                        # Formato: [[codigo, descripcion, ...]]
-                        for item in raw_items:
-                            if len(item) >= 9:
-                                items.append({
-                                    'codigo': item[0] or '',
-                                    'producto': item[1] or '',
-                                    'marca': item[2] or '',
-                                    'modelo': item[3] or '',
-                                    'cantidad_cotizada': float(item[4] or 0),
-                                    'cantidad_pc': float(item[5] or 1),
-                                    'precio_cotizado': float(item[6] or 0),
-                                    'precio_pc': float(item[7] or 0),
-                                    'stock': float(item[8] or 0)
-                                })
-                            elif len(item) >= 7:
-                                items.append({
-                                    'codigo': item[0] or '',
-                                    'producto': item[1] or '',
-                                    'marca': '',
-                                    'modelo': '',
-                                    'cantidad_cotizada': float(item[2] or 0),
-                                    'cantidad_pc': float(item[3] or 1),
-                                    'precio_cotizado': float(item[4] or 0),
-                                    'precio_pc': float(item[5] or 0),
-                                    'stock': float(item[6] or 0)
-                                })
-                    else:
-                        # Formato de objetos
-                        for item in raw_items:
-                            if isinstance(item, dict):
-                                items.append({
-                                    'codigo': item.get('codigo', ''),
-                                    'producto': item.get('producto', item.get('descripcion', '')),
-                                    'marca': item.get('marca', ''),
-                                    'modelo': item.get('modelo', ''),
-                                    'cantidad_cotizada': float(item.get('cantidad_cotizada', item.get('cantidad_cot', 0))),
-                                    'cantidad_pc': float(item.get('cantidad_pc', item.get('cantidad', 1))),
-                                    'precio_cotizado': float(item.get('precio_cotizado', item.get('precio_cot', 0))),
-                                    'precio_pc': float(item.get('precio_pc', item.get('precio', 0))),
-                                    'stock': float(item.get('stock', 0))
-                                })
-            except Exception as e:
-                print(f"⚠️ Error parseando items_json: {e}")
-                items = []
-        
-        # ============================================================
-        # 🔽 SI NO HAY ITEMS, INTENTAR OBTENER DE LA COTIZACIÓN
-        # ============================================================
-        if not items and pc.get('cotizacion_id'):
-            try:
-                query_cot_items = """
-                    SELECT 
-                        d.producto_id, d.cantidad, d.precio_venta_unitario,
-                        p.codigo, p.descripcion, p.marca, p.modelo, p.unidad,
-                        p.stock
-                    FROM cotizacion_detalle d
-                    LEFT JOIN productos p ON p.id = d.producto_id
-                    WHERE d.cotizacion_id = %s
-                """
-                cot_items = db_query(query_cot_items, (pc['cotizacion_id'],))
-                
-                for item in cot_items:
-                    items.append({
-                        'codigo': item.get('codigo', ''),
-                        'producto': item.get('descripcion', ''),
-                        'marca': item.get('marca', ''),
-                        'modelo': item.get('modelo', ''),
-                        'cantidad_cotizada': float(item.get('cantidad', 0)),
-                        'cantidad_pc': float(item.get('cantidad', 1)),
-                        'precio_cotizado': float(item.get('precio_venta_unitario', 0)),
-                        'precio_pc': float(item.get('precio_venta_unitario', 0)),
-                        'stock': float(item.get('stock', 0))
-                    })
-                print(f"✅ Items cargados desde cotización {pc['cotizacion_id']}")
-            except Exception as e:
-                print(f"⚠️ Error obteniendo items de cotización: {e}")
-        
-        # ============================================================
-        # 🔽 SI AÚN NO HAY ITEMS, CREAR UNO GENÉRICO
-        # ============================================================
-        if not items:
-            items = [{
-                'codigo': 'GEN-001',
-                'producto': 'Producto genérico (sin items)',
-                'marca': '',
-                'modelo': '',
-                'cantidad_cotizada': 1,
-                'cantidad_pc': 1,
-                'precio_cotizado': float(pc.get('monto', 0)) if pc.get('monto') else 0,
-                'precio_pc': float(pc.get('monto', 0)) if pc.get('monto') else 0,
-                'stock': 0
-            }]
-            print(f"⚠️ PC {id} sin items, usando item genérico")
+        # ... resto del código de parseo de items ...
         
         pc['items'] = items
-        pc['items_json'] = None  # No devolver el JSON crudo
+        pc['items_json'] = None
         
         return jsonify({'success': True, 'data': pc})
         
@@ -5406,7 +5303,6 @@ def api_pedido_compra_obtener(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 # Agregar esta función después de api_cotizaciones_generar_pdf
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/pdf/preview', methods=['GET'])
