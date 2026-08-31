@@ -1975,9 +1975,7 @@ async function guardarCotizacion(estado) {
         // 2. Validar Condición de Pago
         let condicionFinal = '';
         if (condicionPagoSelect === 'Personalizado') {
-            // Si está en Personalizado, usar el valor del input custom
             condicionFinal = condicionCustom;
-            // Si el input custom está vacío, es un error
             if (!condicionFinal) {
                 camposFaltantes.push('Condición de Pago (escribe un valor personalizado)');
                 const el = document.getElementById('fCondicionCustom');
@@ -1991,9 +1989,7 @@ async function guardarCotizacion(estado) {
                 }
             }
         } else {
-            // Si no está en Personalizado, usar el valor del select
             condicionFinal = condicionPagoSelect;
-            // Si el select está vacío o es "Personalizado" (sin custom), es un error
             if (!condicionFinal || condicionFinal === 'Personalizado') {
                 camposFaltantes.push('Condición de Pago');
                 const el = document.getElementById('fCondicion');
@@ -2011,9 +2007,7 @@ async function guardarCotizacion(estado) {
         // 3. Validar Tiempo de Entrega
         let tiempoFinal = '';
         if (tiempoEntregaSelect === 'Personalizado') {
-            // Si está en Personalizado, usar el valor del input custom
             tiempoFinal = tiempoCustom;
-            // Si el input custom está vacío, es un error
             if (!tiempoFinal) {
                 camposFaltantes.push('Tiempo de Entrega (escribe un valor personalizado)');
                 const el = document.getElementById('fTiempoCustom');
@@ -2027,9 +2021,7 @@ async function guardarCotizacion(estado) {
                 }
             }
         } else {
-            // Si no está en Personalizado, usar el valor del select
             tiempoFinal = tiempoEntregaSelect;
-            // Si el select está vacío o es "Personalizado" (sin custom), es un error
             if (!tiempoFinal || tiempoFinal === 'Personalizado') {
                 camposFaltantes.push('Tiempo de Entrega');
                 const el = document.getElementById('fTiempo');
@@ -2174,6 +2166,13 @@ async function guardarCotizacion(estado) {
         const total = valorVenta + igv;
 
         // ============================================================
+        // 🔽 OBTENER EL REQUERIMIENTO DEL INPUT
+        // ============================================================
+        const requerimientoInput = document.getElementById('fReq');
+        const requerimiento = requerimientoInput ? requerimientoInput.value.trim() : '';
+        console.log('📝 REQUERIMIENTO OBTENIDO:', requerimiento);
+
+        // ============================================================
         // 3. PREPARAR DATOS
         // ============================================================
 
@@ -2203,7 +2202,9 @@ async function guardarCotizacion(estado) {
             motivo: document.getElementById('fMotivo')?.value || 'Solicitud única del cliente',
             transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
             parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
-            nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '', 
+            nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '',
+            // 🔽 REQUERIMIENTO AGREGADO
+            requerimiento: requerimiento,
             productos: quoteProducts.map(p => ({
                 codigo: p.codigo,
                 producto: p.producto || p.descripcion,
@@ -2217,6 +2218,9 @@ async function guardarCotizacion(estado) {
             }))
         };
 
+        // ============================================================
+        // 🔽 LOG CON REQUERIMIENTO
+        // ============================================================
         console.log('📦 Enviando cotización:');
         console.log('  - cliente_id:', data.cliente_id);
         console.log('  - estado:', data.estado);
@@ -2224,6 +2228,7 @@ async function guardarCotizacion(estado) {
         console.log('  - productos:', data.productos.length);
         console.log('  - condicion_pago:', data.condicion_pago);
         console.log('  - tiempo_entrega:', data.tiempo_entrega);
+        console.log('  - requerimiento:', data.requerimiento);  // ← LOG DEL REQUERIMIENTO
 
         // ============================================================
         // 4. ENVIAR A LA API
@@ -2250,7 +2255,6 @@ async function guardarCotizacion(estado) {
         showToast('❌ Error al guardar la cotización: ' + error.message, 'error');
     }
 }
-
 
 function saveCotizacionDraft() {
     // Verificar que hay productos en la cotización
