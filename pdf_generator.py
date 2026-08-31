@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN BLANCO Y NEGRO SUAVE
+# pdf_generator.py - VERSIÓN BLANCO Y NEGRO SUAVE CON DATOS DE EMPRESA MEJOR ORGANIZADOS
 
 import os
 from jinja2 import Template
@@ -116,38 +116,56 @@ class PDFGenerator:
             justify-content: space-between; 
             align-items: stretch; 
             margin-bottom: 15px; 
-            gap: 15px; 
+            gap: 20px; 
             padding-top: 5px;
         }
         .empresa-izquierda { 
             flex: 1; 
             display: flex; 
             align-items: center; 
-            gap: 12px; 
+            gap: 18px; 
         }
         .empresa-izquierda .logo-container { 
             flex-shrink: 0; 
-            width: 80px; 
-            height: 60px; 
+            width: 100px; 
+            height: 70px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
         }
         .empresa-izquierda .logo-container img { 
-            max-height: 60px; 
-            max-width: 100px; 
+            max-height: 65px; 
+            max-width: 110px; 
             object-fit: contain; 
         }
         .empresa-izquierda .info-texto { 
-            font-size: 8px; 
-            line-height: 1.4; 
-            color: #555555;
+            font-size: 8.5px; 
+            line-height: 1.5; 
+            color: #444444;
         }
         .empresa-izquierda .info-texto .nombre { 
-            font-size: 11px; 
+            font-size: 13px; 
             font-weight: bold; 
             text-transform: uppercase; 
+            color: #1a1a1a;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .empresa-izquierda .info-texto .ruc-line {
+            font-size: 9px;
+            font-weight: bold;
             color: #333333;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .slogan {
+            font-size: 8px;
+            color: #666666;
+            font-style: italic;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .contacto-line {
+            font-size: 7.5px;
+            color: #555555;
         }
         .recuadro-derecha { 
             flex-shrink: 0; 
@@ -157,6 +175,9 @@ class PDFGenerator:
             text-align: center; 
             min-width: 180px; 
             background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .recuadro-derecha .ruc { 
             font-size: 10px; 
@@ -304,14 +325,13 @@ class PDFGenerator:
 <body>
     <div class="header-superior">
         <div class="empresa-izquierda">
-            <div class="logo-container"><img src="{{ logo_src }}" alt="Logo" style="max-height:60px;"></div>
+            <div class="logo-container"><img src="{{ logo_src }}" alt="Logo" style="max-height:65px;"></div>
             <div class="info-texto">
                 <div class="nombre">{{ remitente_nombre }}</div>
-                <div class="contacto">
-                    <span>Telf: {{ telefono }}</span><br>
-                    <span>Email: {{ email }}</span><br>
-                    <span>Web: {{ web }}</span>
-                </div>
+                <div class="ruc-line">RUC: {{ ruc_remitente }}</div>
+                <div class="slogan">Soluciones integrales en abastecimientos</div>
+                <div class="contacto-line">Telf: {{ telefono }} | Email: {{ email }}</div>
+                <div class="contacto-line">Web: {{ web }}</div>
             </div>
         </div>
         <div class="recuadro-derecha">
@@ -677,7 +697,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'logo_src': logo_src,
                 'empresa_ruc': EMPRESA['ruc'],
                 'empresa_nombre': EMPRESA['nombre'],
-                'empresa_direccion': EMPRESA['direccion'],
                 'empresa_telefono': EMPRESA['telefono'],
                 'empresa_email': EMPRESA['email'],
                 'empresa_web': EMPRESA['web'],
@@ -701,7 +720,8 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'factura': factura if factura else '—',
                 'nro_cotizacion': nro_cotizacion if nro_cotizacion else '—',
                 'items': items_formateados,
-                'qr_base64': qr_base64            }
+                'qr_base64': qr_base64
+            }
 
             template_content = self._obtener_template_comprobante()
             html_content = self._reemplazar_variables_template_comprobante(template_content, datos_mapeados)
@@ -741,37 +761,55 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             justify-content: space-between; 
             align-items: stretch; 
             margin-bottom: 10px; 
-            gap: 15px; 
+            gap: 20px; 
         }
         .empresa-izquierda { 
             flex: 1; 
             display: flex; 
             align-items: center; 
-            gap: 12px; 
+            gap: 18px; 
         }
         .empresa-izquierda .logo-container { 
             flex-shrink: 0; 
-            width: 80px; 
-            height: 60px; 
+            width: 100px; 
+            height: 70px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
         }
         .empresa-izquierda .logo-container img { 
-            max-height: 60px; 
-            max-width: 100px; 
+            max-height: 65px; 
+            max-width: 110px; 
             object-fit: contain; 
         }
         .empresa-izquierda .info-texto { 
-            font-size: 8px; 
-            line-height: 1.4; 
-            color: #555555;
+            font-size: 8.5px; 
+            line-height: 1.5; 
+            color: #444444;
         }
         .empresa-izquierda .info-texto .nombre { 
-            font-size: 10px; 
+            font-size: 13px; 
             font-weight: bold; 
             text-transform: uppercase; 
+            color: #1a1a1a;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .empresa-izquierda .info-texto .ruc-line {
+            font-size: 9px;
+            font-weight: bold;
             color: #333333;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .slogan {
+            font-size: 8px;
+            color: #666666;
+            font-style: italic;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .contacto-line {
+            font-size: 7.5px;
+            color: #555555;
         }
         .recuadro-derecha { 
             flex-shrink: 0; 
@@ -781,6 +819,9 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             text-align: center; 
             min-width: 200px; 
             background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .recuadro-derecha .ruc { 
             font-size: 10px; 
@@ -956,9 +997,10 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             <div class="logo-container"><img src="{{ logo_src }}" alt="Logo"></div>
             <div class="info-texto">
                 <div class="nombre">{{ empresa_nombre }}</div>
-                <div>Telf: {{ empresa_telefono }}</div>
-                <div>Email: {{ empresa_email }}</div>
-                <div>Web: {{ empresa_web }}</div>
+                <div class="ruc-line">RUC: {{ empresa_ruc }}</div>
+                <div class="slogan">Soluciones integrales en abastecimientos</div>
+                <div class="contacto-line">Telf: {{ empresa_telefono }} | Email: {{ empresa_email }}</div>
+                <div class="contacto-line">Web: {{ empresa_web }}</div>
             </div>
         </div>
         <div class="recuadro-derecha">
@@ -1067,7 +1109,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'logo_src': datos.get('logo_src', ''),
                 'empresa_ruc': '20602095704',
                 'empresa_nombre': 'KCF CORPORACION E.I.R.L',
-                'empresa_direccion': 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
                 'empresa_telefono': '999 932 051',
                 'empresa_email': 'ventas@kcfcorporacion.com',
                 'empresa_web': 'https://kcfcorporacion.com/',
@@ -1212,7 +1253,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'logo_src': logo_src,
                 'empresa_ruc': EMPRESA['ruc'],
                 'empresa_nombre': EMPRESA['nombre'],
-                'empresa_direccion': EMPRESA['direccion'],
                 'empresa_telefono': EMPRESA['telefono'],
                 'empresa_email': EMPRESA['email'],
                 'empresa_web': EMPRESA['web'],
@@ -1283,37 +1323,55 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             justify-content: space-between;
             align-items: stretch;
             margin-bottom: 10px;
-            gap: 15px;
+            gap: 20px;
         }
         .empresa-izquierda {
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 18px;
         }
         .empresa-izquierda .logo-container {
             flex-shrink: 0;
-            width: 80px;
-            height: 60px;
+            width: 100px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .empresa-izquierda .logo-container img {
-            max-height: 60px;
-            max-width: 100px;
+            max-height: 65px;
+            max-width: 110px;
             object-fit: contain;
         }
         .empresa-izquierda .info-texto {
-            font-size: 8px;
-            line-height: 1.4;
-            color: #555555;
+            font-size: 8.5px;
+            line-height: 1.5;
+            color: #444444;
         }
         .empresa-izquierda .info-texto .nombre {
-            font-size: 10px;
+            font-size: 13px;
             font-weight: bold;
             text-transform: uppercase;
+            color: #1a1a1a;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .empresa-izquierda .info-texto .ruc-line {
+            font-size: 9px;
+            font-weight: bold;
             color: #333333;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .slogan {
+            font-size: 8px;
+            color: #666666;
+            font-style: italic;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .contacto-line {
+            font-size: 7.5px;
+            color: #555555;
         }
         .recuadro-derecha {
             flex-shrink: 0;
@@ -1323,6 +1381,9 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             text-align: center;
             min-width: 200px;
             background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .recuadro-derecha .ruc {
             font-size: 10px;
@@ -1526,15 +1587,14 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     <div class="header-superior">
         <div class="empresa-izquierda">
             <div class="logo-container">
-                <img src="{{ logo_src }}" alt="Logo" style="max-height:60px;">
+                <img src="{{ logo_src }}" alt="Logo" style="max-height:65px;">
             </div>
             <div class="info-texto">
                 <div class="nombre">{{ empresa_nombre }}</div>
-                <div class="contacto">
-                    <span>Telf: {{ empresa_telefono }}</span><br>
-                    <span>Email: {{ empresa_email }}</span><br>
-                    <span>Web: {{ empresa_web }}</span>
-                </div>
+                <div class="ruc-line">RUC: {{ empresa_ruc }}</div>
+                <div class="slogan">Soluciones integrales en abastecimientos</div>
+                <div class="contacto-line">Telf: {{ empresa_telefono }} | Email: {{ empresa_email }}</div>
+                <div class="contacto-line">Web: {{ empresa_web }}</div>
             </div>
         </div>
         <div class="recuadro-derecha">
