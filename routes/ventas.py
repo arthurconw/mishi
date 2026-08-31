@@ -1103,58 +1103,118 @@ def obtener_despachos_db():
         print(f"❌ Error en obtener_despachos_db: {e}")
         return []
 
-
 def guardar_despacho_db(data):
-    """Guarda un nuevo despacho"""
+    """Guarda un nuevo despacho con hora local correcta"""
     try:
         from datetime import datetime
+        import pytz  # Necesitas instalar pytz: pip install pytz
         
         # ============================================================
-        # 🔽 FECHA CON HORA ACTUAL
+        # 🔽 OBTENER HORA LOCAL DE PERÚ (UTC-5)
         # ============================================================
-        ahora = datetime.now()
+        # Definir zona horaria de Perú
+        zona_peru = pytz.timezone('America/Lima')
+        ahora = datetime.now(zona_peru)
         fecha_actual = ahora.strftime('%Y-%m-%d %H:%M:%S')
         
+        # Si no hay fecha, usar la actual
+        fecha_despacho = data.get('fecha_despacho')
+        if fecha_despacho:
+            try:
+                # Si es string con formato YYYY-MM-DD o YYYY-MM-DD HH:MM:SS
+                if isinstance(fecha_despacho, str):
+                    # Intentar parsear la fecha
+                    if ' ' in fecha_despacho:
+                        dt = datetime.strptime(fecha_despacho, '%Y-%m-%d %H:%M:%S')
+                    else:
+                        dt = datetime.strptime(fecha_despacho, '%Y-%m-%d')
+                    # Asegurar que la fecha sea naive (sin zona horaria)
+                    if dt.tzinfo:
+                        dt = dt.astimezone(zona_peru)
+                        fecha_despacho = dt.strftime('%Y-%m-%d %H:%M:%S')
+                    else:
+                        fecha_despacho = fecha_despacho
+                elif isinstance(fecha_despacho, datetime):
+                    # Si es datetime, convertir a zona Perú
+                    if fecha_despacho.tzinfo:
+                        fecha_despacho = fecha_despacho.astimezone(zona_peru)
+                    else:
+                        fecha_despacho = zona_peru.localize(fecha_despacho)
+                    fecha_despacho = fecha_despacho.strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    fecha_despacho = fecha_actual
+            except Exception as e:
+                print(f"⚠️ Error procesando fecha_despacho: {e}")
+                fecha_despacho = fecha_actual
+        else:
+            fecha_despacho = fecha_actual
+        
+        print(f"📅 Fecha despacho FINAL: {fecha_despacho}")
+        
+        # ============================================================
+        # GENERAR NÚMERO DE DESPACHO SI NO TIENE
+        # ============================================================
+        if not data.get('numero'):
+            from datetime import datetime
+            now = datetime.now(zona_peru)
+            data['numero'] = f"DESP-{now.strftime('%Y%m%d')}-{str(now.timestamp()).split('.')[0][-4:]}"
+        
+        # ============================================================
+        # GUARDAR ITEMS COMO JSON
+        # ============================================================
+        items_json = json.dumps(data.get('items', []))
+        
+        # ============================================================
+        # GUARDAR DESPACHO
+        # ============================================================
         query = """
             INSERT INTO despachos (
                 numero, fecha, fecha_despacho, estado,
                 pc_id, pc_numero, cotizacion_id, cotizacion_numero,
                 cliente, ruc, comprobante, guia, origen, destino,
                 transportista, observaciones, responsable,
-                creado_por
+                items_json, creado_por
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s
-            )
-            RETURNING id, numero
+                %s, %s, %s, %s, %s, %s, %s
+            ) RETURNING id, numero
         """
+        
         params = (
             data.get('numero'),
-            fecha_actual,  # ← CON HORA COMPLETA
-            data.get('fecha_despacho') or fecha_actual,
+            fecha_actual,  # ← FECHA CON HORA LOCAL CORRECTA
+            fecha_despacho,
             data.get('estado', 'Pendiente despacho'),
             data.get('pc_id'),
             data.get('pc_numero'),
             data.get('cotizacion_id'),
             data.get('cotizacion_numero'),
-            data.get('cliente'),
-            data.get('ruc'),
+            data.get('cliente') or '',
+            data.get('ruc') or '',
             data.get('comprobante'),
             data.get('guia'),
             data.get('origen', 'ALM-SMP'),
-            data.get('destino'),
+            data.get('destino') or '',
             data.get('transportista'),
-            data.get('observaciones'),
-            data.get('responsable'),
-            data.get('creado_por')
+            data.get('observaciones') or '',
+            data.get('responsable') or 'Hellen',
+            items_json,
+            data.get('creado_por') or 8
         )
+        
         result = db_query(query, params)
-        return result[0] if result else None
+        print(f"✅ Resultado: {result}")
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Despacho guardado', 'data': result})
+        
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
+            
     except Exception as e:
-        print(f"❌ Error en guardar_despacho_db: {e}")
-        raise
-
-
+        print(f"❌ Error en api_despachos_guardar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA DEVOLUCIONES
@@ -2919,7 +2979,6 @@ def api_despachos_listar():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-    
 @ventas_bp.route('/ventas/api/despachos/guardar', methods=['POST'])
 @login_required
 def api_despachos_guardar():
@@ -2931,50 +2990,53 @@ def api_despachos_guardar():
         print("🚚 API DESPACHOS GUARDAR")
         print(f"  - PC ID: {data.get('pc_id')}")
         print(f"  - PC Número: {data.get('pc_numero')}")
-        print(f"  - Items recibidos: {len(data.get('items', []))}")
         print("=" * 80)
+        
+        from datetime import datetime, timedelta
+        
+        # ============================================================
+        # 🔽 HORA LOCAL DE PERÚ (UTC-5)
+        # ============================================================
+        ahora_utc = datetime.utcnow()
+        ahora_peru = ahora_utc - timedelta(hours=5)
+        fecha_actual = ahora_peru.strftime('%Y-%m-%d %H:%M:%S')
         
         # Generar número si no tiene
         if not data.get('numero'):
-            from datetime import datetime
-            now = datetime.now()
-            data['numero'] = f"DESP-{now.strftime('%Y%m%d')}-{str(now.timestamp()).split('.')[0][-4:]}"
+            data['numero'] = f"DESP-{ahora_peru.strftime('%Y%m%d')}-{str(ahora_peru.timestamp()).split('.')[0][-4:]}"
         
-        # Fecha si no tiene
-            if not data.get('fecha'):
-                data['fecha'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        if not data.get('fecha'):
+            data['fecha'] = fecha_actual
         
         # ============================================================
-        # PROCESAR FECHA DESPACHO CON HORA
+        # PROCESAR FECHA DESPACHO CON HORA LOCAL
         # ============================================================
-        from datetime import datetime
         fecha_despacho = data.get('fecha_despacho')
         
         if fecha_despacho:
             try:
                 if isinstance(fecha_despacho, str) and ' ' in fecha_despacho:
+                    # Ya tiene hora, mantenerla
                     dt = datetime.strptime(fecha_despacho, '%Y-%m-%d %H:%M:%S')
-                    fecha_despacho = dt.isoformat()
+                    fecha_despacho = dt.strftime('%Y-%m-%d %H:%M:%S')
                 elif isinstance(fecha_despacho, str) and 'T' in fecha_despacho:
-                    pass
+                    # Formato ISO
+                    dt = datetime.fromisoformat(fecha_despacho.replace('Z', '+00:00'))
+                    # Convertir a hora Perú
+                    dt_peru = dt - timedelta(hours=5) if dt.tzinfo else dt
+                    fecha_despacho = dt_peru.strftime('%Y-%m-%d %H:%M:%S')
                 elif isinstance(fecha_despacho, str) and '-' in fecha_despacho and len(fecha_despacho) == 10:
-                    ahora = datetime.now()
-                    dt = datetime(
-                        int(fecha_despacho.split('-')[0]),
-                        int(fecha_despacho.split('-')[1]),
-                        int(fecha_despacho.split('-')[2]),
-                        ahora.hour,
-                        ahora.minute,
-                        ahora.second
-                    )
-                    fecha_despacho = dt.isoformat()
+                    # Solo fecha, agregar hora actual
+                    dt = datetime.strptime(fecha_despacho, '%Y-%m-%d')
+                    dt_peru = dt.replace(hour=ahora_peru.hour, minute=ahora_peru.minute, second=ahora_peru.second)
+                    fecha_despacho = dt_peru.strftime('%Y-%m-%d %H:%M:%S')
                 else:
-                    fecha_despacho = datetime.now().isoformat()
+                    fecha_despacho = fecha_actual
             except Exception as e:
                 print(f"⚠️ Error procesando fecha: {e}")
-                fecha_despacho = datetime.now().isoformat()
+                fecha_despacho = fecha_actual
         else:
-            fecha_despacho = datetime.now().isoformat()
+            fecha_despacho = fecha_actual
         
         print(f"📅 Fecha despacho FINAL: {fecha_despacho}")
         
@@ -3001,7 +3063,7 @@ def api_despachos_guardar():
         
         params = (
             data.get('numero'),
-            data.get('fecha'),
+            fecha_actual,  # ← FECHA CON HORA LOCAL
             fecha_despacho,
             data.get('estado', 'Pendiente despacho'),
             data.get('pc_id'),
@@ -3017,7 +3079,7 @@ def api_despachos_guardar():
             data.get('transportista'),
             data.get('observaciones') or '',
             data.get('responsable') or 'Hellen',
-            items_json,  # 🔽 GUARDAR ITEMS
+            items_json,
             data.get('creado_por') or 8
         )
         
@@ -3034,7 +3096,6 @@ def api_despachos_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 # ============================================================
 # DEVOLUCIONES - API
