@@ -5478,7 +5478,6 @@ def api_pedido_compra_obtener(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/pdf/preview', methods=['GET'])
 @login_required
 def api_cotizaciones_preview_pdf(id):
@@ -5658,7 +5657,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML - HEADER IGUAL A LA GUÍA DE REMISIÓN
+        # 4. Template HTML - HEADER IGUAL A GUÍA DE REMISIÓN
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5675,173 +5674,196 @@ def api_cotizaciones_preview_pdf(id):
             box-sizing: border-box; 
         }
         body { 
-            font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif; 
-            font-size: 10px; 
-            color: #000000; 
-            line-height: 1.3; 
+            font-family: 'Helvetica', Arial, sans-serif;
+            font-size: 9.5px; 
+            color: #333333;
+            line-height: 1.6; 
             background: #ffffff; 
         }
         
-        /* ===== HEADER IGUAL A LA GUÍA DE REMISIÓN ===== */
-        .header {
+        /* ===== HEADER IGUAL A GUÍA DE REMISIÓN ===== */
+        .header-superior {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 12px;
+            align-items: stretch;
+            margin-bottom: 12px;
+            gap: 20px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #cccccc;
         }
-        .logo-section {
-            flex: 0 0 100px;
-        }
-        .logo img {
-            max-width: 100px;
-            height: auto;
-            display: block;
-        }
-        .empresa-info {
+        .empresa-izquierda {
             flex: 1;
-            text-align: center;
-            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
         }
-        .empresa-info .nombre-empresa {
-            font-size: 16px;
+        .empresa-izquierda .logo-container {
+            flex-shrink: 0;
+            width: 90px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .empresa-izquierda .logo-container img {
+            max-height: 60px;
+            max-width: 100px;
+            object-fit: contain;
+        }
+        .empresa-izquierda .info-texto {
+            font-size: 8px;
+            line-height: 1.5;
+            color: #444444;
+        }
+        .empresa-izquierda .info-texto .nombre {
+            font-size: 13px;
             font-weight: bold;
-            color: #000;
+            text-transform: uppercase;
+            color: #1a1a1a;
             letter-spacing: 0.5px;
             margin-bottom: 1px;
         }
-        .empresa-info .ruc {
-            font-size: 10px;
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 3px;
-        }
-        .empresa-info .slogan {
-            font-size: 10px;
-            color: #000;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
-        }
-        .empresa-info .contacto {
+        .empresa-izquierda .info-texto .ruc-line {
             font-size: 9px;
-            color: #000;
+            font-weight: bold;
+            color: #333333;
             margin-bottom: 1px;
         }
-        .empresa-info .web {
-            font-size: 9px;
-            color: #000;
+        .empresa-izquierda .info-texto .slogan {
+            font-size: 8px;
+            color: #666666;
+            font-style: italic;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .contacto-line {
+            font-size: 7.5px;
+            color: #555555;
         }
         
-        .cotizacion-info {
-            flex: 0 0 auto;
-            text-align: right;
-            padding-left: 15px;
-            min-width: 170px;
+        .recuadro-derecha {
+            flex-shrink: 0;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+            padding: 6px 18px;
+            text-align: center;
+            min-width: 180px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .numero-cotizacion {
-            font-size: 16px;
+        .recuadro-derecha .ruc {
+            font-size: 9px;
             font-weight: bold;
-            color: #000;
-            white-space: nowrap;
-            margin-bottom: 4px;
+            color: #333333;
         }
-        .fecha-hora {
-            font-size: 10px;
-            color: #000;
+        .recuadro-derecha .titulo {
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin: 2px 0;
+            color: #333333;
         }
-        .fecha-hora strong {
-            color: #000;
+        .recuadro-derecha .numero {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333333;
         }
         
         /* ===== LAYOUT PRINCIPAL ===== */
         .layout-principal { 
             display: flex; 
             gap: 15px; 
-            margin-bottom: 12px; 
+            margin-bottom: 10px; 
         }
         .seccion-cliente, .seccion-condiciones { 
             flex: 1; 
-            border: 1px solid #000000;
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
             padding: 8px 12px; 
+            background: #f9f9f9;
         }
         .seccion-cliente h3, .seccion-condiciones h3 { 
-            color: #000000; 
-            border-bottom: 1px solid #000000; 
+            color: #444444; 
+            border-bottom: 1px solid #d5d5d5; 
             padding-bottom: 3px; 
-            font-size: 10px; 
+            font-size: 9.5px; 
             margin-top: 0; 
             margin-bottom: 6px; 
             font-weight: bold; 
+            text-transform: uppercase;
         }
         .info-line, .condicion-line { 
             display: flex; 
-            margin-bottom: 3px; 
+            margin-bottom: 2px; 
             font-size: 8.5px; 
         }
         .info-label, .condicion-label { 
-            width: 90px; 
+            width: 100px; 
             font-weight: bold; 
-            color: #000000;
+            color: #555555;
         }
         .info-value, .condicion-value { 
             flex: 1; 
-            color: #000000; 
+            color: #333333;
         }
         
         /* ===== TEXTO INTRODUCTORIO ===== */
         .texto-introductorio { 
-            margin: 10px 0; 
-            padding: 8px 15px; 
-            font-size: 9px; 
+            margin: 8px 0; 
+            padding: 6px 12px; 
+            font-size: 8.5px; 
             line-height: 1.4; 
             text-align: justify; 
+            background: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
         }
         .texto-introductorio .saludo { 
-            font-size: 10px; 
+            font-size: 9px; 
             font-weight: bold; 
-            margin-bottom: 5px; 
-            color: #000000;
+            margin-bottom: 3px; 
+            color: #333333;
         }
         
         /* ===== TABLA DE PRODUCTOS ===== */
         .tabla-productos { 
             width: 100%; 
             border-collapse: collapse; 
-            margin: 10px 0; 
-            font-size: 8.2px; 
+            margin: 8px 0; 
+            font-size: 8px; 
         }
         .tabla-productos th { 
-            background: #d9d9d9;
-            color: #000000;
-            padding: 6px 4px; 
-            border: 1px solid #000000; 
+            background: #e8e8e8;
+            color: #444444;
+            padding: 5px 4px; 
+            border: 1px solid #cccccc; 
             font-weight: bold; 
             text-align: center; 
             vertical-align: middle; 
         }
         .tabla-productos td { 
-            padding: 5px 4px; 
-            border: 1px solid #000000; 
+            padding: 4px 4px; 
+            border: 1px solid #d5d5d5; 
             vertical-align: middle; 
-            color: #000000;
+            color: #333333;
         }
         .tabla-productos tr:nth-child(even) td {
-            background: #f5f5f5;
+            background: #f8f8f8;
         }
         
-        .col-item { text-align: center; width: 35px; }
+        .col-item { text-align: center; width: 30px; }
         .col-codigo { text-align: left; width: 70px; }
         .col-descripcion { text-align: left; }
-        .col-modelo { text-align: left; width: 60px; }
-        .col-marca { text-align: left; width: 65px; }
-        .col-unidad-medida { text-align: center; width: 55px; }
-        .col-cantidad { text-align: center; width: 45px; }
-        .col-valor-unitario { text-align: right; width: 85px; }
+        .col-modelo { text-align: left; width: 55px; }
+        .col-marca { text-align: left; width: 60px; }
+        .col-unidad-medida { text-align: center; width: 50px; }
+        .col-cantidad { text-align: center; width: 40px; }
+        .col-valor-unitario { text-align: right; width: 80px; }
         .col-valor-total { 
             text-align: right; 
-            width: 90px; 
-            background: #e8e8e8; 
+            width: 85px; 
+            background: #f0f0f0; 
             font-weight: bold; 
         }
         
@@ -5859,125 +5881,133 @@ def api_cotizaciones_preview_pdf(id):
             margin-left: auto; 
             margin-right: 0; 
             margin-top: 8px; 
-            margin-bottom: 12px; 
-            border: 2px solid #000000; 
+            margin-bottom: 10px; 
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
             padding: 8px 12px; 
-            background: #ffffff; 
+            background: #f9f9f9; 
         }
         .total-line { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin-bottom: 4px; 
-            font-size: 9px; 
+            margin-bottom: 3px; 
+            font-size: 8.5px; 
             gap: 8px; 
         }
         .total-line span:first-child { 
             white-space: nowrap; 
-            color: #000000; 
+            color: #555555; 
         }
         .total-line .numero-formateado { 
             font-weight: bold; 
             white-space: nowrap; 
-            color: #000000;
+            color: #333333;
         }
         
         /* TOTAL A PAGAR - MÁS GRANDE */
         .total-final { 
-            border-top: 2px solid #000000; 
-            padding-top: 8px; 
-            margin-top: 5px; 
+            border-top: 2px solid #cccccc; 
+            padding-top: 6px; 
+            margin-top: 4px; 
             font-weight: bold; 
-            font-size: 14px;
-            color: #000000; 
+            font-size: 13px;
+            color: #333333; 
         }
         .total-final .numero-formateado {
-            font-size: 16px;
+            font-size: 15px;
         }
         
         /* ===== OTRAS SECCIONES ===== */
         .seccion-importante { 
-            margin: 8px 0; 
-            padding: 5px 10px; 
-            border: 1px solid #000000;
+            margin: 6px 0; 
+            padding: 4px 10px; 
+            border: 1px solid #d5d5d5;
+            border-radius: 6px;
             font-size: 7.5px; 
-            color: #000000; 
+            color: #555555; 
+            background: #fafafa;
         }
-        .seccion-importante strong { color: #000000; }
+        .seccion-importante strong { color: #333333; }
         
         .cuentas-bancarias { 
-            margin-top: 10px; 
-            padding: 8px 12px; 
-            border: 1px solid #000000; 
+            margin-top: 8px; 
+            padding: 6px 12px; 
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
             font-size: 7.5px; 
+            background: #f9f9f9;
         }
         .cuentas-bancarias h3 { 
-            color: #000000; 
-            border-bottom: 1px solid #000000; 
+            color: #444444; 
+            border-bottom: 1px solid #d5d5d5; 
             padding-bottom: 3px; 
             font-size: 9px; 
             margin-top: 0; 
-            margin-bottom: 6px; 
+            margin-bottom: 4px; 
+            text-transform: uppercase;
         }
         .cuenta-line { 
             margin-bottom: 2px;
-            padding: 4px 0;
+            padding: 3px 0;
         }
         .cuenta-line .banco { 
             font-weight: bold; 
-            color: #000000; 
-            font-size: 9px; 
+            color: #333333; 
+            font-size: 8.5px; 
         }
         .cuenta-line .tipo { 
-            font-size: 8px; 
-            color: #000000; 
+            font-size: 7.5px; 
+            color: #555555; 
         }
         .cuenta-line .numero { 
-            font-size: 8px; 
-            color: #000000; 
+            font-size: 7.5px; 
+            color: #333333; 
             font-weight: bold; 
         }
         .cuenta-line .cci { 
-            font-size: 7.5px; 
-            color: #000000; 
+            font-size: 7px; 
+            color: #555555; 
         }
         
         .seccion-aclaratoria { 
-            margin-top: 12px; 
-            padding: 8px 16px; 
-            border: 1px solid #000000; 
-            font-size: 8.5px; 
+            margin-top: 10px; 
+            padding: 6px 14px; 
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
+            font-size: 8px; 
             text-align: left; 
             line-height: 1.4; 
+            background: #fafafa;
         }
         .seccion-aclaratoria .titulo { 
             font-weight: bold; 
-            font-size: 9px; 
-            margin-bottom: 4px; 
-            color: #000000; 
+            font-size: 8.5px; 
+            margin-bottom: 3px; 
+            color: #333333; 
             text-align: left; 
         }
         .seccion-aclaratoria .web-link { 
-            color: #000000; 
+            color: #333333; 
             text-decoration: underline; 
             font-weight: bold; 
         }
         
         .seccion-contacto { 
-            margin-top: 14px; 
-            border-top: 2px solid #000000; 
-            padding-top: 12px; 
+            margin-top: 12px; 
+            border-top: 1px solid #d5d5d5; 
+            padding-top: 10px; 
             text-align: left; 
             font-size: 8.5px; 
         }
         .contacto-nombre { 
-            font-size: 10.5px; 
+            font-size: 10px; 
             font-weight: bold; 
-            color: #000000; 
-            margin-bottom: 4px; 
+            color: #333333; 
+            margin-bottom: 3px; 
         }
-        .contacto-line { margin-bottom: 2px; color: #000000; }
-        .web-link { color: #000000; text-decoration: underline; }
+        .contacto-line { margin-bottom: 2px; color: #555555; }
+        .web-link { color: #333333; text-decoration: underline; }
         
         .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { 
             page-break-inside: avoid; 
@@ -5988,32 +6018,27 @@ def api_cotizaciones_preview_pdf(id):
 </head>
 <body>
     <!-- ============================================================ -->
-    <!-- HEADER IGUAL A LA GUÍA DE REMISIÓN                          -->
+    <!-- HEADER IGUAL A GUÍA DE REMISIÓN                             -->
     <!-- ============================================================ -->
-    <div class="header">
-        <!-- LOGO -->
-        <div class="logo-section">
-            {% if logo_base64 %}
-            <div class="logo">
+    <div class="header-superior">
+        <div class="empresa-izquierda">
+            <div class="logo-container">
+                {% if logo_base64 %}
                 <img src="data:image/png;base64,{{ logo_base64 }}" alt="KCF Logo">
+                {% endif %}
             </div>
-            {% endif %}
+            <div class="info-texto">
+                <div class="nombre">KCF CORPORACION E.I.R.L</div>
+                <div class="ruc-line">RUC: 20602095704</div>
+                <div class="slogan">Soluciones integrales en abastecimientos</div>
+                <div class="contacto-line">Telf: 999 932 051 | Email: ventas@kcfcorporacion.com</div>
+                <div class="contacto-line">Web: https://kcfcorporacion.com/</div>
+            </div>
         </div>
-        
-        <!-- INFORMACIÓN EMPRESA -->
-        <div class="empresa-info">
-            <div class="nombre-empresa">KCF CORPORACION E.I.R.L</div>
-            <div class="ruc">RUC: 20602095704</div>
-            <div class="slogan">Soluciones integrales en abastecimientos</div>
-            <div class="contacto">Telf: 999 932 051 | Email: ventas@kcfcorporacion.com</div>
-            <div class="web">Web: https://kcfcorporacion.com/</div>
-        </div>
-
-        <!-- N° COTIZACIÓN -->
-        <div class="cotizacion-info">
-            <div class="numero-cotizacion">COTIZACIÓN N°: {{ codigo_cotizacion }}</div>
-            <div class="fecha-hora"><strong>Fecha:</strong> {{ fecha_actual }}</div>
-            <div class="fecha-hora"><strong>Hora:</strong> {{ hora_actual|default('00:00') }}</div>
+        <div class="recuadro-derecha">
+            <div class="ruc">R.U.C. Nº 20602095704</div>
+            <div class="titulo">COTIZACIÓN</div>
+            <div class="numero">{{ codigo_cotizacion }}</div>
         </div>
     </div>
 
@@ -6023,23 +6048,25 @@ def api_cotizaciones_preview_pdf(id):
     <div class="layout-principal">
         <div class="seccion-cliente">
             <h3>INFORMACIÓN DEL CLIENTE</h3>
-            <div class="info-line"><span class="info-label"><strong>Cliente:</strong></span><span class="info-value">{{ cliente_razon_social }}</span></div>
-            <div class="info-line"><span class="info-label"><strong>RUC / DNI:</strong></span><span class="info-value">{{ cliente_ruc }}</span></div>
-            <div class="info-line"><span class="info-label"><strong>Dirección:</strong></span><span class="info-value">{{ cliente_direccion }}</span></div>
-            <div class="info-line"><span class="info-label"><strong>Teléfono:</strong></span><span class="info-value">{{ telefono_contacto|default('-') }}</span></div>
-            <div class="info-line"><span class="info-label"><strong>Atención:</strong></span><span class="info-value">{{ cliente_contacto|default('-') }}</span></div>
-            <div class="info-line"><span class="info-label"><strong>Correo:</strong></span><span class="info-value">{{ email_contacto_cliente|default('-') }}</span></div>
-            <div class="info-line"><span class="info-label"><strong>N° Requerimiento:</strong></span><span class="info-value">{{ numero_requerimiento|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label">Cliente:</span><span class="info-value">{{ cliente_razon_social }}</span></div>
+            <div class="info-line"><span class="info-label">RUC / DNI:</span><span class="info-value">{{ cliente_ruc }}</span></div>
+            <div class="info-line"><span class="info-label">Dirección:</span><span class="info-value">{{ cliente_direccion }}</span></div>
+            <div class="info-line"><span class="info-label">Teléfono:</span><span class="info-value">{{ telefono_contacto|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label">Atención:</span><span class="info-value">{{ cliente_contacto|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label">Correo:</span><span class="info-value">{{ email_contacto_cliente|default('-') }}</span></div>
+            <div class="info-line"><span class="info-label">N° Requerimiento:</span><span class="info-value">{{ numero_requerimiento|default('-') }}</span></div>
         </div>
         <div class="seccion-condiciones">
             <h3>CONDICIONES COMERCIALES</h3>
-            <div class="condicion-line"><span class="condicion-label"><strong>Ejecutiva:</strong></span><span class="condicion-value">{{ asesor_comercial }}</span></div>
-            <div class="condicion-line"><span class="condicion-label"><strong>E-mail:</strong></span><span class="condicion-value">{{ email_contacto }}</span></div>
-            <div class="condicion-line"><span class="condicion-label"><strong>Teléfono:</strong></span><span class="condicion-value">{{ telefono_contacto_user }}</span></div>
-            <div class="condicion-line"><span class="condicion-label"><strong>Condición Pago:</strong></span><span class="condicion-value">{{ condicion_pago }}</span></div>
-            <div class="condicion-line"><span class="condicion-label"><strong>Tiempo Entrega:</strong></span><span class="condicion-value">{{ tiempo_entrega }}</span></div>
-            <div class="condicion-line"><span class="condicion-label"><strong>Dirección Entrega:</strong></span><span class="condicion-value">{{ direccion_entrega }}</span></div>
-            <div class="condicion-line"><span class="condicion-label"><strong>Validez Oferta:</strong></span><span class="condicion-value">{{ validez_oferta }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Ejecutiva:</span><span class="condicion-value">{{ asesor_comercial }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">E-mail:</span><span class="condicion-value">{{ email_contacto }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Teléfono:</span><span class="condicion-value">{{ telefono_contacto_user }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Condición Pago:</span><span class="condicion-value">{{ condicion_pago }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Tiempo Entrega:</span><span class="condicion-value">{{ tiempo_entrega }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Dirección Entrega:</span><span class="condicion-value">{{ direccion_entrega }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Validez Oferta:</span><span class="condicion-value">{{ validez_oferta }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Fecha:</span><span class="condicion-value">{{ fecha_actual }}</span></div>
+            <div class="condicion-line"><span class="condicion-label">Hora:</span><span class="condicion-value">{{ hora_actual|default('00:00') }}</span></div>
         </div>
     </div>
 
@@ -6118,7 +6145,7 @@ def api_cotizaciones_preview_pdf(id):
             <span class="banco">BBVA</span>
             <span class="tipo">| Cuenta de ahorro empresa</span><br>
             <span class="numero">Cuenta: 00110319160100022197</span>
-            <span style="color: #000000;"> | </span>
+            <span style="color: #555555;"> | </span>
             <span class="cci">CCI: 011-319-000100022197-16</span>
         </div>
     </div>
