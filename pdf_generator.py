@@ -839,6 +839,8 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 'orden_compra_cliente': orden_compra_cliente if orden_compra_cliente else '—',
                 'factura': factura if factura else '—',
                 'nro_cotizacion': nro_cotizacion if nro_cotizacion else '—',
+                'fecha_vencimiento': datos_comprobante.get('fecha_vencimiento', ''),
+                'guia_vinculada': datos_comprobante.get('guia_vinculada', '—'),
                 'items': items_formateados,
                 'qr_base64': qr_base64
             }
@@ -981,12 +983,12 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         }
         .fila { 
             display: flex; 
-            padding: 1px 0; 
+            padding: 2px 0; 
             align-items: baseline; 
         }
         .fila .label { 
             font-weight: bold; 
-            min-width: 120px; 
+            min-width: 130px; 
             flex-shrink: 0; 
             color: #555555;
         }
@@ -996,6 +998,17 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             padding-left: 5px; 
             color: #333333;
         }
+        
+        /* ===== LAYOUT DE DOS COLUMNAS ===== */
+        .layout-dos-columnas {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+        }
+        .layout-dos-columnas .columna {
+            flex: 1;
+        }
+        
         .products-table { 
             width: 100%; 
             border-collapse: collapse; 
@@ -1151,6 +1164,39 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             font-size: 8.5px; 
             color: #555555;
         }
+        .seccion-con-borde {
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #f9f9f9;
+        }
+        .seccion-con-borde .seccion-titulo {
+            font-weight: bold;
+            font-size: 9.5px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #d5d5d5;
+            padding-bottom: 3px;
+            color: #444444;
+        }
+        .seccion-con-borde .fila {
+            display: flex;
+            padding: 2px 0;
+            align-items: baseline;
+        }
+        .seccion-con-borde .fila .label {
+            font-weight: bold;
+            min-width: 130px;
+            flex-shrink: 0;
+            color: #555555;
+        }
+        .seccion-con-borde .fila .value {
+            flex: 1;
+            text-align: left;
+            padding-left: 5px;
+            color: #333333;
+        }
     </style>
 </head>
 <body>
@@ -1172,17 +1218,39 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         </div>
     </div>
 
-    <div class="seccion">
-        <div class="seccion-titulo">DATOS DEL CLIENTE</div>
-        <div class="info-cliente">
-            <div class="fila"><span class="label">RUC:</span><span class="value">{{ cliente_ruc }}</span></div>
-            <div class="fila"><span class="label">CLIENTE:</span><span class="value">{{ cliente_nombre }}</span></div>
-            <div class="fila"><span class="label">DIRECCIÓN:</span><span class="value">{{ cliente_direccion }}</span></div>
-            <div class="fila"><span class="label">EMAIL:</span><span class="value">{{ cliente_email }}</span></div>
-            <div class="fila"><span class="label">TELÉFONO:</span><span class="value">{{ cliente_telefono }}</span></div>
+    <!-- ============================================================ -->
+    <!-- DATOS DEL CLIENTE Y DATOS DEL COMPROBANTE - DOS COLUMNAS    -->
+    <!-- ============================================================ -->
+    <div class="layout-dos-columnas">
+        <!-- COLUMNA IZQUIERDA: DATOS DEL CLIENTE -->
+        <div class="columna">
+            <div class="seccion-con-borde">
+                <div class="seccion-titulo">DATOS DEL CLIENTE</div>
+                <div class="fila"><span class="label">RUC:</span><span class="value">{{ cliente_ruc }}</span></div>
+                <div class="fila"><span class="label">CLIENTE:</span><span class="value">{{ cliente_nombre }}</span></div>
+                <div class="fila"><span class="label">DIRECCIÓN:</span><span class="value">{{ cliente_direccion }}</span></div>
+                <div class="fila"><span class="label">EMAIL:</span><span class="value">{{ cliente_email }}</span></div>
+                <div class="fila"><span class="label">TELÉFONO:</span><span class="value">{{ cliente_telefono }}</span></div>
+            </div>
+        </div>
+        
+        <!-- COLUMNA DERECHA: DATOS DEL COMPROBANTE -->
+        <div class="columna">
+            <div class="seccion-con-borde">
+                <div class="seccion-titulo">DATOS DEL COMPROBANTE</div>
+                <div class="fila"><span class="label">FECHA EMISIÓN:</span><span class="value">{{ fecha_emision }}</span></div>
+                <div class="fila"><span class="label">FECHA VENCIMIENTO:</span><span class="value">{{ fecha_vencimiento or '—' }}</span></div>
+                <div class="fila"><span class="label">FORMA DE PAGO:</span><span class="value">{{ condicion_pago }}</span></div>
+                <div class="fila"><span class="label">MONEDA:</span><span class="value">{{ moneda }}</span></div>
+                <div class="fila"><span class="label">VENDEDOR:</span><span class="value">Helen Blas Príncipe</span></div>
+                <div class="fila"><span class="label">TELÉFONO:</span><span class="value">(+51) 999932051</span></div>
+            </div>
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- DOCUMENTOS RELACIONADOS                                      -->
+    <!-- ============================================================ -->
     <div class="seccion">
         <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
         <div class="referencias">
@@ -1192,8 +1260,8 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                     <span class="ref-value">{{ orden_compra_cliente }}</span>
                 </div>
                 <div class="ref-item">
-                    <span class="ref-label">NRO DE FACTURA</span>
-                    <span class="ref-value">{{ factura }}</span>
+                    <span class="ref-label">NRO DE GUÍA</span>
+                    <span class="ref-value">{{ guia_vinculada or '—' }}</span>
                 </div>
                 <div class="ref-item">
                     <span class="ref-label">NRO DE COTIZACION</span>
@@ -1203,6 +1271,9 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- DETALLE DE PRODUCTOS                                         -->
+    <!-- ============================================================ -->
     <div class="seccion">
         <div class="seccion-titulo">DETALLE DE PRODUCTOS</div>
         <table class="products-table">
@@ -1237,7 +1308,9 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         </table>
     </div>
 
-    <!-- ===== CUADRO DE RESUMEN VERTICAL ===== -->
+    <!-- ============================================================ -->
+    <!-- CUADRO DE RESUMEN VERTICAL                                   -->
+    <!-- ============================================================ -->
     <div class="totales-box">
         <div class="linea">
             <span class="label-total">OP. GRAVADA</span>
@@ -1289,8 +1362,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     </div>
 </body>
 </html>"""
-
-
     def _reemplazar_variables_template_comprobante(self, template, datos):
         try:
             return Template(template).render(**datos)
