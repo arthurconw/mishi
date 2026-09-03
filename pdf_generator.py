@@ -863,8 +863,9 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             traceback.print_exc()
             return None
 
+
     def _obtener_template_comprobante(self):
-        return """<!DOCTYPE html>
+     return """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -1025,7 +1026,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             background: #f8f8f8;
         }
         
-        /* ===== CUADRO DE RESUMEN ===== */
+        /* ===== CUADRO DE RESUMEN MEJORADO ===== */
         .totales-box { 
             border: 1px solid #d5d5d5;
             border-radius: 8px; 
@@ -1036,53 +1037,66 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             flex-direction: column; 
             align-items: flex-start;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             margin-left: auto;
         }
         .totales-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px 30px;
+            grid-template-columns: auto 1fr auto;
+            gap: 2px 20px;
             width: 100%;
         }
         .totales-grid .linea {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-            font-size: 9px;
-            color: #444444;
-            border-bottom: 1px dotted #e8e8e8;
+            display: contents;
         }
         .totales-grid .linea .label-total {
-            font-weight: normal;
+            font-size: 9px;
+            color: #555555;
+            padding: 2px 0;
+            border-bottom: 1px dotted #e8e8e8;
+        }
+        .totales-grid .linea .moneda-simbolo {
+            font-size: 9px;
+            color: #555555;
+            padding: 2px 0;
+            text-align: right;
+            border-bottom: 1px dotted #e8e8e8;
         }
         .totales-grid .linea .value-total {
+            font-size: 9px;
             font-weight: bold;
-            text-align: right;
-        }
-        .totales-grid .linea.total {
-            font-weight: bold;
-            font-size: 12px;
-            border-top: 2px solid #333333;
-            border-bottom: none;
-            padding-top: 6px;
-            margin-top: 2px;
             color: #333333;
-            grid-column: 1 / -1;
+            padding: 2px 0;
+            text-align: right;
+            border-bottom: 1px dotted #e8e8e8;
         }
         .totales-grid .linea.total .label-total {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
+            color: #333333;
+            border-bottom: none;
+            padding-top: 6px;
+        }
+        .totales-grid .linea.total .moneda-simbolo {
+            font-weight: bold;
+            font-size: 12px;
+            color: #333333;
+            border-bottom: none;
+            padding-top: 6px;
         }
         .totales-grid .linea.total .value-total {
             font-weight: bold;
             font-size: 14px;
+            color: #1a1a1a;
+            border-top: 2px solid #333333;
+            padding-top: 6px;
+            border-bottom: none;
         }
         .total-letras {
             font-size: 8px;
             color: #555555;
-            margin-top: 6px;
-            padding-top: 6px;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 1px solid #d5d5d5;
             width: 100%;
             text-align: left;
@@ -1241,36 +1255,43 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         </table>
     </div>
 
-    <!-- ===== CUADRO DE RESUMEN CON LETRAS ===== -->
+    <!-- ===== CUADRO DE RESUMEN MEJORADO ===== -->
     <div class="totales-box">
         <div class="totales-grid">
             <div class="linea">
                 <span class="label-total">OP. GRAVADA</span>
-                <span class="value-total">{{ moneda }} {{ subtotal }}</span>
+                <span class="moneda-simbolo">{{ moneda }}</span>
+                <span class="value-total">{{ subtotal }}</span>
             </div>
             <div class="linea">
                 <span class="label-total">IGV (18%)</span>
-                <span class="value-total">{{ moneda }} {{ igv }}</span>
+                <span class="moneda-simbolo">{{ moneda }}</span>
+                <span class="value-total">{{ igv }}</span>
             </div>
             <div class="linea">
                 <span class="label-total">OP. DESCUENTO</span>
-                <span class="value-total">{{ moneda }} {{ descuento }}</span>
+                <span class="moneda-simbolo">{{ moneda }}</span>
+                <span class="value-total">{{ descuento }}</span>
             </div>
             <div class="linea">
                 <span class="label-total">OP. INAFECTA</span>
-                <span class="value-total">{{ moneda }} {{ op_inafecta }}</span>
+                <span class="moneda-simbolo">{{ moneda }}</span>
+                <span class="value-total">{{ op_inafecta }}</span>
             </div>
             <div class="linea">
                 <span class="label-total">OP. EXONERADA</span>
-                <span class="value-total">{{ moneda }} {{ op_exonerada }}</span>
+                <span class="moneda-simbolo">{{ moneda }}</span>
+                <span class="value-total">{{ op_exonerada }}</span>
             </div>
             <div class="linea">
                 <span class="label-total">TOTAL OP. GRATUITA</span>
-                <span class="value-total">{{ moneda }} {{ op_gratuita }}</span>
+                <span class="moneda-simbolo">{{ moneda }}</span>
+                <span class="value-total">{{ op_gratuita }}</span>
             </div>
             <div class="linea total">
                 <span class="label-total">TOTAL VENTA</span>
-                <span class="value-total">{{ moneda }} {{ total }}</span>
+                <span class="moneda-simbolo">{{ moneda }}</span>
+                <span class="value-total">{{ total }}</span>
             </div>
         </div>
         <div class="total-letras">
@@ -1295,6 +1316,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     </div>
 </body>
 </html>"""
+
 
     def _reemplazar_variables_template_comprobante(self, template, datos):
         try:

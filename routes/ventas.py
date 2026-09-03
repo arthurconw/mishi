@@ -6400,9 +6400,64 @@ def generar_pdf_comprobante(comp_id):
         items = []
         try:
             if comp.get('items_json'):
-                items = json.loads(comp.get('items_json'))
-        except:
+                raw_items = json.loads(comp.get('items_json'))
+                # ============================================================
+                # 🔽 ASEGURAR QUE MARCA Y MODELO SE EXTIENEN
+                # ============================================================
+                for item in raw_items:
+                    if isinstance(item, dict):
+                        items.append({
+                            'codigo': item.get('codigo', ''),
+                            'producto': item.get('producto', item.get('descripcion', '')),
+                            'marca': item.get('marca', ''),       # ← IMPORTANTE
+                            'modelo': item.get('modelo', ''),     # ← IMPORTANTE
+                            'um': item.get('um', 'NIU'),
+                            'cantidad': float(item.get('cantidad', 1)),
+                            'valorVenta': float(item.get('valorVenta', item.get('precio', 0)))
+                        })
+                    elif isinstance(item, list):
+                        # Si es un array: [codigo, producto, marca, modelo, um, cantidad, valorVenta]
+                        items.append({
+                            'codigo': item[0] if len(item) > 0 else '',
+                            'producto': item[1] if len(item) > 1 else '',
+                            'marca': item[2] if len(item) > 2 else '',   # ← IMPORTANTE
+                            'modelo': item[3] if len(item) > 3 else '',  # ← IMPORTANTE
+                            'um': item[4] if len(item) > 4 else 'NIU',
+                            'cantidad': float(item[5]) if len(item) > 5 else 1,
+                            'valorVenta': float(item[6]) if len(item) > 6 else 0
+                        })
+        except Exception as e:
+            print(f"⚠️ Error parseando items: {e}")
             items = []
+        
+        # ============================================================
+        # 🔽 SI NO HAY ITEMS, INTENTAR OBTENER DE LA COTIZACIÓN ASOCIADA
+        # ============================================================
+        if not items and comp.get('documento_asociado'):
+            try:
+                cot_numero = comp.get('documento_asociado')
+                query_cot_items = """
+                    SELECT 
+                        d.cantidad, d.precio_venta_unitario,
+                        p.codigo, p.descripcion, p.marca, p.modelo, p.unidad
+                    FROM cotizacion_detalle d
+                    LEFT JOIN productos p ON p.id = d.producto_id
+                    LEFT JOIN cotizaciones c ON c.id = d.cotizacion_id
+                    WHERE c.codigo_cotizacion = %s OR c.numero_cotizacion = %s
+                """
+                cot_items = db_query(query_cot_items, (cot_numero, cot_numero))
+                for item in cot_items:
+                    items.append({
+                        'codigo': item.get('codigo', ''),
+                        'producto': item.get('descripcion', ''),
+                        'marca': item.get('marca', ''),       # ← IMPORTANTE
+                        'modelo': item.get('modelo', ''),     # ← IMPORTANTE
+                        'um': item.get('unidad', 'NIU'),
+                        'cantidad': float(item.get('cantidad', 1)),
+                        'valorVenta': float(item.get('precio_venta_unitario', 0))
+                    })
+            except Exception as e:
+                print(f"⚠️ Error obteniendo items de cotización: {e}")
         
         datos_comprobante = {
             'tipo_documento': 'comprobante',
