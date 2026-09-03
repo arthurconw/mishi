@@ -5658,7 +5658,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML - HEADER EXACTO A LA PRIMERA IMAGEN (SIN DESTINATARIO)
+        # 4. Template HTML - HEADER IGUAL A LA GUÍA DE REMISIÓN
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5682,7 +5682,7 @@ def api_cotizaciones_preview_pdf(id):
             background: #ffffff; 
         }
         
-        /* ===== HEADER EXACTO A LA PRIMERA IMAGEN ===== */
+        /* ===== HEADER IGUAL A LA GUÍA DE REMISIÓN ===== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -5692,10 +5692,10 @@ def api_cotizaciones_preview_pdf(id):
             padding-bottom: 12px;
         }
         .logo-section {
-            flex: 0 0 120px;
+            flex: 0 0 100px;
         }
         .logo img {
-            max-width: 120px;
+            max-width: 100px;
             height: auto;
             display: block;
         }
@@ -5705,31 +5705,31 @@ def api_cotizaciones_preview_pdf(id):
             padding: 0 10px;
         }
         .empresa-info .nombre-empresa {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
+            color: #000;
+            letter-spacing: 0.5px;
+            margin-bottom: 1px;
+        }
+        .empresa-info .ruc {
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 3px;
+        }
+        .empresa-info .slogan {
+            font-size: 10px;
             color: #000;
             letter-spacing: 0.5px;
             margin-bottom: 2px;
         }
-        .empresa-info .ruc {
-            font-size: 11px;
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 4px;
-        }
-        .empresa-info .slogan {
-            font-size: 11px;
-            color: #000;
-            letter-spacing: 0.5px;
-            margin-bottom: 3px;
-        }
         .empresa-info .contacto {
-            font-size: 9.5px;
+            font-size: 9px;
             color: #000;
             margin-bottom: 1px;
         }
         .empresa-info .web {
-            font-size: 9.5px;
+            font-size: 9px;
             color: #000;
         }
         
@@ -5737,7 +5737,7 @@ def api_cotizaciones_preview_pdf(id):
             flex: 0 0 auto;
             text-align: right;
             padding-left: 15px;
-            min-width: 180px;
+            min-width: 170px;
         }
         .numero-cotizacion {
             font-size: 16px;
@@ -5988,7 +5988,7 @@ def api_cotizaciones_preview_pdf(id):
 </head>
 <body>
     <!-- ============================================================ -->
-    <!-- HEADER EXACTO A LA PRIMERA IMAGEN (SIN DESTINATARIO)        -->
+    <!-- HEADER IGUAL A LA GUÍA DE REMISIÓN                          -->
     <!-- ============================================================ -->
     <div class="header">
         <!-- LOGO -->
