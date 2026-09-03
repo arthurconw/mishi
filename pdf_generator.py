@@ -71,106 +71,103 @@ class PDFGenerator:
     # ============================================================
     # FUNCIÓN PARA CONVERTIR NÚMEROS A LETRAS
     # ============================================================
-    def _numero_a_letras(self, numero):
-        """Convierte un número a su representación en letras"""
-        try:
-            numero = float(numero)
-            if numero == 0:
-                return "CERO"
+    def numero_a_letras(self, numero):
+    """Convierte un número a su representación en letras"""
+    try:
+        numero = float(numero)
+        if numero == 0:
+            return "CERO"
+        
+        # Diccionarios para conversión
+        unidades = ["", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"]
+        decenas = ["", "DIEZ", "VEINTE", "TREINTA", "CUARENTA", "CINCUENTA", 
+                  "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"]
+        centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", 
+                   "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"]
+        
+        # Separar parte entera y decimal
+        entero = int(numero)
+        decimal = int(round((numero - entero) * 100, 2))
+        
+        def convertir_grupo(n):
+            if n == 0:
+                return ""
+            if n == 100:
+                return "CIEN"
             
-            # Diccionarios para conversión
-            unidades = ["", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"]
-            decenas = ["", "DIEZ", "VEINTE", "TREINTA", "CUARENTA", "CINCUENTA", 
-                      "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"]
-            centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", 
-                       "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"]
+            texto = ""
+            # Centenas
+            if n >= 100:
+                c = n // 100
+                texto += centenas[c]
+                n = n % 100
+                if n > 0:
+                    texto += " "
             
-            # Separar parte entera y decimal
-            entero = int(numero)
-            decimal = int(round((numero - entero) * 100, 2))
-            
-            # Función para convertir números menores a 1000
-            def convertir_grupo(n):
-                if n == 0:
-                    return ""
-                if n == 100:
-                    return "CIEN"
-                
-                texto = ""
-                # Centenas
-                if n >= 100:
-                    c = n // 100
-                    texto += centenas[c]
-                    n = n % 100
-                    if n > 0:
-                        texto += " "
-                
-                # Decenas y unidades
-                if n >= 10:
-                    d = n // 10
-                    u = n % 10
-                    if d == 1 and u > 0:
-                        # Números del 11 al 19
-                        especiales = {11: "ONCE", 12: "DOCE", 13: "TRECE", 14: "CATORCE", 
-                                     15: "QUINCE", 16: "DIECISÉIS", 17: "DIECISIETE", 
-                                     18: "DIECIOCHO", 19: "DIECINUEVE"}
-                        texto += especiales.get(n, "")
-                    else:
-                        texto += decenas[d]
-                        if u > 0:
-                            if d == 2:
-                                # Veinti...
-                                especiales = {1: "UN", 2: "DOS", 3: "TRES", 4: "CUATRO", 
-                                             5: "CINCO", 6: "SEIS", 7: "SIETE", 8: "OCHO", 9: "NUEVE"}
-                                texto += "Y" + especiales[u]
-                            else:
-                                texto += " Y " + unidades[u]
-                elif n > 0:
-                    texto += unidades[n]
-                
-                return texto.strip()
-            
-            # Convertir millones, miles y unidades
-            texto_final = ""
-            
-            # Millones
-            millones = entero // 1000000
-            if millones > 0:
-                if millones == 1:
-                    texto_final += "UN MILLÓN"
+            # Decenas y unidades
+            if n >= 10:
+                d = n // 10
+                u = n % 10
+                if d == 1 and u > 0:
+                    # Números del 11 al 19
+                    especiales = {11: "ONCE", 12: "DOCE", 13: "TRECE", 14: "CATORCE", 
+                                 15: "QUINCE", 16: "DIECISÉIS", 17: "DIECISIETE", 
+                                 18: "DIECIOCHO", 19: "DIECINUEVE"}
+                    texto += especiales.get(n, "")
                 else:
-                    texto_final += convertir_grupo(millones) + " MILLONES"
-                entero = entero % 1000000
-                if entero > 0:
-                    texto_final += " "
+                    texto += decenas[d]
+                    if u > 0:
+                        if d == 2:
+                            # Veinti...
+                            especiales = {1: "UN", 2: "DOS", 3: "TRES", 4: "CUATRO", 
+                                         5: "CINCO", 6: "SEIS", 7: "SIETE", 8: "OCHO", 9: "NUEVE"}
+                            texto += "Y" + especiales[u]
+                        else:
+                            texto += " Y " + unidades[u]
+            elif n > 0:
+                texto += unidades[n]
             
-            # Miles
-            miles = entero // 1000
-            if miles > 0:
-                if miles == 1:
-                    texto_final += "MIL"
-                else:
-                    texto_final += convertir_grupo(miles) + " MIL"
-                entero = entero % 1000
-                if entero > 0:
-                    texto_final += " "
-            
-            # Unidades
-            if entero > 0:
-                texto_final += convertir_grupo(entero)
-            
-            # Parte decimal
-            if decimal > 0:
-                texto_final += f" CON {decimal:02d}/100"
+            return texto.strip()
+        
+        texto_final = ""
+        
+        # Millones
+        millones = entero // 1000000
+        if millones > 0:
+            if millones == 1:
+                texto_final += "UN MILLÓN"
             else:
-                texto_final += " CON 00/100"
-            
-            return texto_final.upper()
-            
-        except Exception as e:
-            print(f"⚠️ Error convirtiendo número a letras: {e}")
-            return str(numero)
-
+                texto_final += convertir_grupo(millones) + " MILLONES"
+            entero = entero % 1000000
+            if entero > 0:
+                texto_final += " "
+        
+        # Miles
+        miles = entero // 1000
+        if miles > 0:
+            if miles == 1:
+                texto_final += "MIL"
+            else:
+                texto_final += convertir_grupo(miles) + " MIL"
+            entero = entero % 1000
+            if entero > 0:
+                texto_final += " "
+        
+        # Unidades
+        if entero > 0:
+            texto_final += convertir_grupo(entero)
+        
+        # Parte decimal
+        if decimal > 0:
+            texto_final += f" CON {decimal:02d}/100"
+        else:
+            texto_final += " CON 00/100"
+        
+        return texto_final.upper()
+        
+    except Exception as e:
+        print(f"⚠️ Error convirtiendo número a letras: {e}")
+        return str(numero)
     # ============================================================
     # GENERAR GUÍA DE REMISIÓN - BLANCO Y NEGRO SUAVE
     # ============================================================
