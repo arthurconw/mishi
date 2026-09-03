@@ -875,7 +875,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             font-family: 'Helvetica', Arial, sans-serif; 
             font-size: 9.5px; 
             color: #333333;
-            line-height: 1.8; 
+            line-height: 1.6; 
             background: #ffffff;
         }
         .header-superior { 
@@ -963,7 +963,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             color: #333333;
         }
         .seccion { 
-            margin-bottom: 8px; 
+            margin-bottom: 6px; 
         }
         .seccion-titulo { 
             font-weight: bold; 
@@ -1003,7 +1003,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         .layout-dos-columnas {
             display: flex;
             gap: 15px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .layout-dos-columnas .columna {
             flex: 1;
@@ -1036,62 +1036,64 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             background: #f8f8f8;
         }
         
-        /* ===== CUADRO DE RESUMEN VERTICAL ===== */
+        /* ===== CUADRO DE RESUMEN VERTICAL MÁS PEQUEÑO ===== */
         .totales-box { 
             border: 1px solid #d5d5d5;
-            border-radius: 8px; 
-            padding: 10px 14px; 
+            border-radius: 6px; 
+            padding: 6px 12px; 
             background: #f9f9f9;
-            margin-top: 8px; 
+            margin-top: 6px; 
             display: flex; 
             flex-direction: column; 
             align-items: flex-start;
             width: 100%;
-            max-width: 350px;
+            max-width: 320px;
             margin-left: auto;
         }
         .totales-box .linea {
             display: flex;
             justify-content: space-between;
             width: 100%;
-            padding: 3px 0;
-            font-size: 9px;
+            padding: 1px 0;
+            font-size: 7.5px;
             color: #444444;
             border-bottom: 1px dotted #e8e8e8;
         }
         .totales-box .linea .label-total {
             font-weight: normal;
             color: #555555;
+            font-size: 7.5px;
         }
         .totales-box .linea .value-total {
             font-weight: bold;
             color: #333333;
             text-align: right;
+            font-size: 7.5px;
         }
         .totales-box .linea.total {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 11px;
             border-top: 2px solid #333333;
             border-bottom: none;
-            padding-top: 8px;
+            padding-top: 4px;
             margin-top: 2px;
             color: #333333;
         }
         .totales-box .linea.total .label-total {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 11px;
             color: #333333;
         }
         .totales-box .linea.total .value-total {
             font-weight: bold;
-            font-size: 15px;
+            font-size: 13px;
             color: #1a1a1a;
         }
         .total-letras {
-            font-size: 8px;
+            font-size: 7px;
             color: #555555;
-            margin-top: 8px;
-            padding-top: 8px;
+            margin-top: 4px;
+            padding-top: 4px;
             border-top: 1px solid #d5d5d5;
             width: 100%;
             text-align: left;
@@ -1104,7 +1106,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         .referencias { 
             border: 1px solid #d5d5d5;
             border-radius: 8px; 
-            padding: 6px 12px; 
+            padding: 4px 12px; 
             margin-bottom: 6px; 
             background: #f9f9f9;
         }
@@ -1112,7 +1114,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             display: grid; 
             grid-template-columns: 1fr 1fr 1fr; 
             gap: 8px; 
-            padding: 6px 0; 
+            padding: 4px 0; 
         }
         .ref-item { 
             text-align: center; 
@@ -1120,69 +1122,69 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         .ref-item .ref-label { 
             font-weight: bold; 
             display: block; 
-            font-size: 7.5px; 
+            font-size: 7px; 
             color: #777777;
             text-transform: uppercase; 
             letter-spacing: 0.3px; 
         }
         .ref-item .ref-value { 
-            font-size: 9px; 
+            font-size: 8.5px; 
             font-weight: 600; 
             color: #333333;
         }
         .qr-container { 
             text-align: center; 
-            margin: 8px 0 5px 0; 
-            padding: 6px; 
+            margin: 6px 0 4px 0; 
+            padding: 4px; 
             border: 1px solid #d5d5d5;
             border-radius: 8px; 
             background: #fafafa;
         }
         .qr-container img { 
-            width: 90px; 
-            height: 90px; 
+            width: 80px; 
+            height: 80px; 
         }
         .qr-container .qr-text { 
-            font-size: 7px; 
+            font-size: 6.5px; 
             color: #888888;
             margin-top: 2px; 
         }
         .footer { 
-            margin-top: 12px; 
+            margin-top: 10px; 
             text-align: center; 
-            font-size: 7.5px; 
+            font-size: 7px; 
             color: #888888;
             border-top: 1px solid #e0e0e0;
-            padding-top: 6px; 
+            padding-top: 4px; 
         }
         .observaciones { 
-            margin-top: 6px; 
-            padding: 6px 10px; 
+            margin-top: 4px; 
+            padding: 4px 10px; 
             border: 1px solid #e5e7eb; 
             border-radius: 6px; 
             background: #fafafa; 
-            font-size: 8.5px; 
+            font-size: 8px; 
             color: #555555;
         }
         .seccion-con-borde {
             border: 1px solid #d5d5d5;
             border-radius: 8px;
-            padding: 8px 12px;
+            padding: 6px 12px;
             margin-bottom: 6px;
             background: #f9f9f9;
         }
         .seccion-con-borde .seccion-titulo {
             font-weight: bold;
-            font-size: 9.5px;
-            margin-bottom: 4px;
+            font-size: 9px;
+            margin-bottom: 3px;
             text-transform: uppercase;
             border-bottom: 1px solid #d5d5d5;
-            padding-bottom: 3px;
+            padding-bottom: 2px;
             color: #444444;
         }
         .seccion-con-borde .fila {
             display: flex;
-            padding: 2px 0;
+            padding: 1px 0;
             align-items: baseline;
         }
         .seccion-con-borde .fila .label {
@@ -1190,12 +1192,14 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             min-width: 130px;
             flex-shrink: 0;
             color: #555555;
+            font-size: 8.5px;
         }
         .seccion-con-borde .fila .value {
             flex: 1;
             text-align: left;
             padding-left: 5px;
             color: #333333;
+            font-size: 8.5px;
         }
     </style>
 </head>
@@ -1222,12 +1226,12 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     <!-- DATOS DEL CLIENTE Y DATOS DEL COMPROBANTE - DOS COLUMNAS    -->
     <!-- ============================================================ -->
     <div class="layout-dos-columnas">
-        <!-- COLUMNA IZQUIERDA: DATOS DEL CLIENTE -->
+        <!-- COLUMNA IZQUIERDA: DATOS DEL CLIENTE (CLIENTE primero, luego RUC) -->
         <div class="columna">
             <div class="seccion-con-borde">
                 <div class="seccion-titulo">DATOS DEL CLIENTE</div>
-                <div class="fila"><span class="label">RUC:</span><span class="value">{{ cliente_ruc }}</span></div>
                 <div class="fila"><span class="label">CLIENTE:</span><span class="value">{{ cliente_nombre }}</span></div>
+                <div class="fila"><span class="label">RUC:</span><span class="value">{{ cliente_ruc }}</span></div>
                 <div class="fila"><span class="label">DIRECCIÓN:</span><span class="value">{{ cliente_direccion }}</span></div>
                 <div class="fila"><span class="label">EMAIL:</span><span class="value">{{ cliente_email }}</span></div>
                 <div class="fila"><span class="label">TELÉFONO:</span><span class="value">{{ cliente_telefono }}</span></div>
@@ -1309,7 +1313,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- CUADRO DE RESUMEN VERTICAL                                   -->
+    <!-- CUADRO DE RESUMEN VERTICAL MÁS PEQUEÑO                      -->
     <!-- ============================================================ -->
     <div class="totales-box">
         <div class="linea">
@@ -1362,6 +1366,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
     </div>
 </body>
 </html>"""
+
     def _reemplazar_variables_template_comprobante(self, template, datos):
         try:
             return Template(template).render(**datos)
