@@ -5641,7 +5641,7 @@ def api_cotizaciones_preview_pdf(id):
             'cliente_contacto': c.get('cliente_contacto') or c.get('contacto_cliente') or '---',
             'email_contacto_cliente': c.get('cliente_email') or c.get('email_cliente') or '---',
             'telefono_contacto': c.get('cliente_telefono') or c.get('telefono_cliente') or '---',
-            'numero_requerimiento': requerimiento,  # ← REQUERIMIENTO
+            'numero_requerimiento': requerimiento,
             'asesor_comercial': 'Helen Blas Príncipe',
             'email_contacto': 'ventas@kcfcorporacion.com',
             'telefono_contacto_user': '999932051',
@@ -5658,7 +5658,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML - AGREGAR REQUERIMIENTO
+        # 4. Template HTML - COMPLETO ACTUALIZADO
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5682,56 +5682,82 @@ def api_cotizaciones_preview_pdf(id):
             background: #ffffff; 
         }
         
+        /* ===== HEADER REDISEÑADO ===== */
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #000000;
-            padding-bottom: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 12px;
         }
-        .logo-section { flex: 1; }
-        .logo { max-width: 140px; }
-        .logo img { width: 100%; display: block; }
-        .empresa-info { flex: 2; text-align: center; }
-        .empresa-info h1 { 
-            color: #000000; 
-            margin: 0 0 3px 0; 
-            font-size: 18px; 
-            font-weight: bold; 
+        .logo-section {
+            flex: 0 0 120px;
         }
-        .empresa-info .slogan { 
-            font-size: 9px; 
-            color: #000000; 
-            letter-spacing: 1px; 
+        .logo img {
+            max-width: 120px;
+            height: auto;
+            display: block;
         }
-        .empresa-info .ruc-text { 
+        .empresa-info {
+            flex: 1;
+            text-align: center;
+        }
+        .empresa-info h1 {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+            color: #000;
+            letter-spacing: 1px;
+        }
+        .empresa-info .slogan {
             font-size: 11px;
-            color: #000000; 
-            font-weight: bold; 
-            margin-top: 3px; 
+            color: #000;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+        .empresa-info .ruc-text {
+            font-size: 11px;
+            color: #000;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+        .empresa-info .contacto-text {
+            font-size: 9px;
+            color: #000;
+            margin-top: 2px;
+        }
+        .empresa-info .web-text {
+            font-size: 9px;
+            color: #000;
         }
         
         .cotizacion-info {
-            flex: 1;
+            flex: 0 0 auto;
             text-align: right;
-            border: 1px solid #000000;
-            padding: 6px 10px;
+            padding-left: 15px;
         }
-        .cotizacion-info .numero-linea {
-            font-size: 11px;
+        .numero-cotizacion {
+            font-size: 16px;
             font-weight: bold;
-            color: #000000;
+            color: #000;
             white-space: nowrap;
         }
-        .cotizacion-info .fecha, 
-        .cotizacion-info .hora {
-            font-size: 8px;
-            margin-top: 2px;
-            color: #000000;
+        .fecha-hora {
+            font-size: 10px;
+            color: #000;
+            margin-top: 4px;
+        }
+        .fecha-hora strong {
+            color: #000;
         }
         
-        .layout-principal { display: flex; gap: 15px; margin-bottom: 12px; }
+        /* ===== LAYOUT PRINCIPAL ===== */
+        .layout-principal { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 12px; 
+        }
         .seccion-cliente, .seccion-condiciones { 
             flex: 1; 
             border: 1px solid #000000;
@@ -5756,8 +5782,12 @@ def api_cotizaciones_preview_pdf(id):
             font-weight: bold; 
             color: #000000;
         }
-        .info-value, .condicion-value { flex: 1; color: #000000; }
+        .info-value, .condicion-value { 
+            flex: 1; 
+            color: #000000; 
+        }
         
+        /* ===== TEXTO INTRODUCTORIO ===== */
         .texto-introductorio { 
             margin: 10px 0; 
             padding: 8px 15px; 
@@ -5772,6 +5802,7 @@ def api_cotizaciones_preview_pdf(id):
             color: #000000;
         }
         
+        /* ===== TABLA DE PRODUCTOS ===== */
         .tabla-productos { 
             width: 100%; 
             border-collapse: collapse; 
@@ -5779,8 +5810,8 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 8.2px; 
         }
         .tabla-productos th { 
-            background: #000000; 
-            color: #ffffff; 
+            background: #d9d9d9;  /* GRIS SUAVE */
+            color: #000000;
             padding: 6px 4px; 
             border: 1px solid #000000; 
             font-weight: bold; 
@@ -5820,6 +5851,7 @@ def api_cotizaciones_preview_pdf(id):
         .text-center { text-align: center; }
         .fw-bold { font-weight: bold; }
         
+        /* ===== SECCIÓN TOTALES ===== */
         .seccion-totales { 
             width: 280px; 
             margin-left: auto; 
@@ -5847,15 +5879,21 @@ def api_cotizaciones_preview_pdf(id):
             white-space: nowrap; 
             color: #000000;
         }
+        
+        /* TOTAL A PAGAR - MÁS GRANDE */
         .total-final { 
             border-top: 2px solid #000000; 
-            padding-top: 5px; 
+            padding-top: 8px; 
             margin-top: 5px; 
             font-weight: bold; 
-            font-size: 11px; 
+            font-size: 14px;
             color: #000000; 
         }
+        .total-final .numero-formateado {
+            font-size: 16px;
+        }
         
+        /* ===== OTRAS SECCIONES ===== */
         .seccion-importante { 
             margin: 8px 0; 
             padding: 5px 10px; 
@@ -5947,8 +5985,11 @@ def api_cotizaciones_preview_pdf(id):
     </style>
 </head>
 <body>
-    <!-- HEADER -->
+    <!-- ============================================================ -->
+    <!-- HEADER REDISEÑADO - IGUAL A LA IMAGEN                        -->
+    <!-- ============================================================ -->
     <div class="header">
+        <!-- LOGO -->
         <div class="logo-section">
             {% if logo_base64 %}
             <div class="logo">
@@ -5956,19 +5997,27 @@ def api_cotizaciones_preview_pdf(id):
             </div>
             {% endif %}
         </div>
+        
+        <!-- INFORMACIÓN EMPRESA - CENTRADO -->
         <div class="empresa-info">
             <h1>KCF CORPORACION E.I.R.L</h1>
             <div class="slogan">Soluciones integrales en abastecimientos</div>
             <div class="ruc-text">RUC: 20602095704</div>
+            <div class="contacto-text">Telf: 999 932 051 | Email: ventas@kcfcorporacion.com</div>
+            <div class="web-text">Web: https://kcfcorporacion.com/</div>
         </div>
+
+        <!-- N° COTIZACIÓN - FUERA DEL CUADRO Y MÁS GRANDE -->
         <div class="cotizacion-info">
-            <div class="numero-linea"><strong>COTIZACIÓN N°:</strong> {{ codigo_cotizacion }}</div>
-            <div class="fecha"><strong>Fecha:</strong> {{ fecha_actual }}</div>
-            <div class="hora"><strong>Hora:</strong> {{ hora_actual|default('00:00') }}</div>
+            <div class="numero-cotizacion">COTIZACIÓN N°: {{ codigo_cotizacion }}</div>
+            <div class="fecha-hora"><strong>Fecha:</strong> {{ fecha_actual }}</div>
+            <div class="fecha-hora"><strong>Hora:</strong> {{ hora_actual|default('00:00') }}</div>
         </div>
     </div>
 
-    <!-- CLIENTE Y CONDICIONES -->
+    <!-- ============================================================ -->
+    <!-- CLIENTE Y CONDICIONES                                        -->
+    <!-- ============================================================ -->
     <div class="layout-principal">
         <div class="seccion-cliente">
             <h3>INFORMACIÓN DEL CLIENTE</h3>
@@ -5992,13 +6041,17 @@ def api_cotizaciones_preview_pdf(id):
         </div>
     </div>
 
-    <!-- TEXTO INTRODUCTORIO -->
+    <!-- ============================================================ -->
+    <!-- TEXTO INTRODUCTORIO                                          -->
+    <!-- ============================================================ -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
         La presente tiene como objeto poner a su consideración nuestra oferta detallada según su requerimiento, agradecemos por confiar en nuestros productos:
     </div>
 
-    <!-- TABLA DE PRODUCTOS -->
+    <!-- ============================================================ -->
+    <!-- TABLA DE PRODUCTOS - CABECERA GRIS SUAVE                    -->
+    <!-- ============================================================ -->
     <table class="tabla-productos">
         <thead>
             <tr>
@@ -6034,12 +6087,16 @@ def api_cotizaciones_preview_pdf(id):
         </tbody>
     </table>
 
-    <!-- IMPORTANTE -->
+    <!-- ============================================================ -->
+    <!-- IMPORTANTE                                                  -->
+    <!-- ============================================================ -->
     <div class="seccion-importante">
         <strong>Importante:</strong> Las imágenes son referenciales, colores, acabados o especificaciones técnicas deben ser verificadas en la descripción del producto.
     </div>
 
-    <!-- TOTALES -->
+    <!-- ============================================================ -->
+    <!-- TOTALES - TOTAL A PAGAR MÁS GRANDE                         -->
+    <!-- ============================================================ -->
     <div class="seccion-totales">
         <div class="total-line"><span>Subtotal (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
         {% if hay_descuentos %}
@@ -6050,7 +6107,9 @@ def api_cotizaciones_preview_pdf(id):
         <div class="total-line total-final"><span><strong>TOTAL A PAGAR:</strong></span><span class="numero-formateado"><strong>S/ {{ "%.2f"|format(summary_total_venta|default(0)) }}</strong></span></div>
     </div>
 
-    <!-- CUENTAS BANCARIAS -->
+    <!-- ============================================================ -->
+    <!-- CUENTAS BANCARIAS                                           -->
+    <!-- ============================================================ -->
     <div class="cuentas-bancarias">
         <h3>CUENTAS BANCARIAS</h3>
         <div class="cuenta-line">
@@ -6062,7 +6121,9 @@ def api_cotizaciones_preview_pdf(id):
         </div>
     </div>
 
-    <!-- NOTA ACLARATORIA -->
+    <!-- ============================================================ -->
+    <!-- NOTA ACLARATORIA                                            -->
+    <!-- ============================================================ -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 Nota Aclaratoria</div>
         La validez de esta oferta está sujeta a la disponibilidad de inventario.<br>
@@ -6071,7 +6132,9 @@ def api_cotizaciones_preview_pdf(id):
         <a href="https://kcfcorporacion.com" class="web-link">www.kcfcorporacion.com</a>
     </div>
 
-    <!-- CONTACTO -->
+    <!-- ============================================================ -->
+    <!-- CONTACTO FINAL                                              -->
+    <!-- ============================================================ -->
     <div class="seccion-contacto">
         <div class="contacto-nombre">Cordialmente,</div>
         <div class="contacto-nombre">HELLEN BLAS PRINCIPE</div>
@@ -6107,7 +6170,6 @@ def api_cotizaciones_preview_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/pedido-compra/<int:id>', methods=['DELETE'])
 @login_required
