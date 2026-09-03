@@ -228,15 +228,15 @@ class PDFGenerator:
         }
         .empresa-izquierda .logo-container { 
             flex-shrink: 0; 
-            width: 100px; 
-            height: 70px; 
+            width: 120px; 
+            height: 80px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
         }
         .empresa-izquierda .logo-container img { 
-            max-height: 65px; 
-            max-width: 110px; 
+            max-height: 75px; 
+            max-width: 130px; 
             object-fit: contain; 
         }
         .empresa-izquierda .info-texto { 
@@ -893,15 +893,15 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         }
         .empresa-izquierda .logo-container { 
             flex-shrink: 0; 
-            width: 100px; 
-            height: 70px; 
+            width: 120px; 
+            height: 80px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
         }
         .empresa-izquierda .logo-container img { 
-            max-height: 65px; 
-            max-width: 110px; 
+            max-height: 75px; 
+            max-width: 130px; 
             object-fit: contain; 
         }
         .empresa-izquierda .info-texto { 
@@ -1247,7 +1247,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
                 <div class="fila"><span class="label">FORMA DE PAGO:</span><span class="value">{{ condicion_pago }}</span></div>
                 <div class="fila"><span class="label">MONEDA:</span><span class="value">{{ moneda }}</span></div>
                 <div class="fila"><span class="label">VENDEDOR:</span><span class="value">Helen Blas Príncipe</span></div>
-                <div class="fila"><span class="label">TELÉFONO:</span><span class="value">(+51) 999932051</span></div>
+                <div class="fila"><span class="label">TELÉFONO:</span><span class="value">999932051</span></div>
             </div>
         </div>
     </div>
