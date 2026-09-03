@@ -5658,7 +5658,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML - COMPLETO ACTUALIZADO
+        # 4. Template HTML - HEADER EXACTO A LA PRIMERA IMAGEN (SIN DESTINATARIO)
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5682,11 +5682,11 @@ def api_cotizaciones_preview_pdf(id):
             background: #ffffff; 
         }
         
-        /* ===== HEADER REDISEÑADO ===== */
+        /* ===== HEADER EXACTO A LA PRIMERA IMAGEN ===== */
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 15px;
             border-bottom: 2px solid #000;
             padding-bottom: 12px;
@@ -5702,33 +5702,34 @@ def api_cotizaciones_preview_pdf(id):
         .empresa-info {
             flex: 1;
             text-align: center;
+            padding: 0 10px;
         }
-        .empresa-info h1 {
-            font-size: 20px;
+        .empresa-info .nombre-empresa {
+            font-size: 18px;
             font-weight: bold;
-            margin: 0;
             color: #000;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .empresa-info .ruc {
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 4px;
         }
         .empresa-info .slogan {
             font-size: 11px;
             color: #000;
-            letter-spacing: 1px;
-            margin-top: 2px;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
         }
-        .empresa-info .ruc-text {
-            font-size: 11px;
+        .empresa-info .contacto {
+            font-size: 9.5px;
             color: #000;
-            font-weight: bold;
-            margin-top: 4px;
+            margin-bottom: 1px;
         }
-        .empresa-info .contacto-text {
-            font-size: 9px;
-            color: #000;
-            margin-top: 2px;
-        }
-        .empresa-info .web-text {
-            font-size: 9px;
+        .empresa-info .web {
+            font-size: 9.5px;
             color: #000;
         }
         
@@ -5736,17 +5737,18 @@ def api_cotizaciones_preview_pdf(id):
             flex: 0 0 auto;
             text-align: right;
             padding-left: 15px;
+            min-width: 180px;
         }
         .numero-cotizacion {
             font-size: 16px;
             font-weight: bold;
             color: #000;
             white-space: nowrap;
+            margin-bottom: 4px;
         }
         .fecha-hora {
             font-size: 10px;
             color: #000;
-            margin-top: 4px;
         }
         .fecha-hora strong {
             color: #000;
@@ -5810,7 +5812,7 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 8.2px; 
         }
         .tabla-productos th { 
-            background: #d9d9d9;  /* GRIS SUAVE */
+            background: #d9d9d9;
             color: #000000;
             padding: 6px 4px; 
             border: 1px solid #000000; 
@@ -5986,7 +5988,7 @@ def api_cotizaciones_preview_pdf(id):
 </head>
 <body>
     <!-- ============================================================ -->
-    <!-- HEADER REDISEÑADO - IGUAL A LA IMAGEN                        -->
+    <!-- HEADER EXACTO A LA PRIMERA IMAGEN (SIN DESTINATARIO)        -->
     <!-- ============================================================ -->
     <div class="header">
         <!-- LOGO -->
@@ -5998,16 +6000,16 @@ def api_cotizaciones_preview_pdf(id):
             {% endif %}
         </div>
         
-        <!-- INFORMACIÓN EMPRESA - CENTRADO -->
+        <!-- INFORMACIÓN EMPRESA -->
         <div class="empresa-info">
-            <h1>KCF CORPORACION E.I.R.L</h1>
+            <div class="nombre-empresa">KCF CORPORACION E.I.R.L</div>
+            <div class="ruc">RUC: 20602095704</div>
             <div class="slogan">Soluciones integrales en abastecimientos</div>
-            <div class="ruc-text">RUC: 20602095704</div>
-            <div class="contacto-text">Telf: 999 932 051 | Email: ventas@kcfcorporacion.com</div>
-            <div class="web-text">Web: https://kcfcorporacion.com/</div>
+            <div class="contacto">Telf: 999 932 051 | Email: ventas@kcfcorporacion.com</div>
+            <div class="web">Web: https://kcfcorporacion.com/</div>
         </div>
 
-        <!-- N° COTIZACIÓN - FUERA DEL CUADRO Y MÁS GRANDE -->
+        <!-- N° COTIZACIÓN -->
         <div class="cotizacion-info">
             <div class="numero-cotizacion">COTIZACIÓN N°: {{ codigo_cotizacion }}</div>
             <div class="fecha-hora"><strong>Fecha:</strong> {{ fecha_actual }}</div>
