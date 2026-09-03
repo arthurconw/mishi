@@ -6367,14 +6367,13 @@ def obtener_despacho_por_id_db(despacho_id):
 # GENERAR PDF DE COMPROBANTE (FACTURA / BOLETA)
 # ============================================================
 
-@ventas_bp.route('/ventas/api/comprobantes/<int:comp_id>/pdf', methods=['GET'])
+@ventas_bp.route('/ventas/api/comprobantes/<int:comp_id>/pdf/preview', methods=['GET'])
 @login_required
-def generar_pdf_comprobante(comp_id):
-    """Genera el PDF de un comprobante (Factura o Boleta)"""
+def preview_pdf_comprobante(comp_id):
+    """Vista previa del PDF de comprobante"""
     try:
-        print(f"📄 Generando PDF para comprobante ID: {comp_id}")
+        print(f"👁️ Vista previa PDF para comprobante ID: {comp_id}")
         
-        # Obtener el comprobante
         query = """
             SELECT 
                 id, tipo_comprobante, serie, numero, fecha_emision,
@@ -6382,7 +6381,7 @@ def generar_pdf_comprobante(comp_id):
                 cliente_nombre, cliente_direccion, cliente_email,
                 cliente_telefono, subtotal, igv, total,
                 items_json, observaciones, estado_sunat,
-                creado_por
+                documento_asociado
             FROM comprobantes
             WHERE id = %s
         """
@@ -6392,47 +6391,44 @@ def generar_pdf_comprobante(comp_id):
             return jsonify({'error': 'Comprobante no encontrado'}), 404
         
         comp = comp_result[0]
-        print(f"✅ Comprobante encontrado: {comp.get('serie')}-{comp.get('numero')}")
         
-        # Preparar datos para el PDFGenerator
         from pdf_generator import pdf_generator
         
         items = []
-        try:
-            if comp.get('items_json'):
+        
+        # 🔽 OBTENER ITEMS CON MARCA Y MODELO
+        if comp.get('items_json'):
+            try:
                 raw_items = json.loads(comp.get('items_json'))
-                # ============================================================
-                # 🔽 ASEGURAR QUE MARCA Y MODELO SE EXTIENEN
-                # ============================================================
-                for item in raw_items:
+                for idx, item in enumerate(raw_items, 1):
                     if isinstance(item, dict):
                         items.append({
+                            'item': idx,
                             'codigo': item.get('codigo', ''),
-                            'producto': item.get('producto', item.get('descripcion', '')),
-                            'marca': item.get('marca', ''),       # ← IMPORTANTE
-                            'modelo': item.get('modelo', ''),     # ← IMPORTANTE
-                            'um': item.get('um', 'NIU'),
+                            'descripcion': item.get('producto', item.get('descripcion', 'Sin descripción')),
+                            'marca': item.get('marca', ''),          # ← IMPORTANTE
+                            'modelo': item.get('modelo', ''),        # ← IMPORTANTE
+                            'unidad': item.get('um', 'NIU'),
                             'cantidad': float(item.get('cantidad', 1)),
-                            'valorVenta': float(item.get('valorVenta', item.get('precio', 0)))
+                            'precio_unitario': float(item.get('valorVenta', item.get('precio', 0))),
+                            'total_item': float(item.get('cantidad', 1)) * float(item.get('valorVenta', item.get('precio', 0)))
                         })
                     elif isinstance(item, list):
-                        # Si es un array: [codigo, producto, marca, modelo, um, cantidad, valorVenta]
                         items.append({
+                            'item': idx,
                             'codigo': item[0] if len(item) > 0 else '',
-                            'producto': item[1] if len(item) > 1 else '',
+                            'descripcion': item[1] if len(item) > 1 else 'Sin descripción',
                             'marca': item[2] if len(item) > 2 else '',   # ← IMPORTANTE
                             'modelo': item[3] if len(item) > 3 else '',  # ← IMPORTANTE
-                            'um': item[4] if len(item) > 4 else 'NIU',
+                            'unidad': item[4] if len(item) > 4 else 'NIU',
                             'cantidad': float(item[5]) if len(item) > 5 else 1,
-                            'valorVenta': float(item[6]) if len(item) > 6 else 0
+                            'precio_unitario': float(item[6]) if len(item) > 6 else 0,
+                            'total_item': float(item[5]) * float(item[6]) if len(item) > 6 else 0
                         })
-        except Exception as e:
-            print(f"⚠️ Error parseando items: {e}")
-            items = []
+            except Exception as e:
+                print(f"⚠️ Error parseando items: {e}")
         
-        # ============================================================
-        # 🔽 SI NO HAY ITEMS, INTENTAR OBTENER DE LA COTIZACIÓN ASOCIADA
-        # ============================================================
+        # Si no hay items, buscar en cotización
         if not items and comp.get('documento_asociado'):
             try:
                 cot_numero = comp.get('documento_asociado')
@@ -6446,18 +6442,31 @@ def generar_pdf_comprobante(comp_id):
                     WHERE c.codigo_cotizacion = %s OR c.numero_cotizacion = %s
                 """
                 cot_items = db_query(query_cot_items, (cot_numero, cot_numero))
-                for item in cot_items:
+                for idx, item in enumerate(cot_items, 1):
                     items.append({
+                        'item': idx,
                         'codigo': item.get('codigo', ''),
-                        'producto': item.get('descripcion', ''),
-                        'marca': item.get('marca', ''),       # ← IMPORTANTE
-                        'modelo': item.get('modelo', ''),     # ← IMPORTANTE
-                        'um': item.get('unidad', 'NIU'),
+                        'descripcion': item.get('descripcion', 'Sin descripción'),
+                        'marca': item.get('marca', ''),
+                        'modelo': item.get('modelo', ''),
+                        'unidad': item.get('unidad', 'NIU'),
                         'cantidad': float(item.get('cantidad', 1)),
-                        'valorVenta': float(item.get('precio_venta_unitario', 0))
+                        'precio_unitario': float(item.get('precio_venta_unitario', 0)),
+                        'total_item': float(item.get('cantidad', 1)) * float(item.get('precio_venta_unitario', 0))
                     })
             except Exception as e:
                 print(f"⚠️ Error obteniendo items de cotización: {e}")
+        
+        subtotal = float(comp.get('subtotal', 0))
+        igv = float(comp.get('igv', 0))
+        total = float(comp.get('total', 0))
+        
+        if subtotal == 0 and items:
+            subtotal = sum(item['total_item'] for item in items)
+            igv = subtotal * 0.18
+            total = subtotal + igv
+        
+        total_letras = pdf_generator._numero_a_letras(total)
         
         datos_comprobante = {
             'tipo_documento': 'comprobante',
@@ -6465,43 +6474,46 @@ def generar_pdf_comprobante(comp_id):
             'serie': comp.get('serie', 'F001'),
             'numero': comp.get('numero', ''),
             'fecha_emision': comp.get('fecha_emision'),
-            'moneda': comp.get('moneda', 'S/'),
+            'moneda': 'S/',
             'condicion_pago': 'Contado',
-            'ruc': comp.get('cliente_numero_doc', ''),
-            'cliente': comp.get('cliente_nombre', ''),
-            'direccion': comp.get('cliente_direccion', ''),
-            'telefono': comp.get('cliente_telefono', ''),
-            'email': comp.get('cliente_email', ''),
-            'subtotal': float(comp.get('subtotal', 0)),
-            'igv': float(comp.get('igv', 0)),
-            'total': float(comp.get('total', 0)),
+            'cliente_ruc': comp.get('cliente_numero_doc', ''),
+            'cliente_nombre': comp.get('cliente_nombre', ''),
+            'cliente_direccion': comp.get('cliente_direccion', ''),
+            'cliente_telefono': comp.get('cliente_telefono', ''),
+            'cliente_email': comp.get('cliente_email', ''),
+            'subtotal': f"{subtotal:.2f}",
+            'igv': f"{igv:.2f}",
+            'total': f"{total:.2f}",
+            'total_letras': total_letras,
+            'descuento': "0.00",
+            'op_inafecta': "0.00",
+            'op_exonerada': "0.00",
+            'op_gratuita': "0.00",
             'observaciones': comp.get('observaciones', ''),
-            'items': items
+            'orden_compra_cliente': comp.get('documento_asociado', '—'),
+            'factura': f"{comp.get('serie', '')}-{comp.get('numero', '')}",
+            'nro_cotizacion': comp.get('documento_asociado', '—'),
+            'items': items,
+            'qr_base64': ''
         }
         
-        # Generar el PDF
         pdf_path = pdf_generator.generar_pdf_universal(datos_comprobante)
         
         if not pdf_path:
             return jsonify({'error': 'Error al generar el PDF'}), 500
         
-        # Retornar el PDF
         from flask import send_file
-        filename = f"{comp.get('tipo_comprobante', 'FACTURA')}_{comp.get('serie', 'F001')}_{comp.get('numero', '0001')}.pdf"
-        
         return send_file(
             pdf_path,
             mimetype='application/pdf',
-            as_attachment=True,
-            download_name=filename
+            as_attachment=False
         )
         
     except Exception as e:
-        print(f"❌ Error generando PDF de comprobante: {e}")
+        print(f"❌ Error generando vista previa: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/comprobantes/<int:comp_id>/pdf/preview', methods=['GET'])
 @login_required
