@@ -6466,7 +6466,7 @@ def preview_pdf_comprobante(comp_id):
             igv = subtotal * 0.18
             total = subtotal + igv
         
-        total_letras = pdf_generator._numero_a_letras(total)
+        total_letras = pdf_generator.numero_a_letras(total)
         
         datos_comprobante = {
             'tipo_documento': 'comprobante',
