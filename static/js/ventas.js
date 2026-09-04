@@ -4403,6 +4403,10 @@ async function deleteCotizacion(id) {
     );
 }
 
+// ============================================================
+// FUNCIÓN MARCAR DESPACHADO CORREGIDA - CON DATOS DEL CLIENTE
+// ============================================================
+
 async function marcarDespachado(id) {
     const despacho = despachosData.find(d => d.id === id);
     if (!despacho) {
@@ -4416,7 +4420,7 @@ async function marcarDespachado(id) {
     showConfirmModal(
         '🚚 ¿Marcar como despachado?',
         `Estás a punto de marcar como <b>"Despachado"</b> el despacho <b>${numero}</b> del cliente <b>${cliente}</b>.`,
-        '⚠️ Esta acción es irreversible.',
+        '⚠️ Esta acción creará una Guía de Remisión y es irreversible.',
         async function() {
             try {
                 showToast('⏳ Procesando despacho...', 'info');
@@ -4450,7 +4454,6 @@ async function marcarDespachado(id) {
                         const pcResponse = await apiFetch(`/ventas/api/pedido-compra/${despacho.pc_id}`);
                         if (pcResponse.success && pcResponse.data) {
                             const pcItems = pcResponse.data.items || [];
-                            // Normalizar items del PC
                             items = pcItems.map(item => {
                                 if (typeof item === 'object' && !Array.isArray(item)) {
                                     return {
@@ -4490,12 +4493,9 @@ async function marcarDespachado(id) {
                 }
                 
                 // ============================================================
-                // CREAR GUÍA DE REMISIÓN CON LOS ITEMS
+                // CREAR GUÍA DE REMISIÓN CON LOS ITEMS Y DATOS DEL CLIENTE
                 // ============================================================
-                // 🔽 CORRECCIÓN: Obtener fecha con hora ACTUAL correcta
                 const ahora = new Date();
-                
-                // Formatear fecha con hora para el campo fecha_emision
                 const year = ahora.getFullYear();
                 const month = String(ahora.getMonth() + 1).padStart(2, '0');
                 const day = String(ahora.getDate()).padStart(2, '0');
@@ -4503,30 +4503,99 @@ async function marcarDespachado(id) {
                 const minutes = String(ahora.getMinutes()).padStart(2, '0');
                 const seconds = String(ahora.getSeconds()).padStart(2, '0');
                 
-                // Formato ISO completo con hora: 2026-08-17T14:30:00
+                // ✅ FORMATO ISO COMPLETO CON HORA
                 const fechaHoraISO = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-                
-                // Solo fecha para fecha_traslado (mantener consistencia)
                 const fechaSolo = `${year}-${month}-${day}`;
                 
+                // ✅ OBTENER DATOS DEL CLIENTE DEL DESPACHO
+                const rucCliente = despacho.ruc || '';
+                const nombreCliente = despacho.cliente || '';
+                const direccionCliente = despacho.destino || '';
+                
+                // ✅ OBTENER UBIGEO DEL CLIENTE (si existe en la cotización)
+                let ubigeoCliente = '';
+                let departamentoCliente = '';
+                let provinciaCliente = '';
+                let distritoCliente = '';
+                
+                // Si el despacho tiene cotizacion_numero, buscar la cotización para obtener el ubigeo
+                if (despacho.cotizacion_numero) {
+                    try {
+                        const cotizacion = cotizacionesData.find(c => c.numero === despacho.cotizacion_numero);
+                        if (cotizacion) {
+                            // Buscar la cotización completa para obtener el ubigeo
+                            const cotCompleta = await apiFetch(`/ventas/api/cotizaciones/${cotizacion.id}/completa`);
+                            if (cotCompleta.success && cotCompleta.data) {
+                                const data = cotCompleta.data;
+                                if (data.cliente_ubigeo) {
+                                    ubigeoCliente = data.cliente_ubigeo;
+                                }
+                                if (data.cliente_departamento) departamentoCliente = data.cliente_departamento;
+                                if (data.cliente_provincia) provinciaCliente = data.cliente_provincia;
+                                if (data.cliente_distrito) distritoCliente = data.cliente_distrito;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ No se pudo obtener ubigeo de la cotización:', e);
+                    }
+                }
+                
+                // Si no hay departamento, usar valores por defecto o dejar vacío
+                if (!departamentoCliente) {
+                    departamentoCliente = 'LIMA';
+                    provinciaCliente = 'LIMA';
+                    distritoCliente = 'SAN MARTIN DE PORRES';
+                    // Intentar adivinar por dirección (simple)
+                    if (direccionCliente) {
+                        const dirUpper = direccionCliente.toUpperCase();
+                        if (dirUpper.includes('CALLAO')) {
+                            departamentoCliente = 'CALLAO';
+                            provinciaCliente = 'CALLAO';
+                            distritoCliente = 'CALLAO';
+                        }
+                    }
+                }
+                
+                // ✅ ORIGEN FIJO (KCF CORPORACION)
+                const ORIGEN_FIJO = {
+                    ruc: '20602095704',
+                    nombre: 'KCF CORPORACION E.I.R.L',
+                    direccion: 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+                    ubigeo: '150139'
+                };
+                
+                // ✅ GENERAR NÚMERO DE GUÍA
                 const numeroGuia = `G-${year}${month}${day}-${String(ahora.getTime()).slice(-4)}`;
                 
+                // ✅ PREPARAR DATOS DE LA GUÍA CON TODOS LOS CAMPOS
                 const guiaData = {
                     estado: 'Borrador',
                     serie: 'T001',
                     numero: numeroGuia,
-                    cotizacion_numero: despacho.cotizacion_numero || '',
-                    cliente: despacho.cliente || '',
-                    ruc: despacho.ruc || '',
-                    origen: despacho.origen || 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
-                    destino: despacho.destino || '',
+                    // 🔽 DATOS DEL CLIENTE (DESTINATARIO)
+                    ruc_destinatario: rucCliente,
+                    destinatario_nombre: nombreCliente,
+                    destinatario_direccion: direccionCliente,
+                    destinatario_ubigeo: ubigeoCliente,
+                    destinatario_departamento: departamentoCliente,
+                    destinatario_provincia: provinciaCliente,
+                    destinatario_distrito: distritoCliente,
+                    // 🔽 DATOS DEL REMITENTE (FIJOS)
+                    ruc_remitente: ORIGEN_FIJO.ruc,
+                    remitente_nombre: ORIGEN_FIJO.nombre,
+                    remitente_direccion: ORIGEN_FIJO.direccion,
+                    remitente_ubigeo: ORIGEN_FIJO.ubigeo,
+                    // 🔽 FECHAS
+                    fecha_emision: fechaHoraISO,
+                    fecha_traslado: fechaSolo,
+                    // 🔽 DOCUMENTOS ASOCIADOS
+                    documento_asociado: despacho.cotizacion_numero || '',
+                    orden_compra_cliente: '',
+                    factura: '',
+                    // 🔽 MOTIVO Y OBSERVACIONES
                     motivo_traslado: 'VENTA',
                     observaciones: `Guía generada automáticamente desde despacho ${despacho.numero}`,
-                     documento_asociado: despacho.cotizacion_numero || '',  
-                    // 🔽 CAMBIO PRINCIPAL: fecha con hora actual
-                    fecha_emision: fechaHoraISO,
-                    fecha_traslado: fechaSolo,  // Solo fecha para el traslado
-                    // 🔽 USAR LOS ITEMS DEL DESPACHO
+                    // 🔽 PRODUCTOS
                     items: items.map(item => ({
                         codigo: item.codigo || '',
                         producto: item.producto || 'Sin descripción',
@@ -4535,12 +4604,16 @@ async function marcarDespachado(id) {
                         cantidad: parseFloat(item.cantidad || 1),
                         um: item.um || 'NIU',
                         stock: parseInt(item.stock || 0)
-                    }))
+                    })),
+                    // 🔽 PESO Y BULTOS (por defecto)
+                    peso_total: 0,
+                    numero_bultos: 1,
+                    unidad_peso_bruto: 'KGM'
                 };
                 
-                console.log('📦 Creando guía con fecha/hora:', guiaData.fecha_emision);
-                console.log('📦 Datos completos guía:', guiaData);
+                console.log('📦 Creando guía con datos completos:', guiaData);
                 
+                // ✅ ENVIAR A LA API DE GUÍAS
                 const guiaResponse = await fetch('/ventas/api/guias/guardar', {
                     method: 'POST',
                     headers: {
@@ -4561,7 +4634,7 @@ async function marcarDespachado(id) {
                     setTimeout(() => {
                         showConfirmModal(
                             '📦 ¿Ver la guía creada?',
-                            `Se ha creado la Guía de Remisión <b>${guiaData.serie}-${guiaData.numero}</b> con ${items.length} productos en estado "Borrador".`,
+                            `Se ha creado la Guía de Remisión <b>T001-${guiaData.numero}</b> con ${items.length} productos en estado "Borrador".`,
                             '⚠️ La guía está en borrador. Debes revisarla y completarla antes de emitirla.',
                             function() {
                                 const tabBtn = document.querySelector('.tab-btn[data-tab="guias"]');
