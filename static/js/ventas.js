@@ -12978,44 +12978,55 @@ function renderCotizacionFormContent(isEdit) {
 }
 
 // ============================================================
-// FUNCIONES PARA DIRECCIÓN DE RECOGO - CORREGIDAS
+// FUNCIONES PARA DIRECCIÓN DE RECOGO - VERSIÓN CORREGIDA
 // ============================================================
 
 function mostrarSubDireccionRecogo(valor) {
-    console.log('🔄 mostrarSubDireccionRecogo:', valor);
+    console.log('🔄 mostrarSubDireccionRecogo - valor recibido:', valor);
     
     const subContainer = document.getElementById('subDireccionRecogo');
     const customInput = document.getElementById('fDireccionEntregaCustom');
+    const subSelect = document.getElementById('fSubDireccionRecogo');
+    const subCustom = document.getElementById('fSubDireccionRecogoCustom');
     
-    // Ocultar todos primero
-    if (subContainer) subContainer.style.display = 'none';
-    if (customInput) customInput.style.display = 'none';
+    // Ocultar todo primero
+    if (subContainer) {
+        subContainer.style.display = 'none';
+    }
+    if (customInput) {
+        customInput.style.display = 'none';
+    }
+    if (subCustom) {
+        subCustom.style.display = 'none';
+    }
     
+    // Si el valor es "direccion_recogo", mostrar el sub-desplegable
     if (valor === 'direccion_recogo') {
-        // Mostrar el sub-desplegable de sedes
         if (subContainer) {
             subContainer.style.display = 'block';
-            // Resetear el sub-select
-            const subSelect = document.getElementById('fSubDireccionRecogo');
+            // Resetear el sub-select a la primera opción vacía
             if (subSelect) {
                 subSelect.value = '';
-                // Asegurar que el campo personalizado del sub esté oculto
-                const subCustom = document.getElementById('fSubDireccionRecogoCustom');
-                if (subCustom) subCustom.style.display = 'none';
             }
         }
-    } else if (valor === 'Personalizado') {
-        // Mostrar el input personalizado principal
+    } 
+    // Si el valor es "Personalizado", mostrar el input personalizado principal
+    else if (valor === 'Personalizado') {
         if (customInput) {
             customInput.style.display = 'block';
             customInput.focus();
         }
     }
-    // Si es otro valor (dirección directa), no hacer nada
+    // Si el valor es una dirección completa (sede seleccionada), NO hacer nada
+    // El sub-container ya está oculto y la dirección se muestra en el select principal
+    else if (valor && valor !== '' && valor !== '-- Seleccione --') {
+        // Es una dirección directa, no mostrar nada adicional
+        console.log('✅ Dirección seleccionada directamente:', valor);
+    }
 }
 
 function actualizarDireccionRecogo(valor) {
-    console.log('🔄 actualizarDireccionRecogo:', valor);
+    console.log('🔄 actualizarDireccionRecogo - valor recibido:', valor);
     
     const mainSelect = document.getElementById('fDireccionEntrega');
     const subContainer = document.getElementById('subDireccionRecogo');
@@ -13023,31 +13034,38 @@ function actualizarDireccionRecogo(valor) {
     
     if (!mainSelect) return;
     
+    // Si es "Personalizado", mostrar el input personalizado del sub
     if (valor === 'Personalizado') {
-        // Mostrar el input personalizado del sub
         if (subCustom) {
             subCustom.style.display = 'block';
             subCustom.focus();
         }
         // Mantener el main select en 'direccion_recogo' mientras escribe
         mainSelect.value = 'direccion_recogo';
-    } else if (valor) {
+        return;
+    }
+    
+    // Si tiene un valor válido (sede seleccionada)
+    if (valor && valor !== '') {
         // ✅ ACTUALIZAR EL SELECT PRINCIPAL CON LA DIRECCIÓN SELECCIONADA
         mainSelect.value = valor;
         console.log('✅ Dirección actualizada en main select:', valor);
         
         // Ocultar el input personalizado del sub
-        if (subCustom) subCustom.style.display = 'none';
+        if (subCustom) {
+            subCustom.style.display = 'none';
+            subCustom.value = '';
+        }
         
-        // ✅ Ocultar el sub-container después de seleccionar
+        // ✅ OCULTAR EL SUB-CONTAINER DESPUÉS DE SELECCIONAR
         if (subContainer) {
             subContainer.style.display = 'none';
         }
         
-        // 🔽 FORZAR QUE SE VEA LA DIRECCIÓN EN EL SELECT PRINCIPAL
-        // (El select ya tiene el valor, pero a veces no se refresca visualmente)
-        // Disparamos un evento change para que se actualice
-        mainSelect.dispatchEvent(new Event('change'));
+        // 🔽 FORZAR ACTUALIZACIÓN VISUAL DEL SELECT
+        // Esto hace que el texto se muestre correctamente en el select
+        const event = new Event('change', { bubbles: true });
+        mainSelect.dispatchEvent(event);
     }
 }
 
@@ -13061,25 +13079,99 @@ function getDireccionEntregaValue() {
     if (!mainSelect) return '';
     
     const valor = mainSelect.value;
-    console.log('🔍 getDireccionEntregaValue - valor actual:', valor);
+    console.log('🔍 getDireccionEntregaValue - valor actual del select:', valor);
     
     // Si es Personalizado, usar el input personalizado principal
     if (valor === 'Personalizado' && customInput) {
-        return customInput.value.trim() || '';
+        const customVal = customInput.value.trim();
+        console.log('🔍 Valor personalizado principal:', customVal);
+        return customVal || '';
     }
     
     // Si es dirección de recogo, ver el sub-select
     if (valor === 'direccion_recogo' && subSelect) {
         const subValor = subSelect.value;
-        console.log('🔍 subValor:', subValor);
+        console.log('🔍 Valor del sub-select:', subValor);
+        
         if (subValor === 'Personalizado' && subCustom) {
-            return subCustom.value.trim() || '';
+            const customSubVal = subCustom.value.trim();
+            console.log('🔍 Valor personalizado del sub:', customSubVal);
+            return customSubVal || '';
         }
         return subValor || '';
     }
     
-    // Si es una dirección directa (o la sede seleccionada)
-    return valor || '';
+    // Si es una dirección directa (sede seleccionada o cualquier otra)
+    if (valor && valor !== '' && valor !== '-- Seleccione --') {
+        console.log('🔍 Devolviendo valor directo:', valor);
+        return valor;
+    }
+    
+    console.log('🔍 No se encontró dirección, devolviendo vacío');
+    return '';
+}
+
+// Función para cargar una dirección existente en el formulario
+function cargarDireccionEntregaExistente(direccion) {
+    if (!direccion || direccion === '') return;
+    
+    console.log('📥 Cargando dirección existente:', direccion);
+    
+    const mainSelect = document.getElementById('fDireccionEntrega');
+    const subSelect = document.getElementById('fSubDireccionRecogo');
+    const customInput = document.getElementById('fDireccionEntregaCustom');
+    const subCustom = document.getElementById('fSubDireccionRecogoCustom');
+    const subContainer = document.getElementById('subDireccionRecogo');
+    
+    if (!mainSelect) return;
+    
+    // Definir las sedes
+    const sedeSanMartin = 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES';
+    const sedeBrena = 'AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA';
+    
+    // Verificar si es una sede
+    if (direccion === sedeSanMartin || direccion === sedeBrena) {
+        // Es una sede, seleccionarla en el sub-select
+        mainSelect.value = 'direccion_recogo';
+        if (subSelect) {
+            subSelect.value = direccion;
+        }
+        // Ocultar el sub-container
+        if (subContainer) {
+            subContainer.style.display = 'none';
+        }
+        console.log('✅ Cargada sede:', direccion);
+    } 
+    // Verificar si es la opción de recogo sin sede específica
+    else if (direccion === 'direccion_recogo' || direccion.includes('Recogo')) {
+        mainSelect.value = 'direccion_recogo';
+        if (subContainer) {
+            subContainer.style.display = 'block';
+        }
+        console.log('✅ Cargada opción de recogo');
+    }
+    // Verificar si está en las opciones del select principal
+    else {
+        let found = false;
+        for (let opt of mainSelect.options) {
+            if (opt.value === direccion) {
+                opt.selected = true;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            // No está en las opciones, usar personalizado
+            mainSelect.value = 'Personalizado';
+            if (customInput) {
+                customInput.value = direccion;
+                customInput.style.display = 'block';
+            }
+            console.log('✅ Cargada dirección personalizada:', direccion);
+        } else {
+            console.log('✅ Cargada dirección directa:', direccion);
+        }
+    }
 }
 // ============================================================
 // MOSTRAR/OCULTAR CAMPOS DE PAGO (Contado)
