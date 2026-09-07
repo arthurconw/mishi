@@ -12757,7 +12757,7 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
                 </div>
             </div>
-     <!-- Validez Oferta | Dirección de Entrega -->
+            <!-- Validez Oferta | Dirección de Entrega -->
 <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
     <div class="form-field">
         <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
@@ -12771,25 +12771,27 @@ function renderCotizacionFormContent(isEdit) {
         </select>
         <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
     </div>
+
     <div class="form-field">
-    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-    <select id="fDireccionEntrega" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
-        <option value="">-- Seleccione --</option>
-        <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
-        <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
-        <option value="direccion_recogo">📦 Dirección de Recogo</option>
-        <option value="Personalizado">✏️ Personalizado...</option>
-    </select>
-    <div id="subDireccionRecogo" style="display:none;margin-top:3px;">
-        <select id="fSubDireccionRecogo" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="actualizarDireccionRecogo(this.value)">
-            <option value="">-- Seleccione Sede --</option>
+        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
+        <select id="fDireccionEntrega" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
+            <option value="">-- Seleccione --</option>
             <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
             <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
+            <option value="direccion_recogo">📦 Dirección de Recogo</option>
             <option value="Personalizado">✏️ Personalizado...</option>
         </select>
-        <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+        <div id="subDireccionRecogo" style="display:none;margin-top:3px;">
+            <select id="fSubDireccionRecogo" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="actualizarDireccionRecogo(this.value)">
+                <option value="">-- Seleccione Sede --</option>
+                <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
+                <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
+                <option value="Personalizado">✏️ Personalizado...</option>
+            </select>
+            <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+        </div>
+        <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
     </div>
-    <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
 </div>
             <!-- Nota Comercial -->
             <div style="display:grid;grid-template-columns:1fr;gap:3px;">
