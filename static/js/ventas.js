@@ -12757,7 +12757,7 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
                 </div>
             </div>
-           <!-- Validez Oferta | Dirección Entrega -->
+           <!-- Validez Oferta | Dirección de Recogo -->
 <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
     <div class="form-field">
         <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
@@ -12772,14 +12772,21 @@ function renderCotizacionFormContent(isEdit) {
         <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
     </div>
     <div class="form-field">
-        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-        <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Recogo</label>
+        <select id="fDireccionEntrega" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
             <option value="">-- Seleccione --</option>
-            <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres - Jr. Las Almendras Verdes Nro. 284</option>
-            <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña - Av. Brasil Nro. 1234</option>
-            <option value="Recojo en sede">📍 Recogo en sede - Elegir</option>
+            <option value="direccion_recogo">📦 Dirección de Recogo</option>
             <option value="Personalizado">✏️ Personalizado...</option>
         </select>
+        <div id="subDireccionRecogo" style="display:none;margin-top:3px;">
+            <select id="fSubDireccionRecogo" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="actualizarDireccionRecogo(this.value)">
+                <option value="">-- Seleccione Sede --</option>
+                <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
+                <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
+                <option value="Personalizado">✏️ Personalizado...</option>
+            </select>
+            <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+        </div>
         <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
     </div>
 </div>
@@ -12968,6 +12975,95 @@ function renderCotizacionFormContent(isEdit) {
 
         
     `;
+}
+
+// ============================================================
+// FUNCIONES PARA DIRECCIÓN DE RECOGO
+// ============================================================
+
+function mostrarSubDireccionRecogo(valor) {
+    const subContainer = document.getElementById('subDireccionRecogo');
+    const customInput = document.getElementById('fDireccionEntregaCustom');
+    
+    // Ocultar todos primero
+    if (subContainer) subContainer.style.display = 'none';
+    if (customInput) customInput.style.display = 'none';
+    
+    if (valor === 'direccion_recogo') {
+        // Mostrar el sub-desplegable de sedes
+        if (subContainer) {
+            subContainer.style.display = 'block';
+            // Resetear el sub-select
+            const subSelect = document.getElementById('fSubDireccionRecogo');
+            if (subSelect) subSelect.value = '';
+            // Ocultar el input personalizado del sub
+            const subCustom = document.getElementById('fSubDireccionRecogoCustom');
+            if (subCustom) subCustom.style.display = 'none';
+        }
+    } else if (valor === 'Personalizado') {
+        // Mostrar el input personalizado principal
+        if (customInput) customInput.style.display = 'block';
+        // Limpiar el valor del select principal
+        const mainSelect = document.getElementById('fDireccionEntrega');
+        if (mainSelect) mainSelect.value = 'Personalizado';
+    } else {
+        // Limpiar el valor del select principal
+        const mainSelect = document.getElementById('fDireccionEntrega');
+        if (mainSelect) mainSelect.value = '';
+    }
+}
+
+function actualizarDireccionRecogo(valor) {
+    const mainSelect = document.getElementById('fDireccionEntrega');
+    const subContainer = document.getElementById('subDireccionRecogo');
+    const subCustom = document.getElementById('fSubDireccionRecogoCustom');
+    
+    if (!mainSelect) return;
+    
+    if (valor === 'Personalizado') {
+        // Mostrar el input personalizado del sub
+        if (subCustom) {
+            subCustom.style.display = 'block';
+            subCustom.focus();
+        }
+        mainSelect.value = 'direccion_recogo';
+    } else if (valor) {
+        // Actualizar el select principal con la dirección seleccionada
+        mainSelect.value = valor;
+        // Ocultar el input personalizado del sub
+        if (subCustom) subCustom.style.display = 'none';
+        // 🔽 Ocultar el sub-container después de seleccionar
+        if (subContainer) subContainer.style.display = 'none';
+    }
+}
+
+// Función para obtener el valor final de la dirección de recogo
+function getDireccionRecogoValue() {
+    const mainSelect = document.getElementById('fDireccionEntrega');
+    const subSelect = document.getElementById('fSubDireccionRecogo');
+    const subCustom = document.getElementById('fSubDireccionRecogoCustom');
+    const customInput = document.getElementById('fDireccionEntregaCustom');
+    
+    if (!mainSelect) return '';
+    
+    const valor = mainSelect.value;
+    
+    // Si es Personalizado, usar el input personalizado principal
+    if (valor === 'Personalizado' && customInput) {
+        return customInput.value.trim() || '';
+    }
+    
+    // Si es dirección de recogo, ver el sub-select
+    if (valor === 'direccion_recogo' && subSelect) {
+        const subValor = subSelect.value;
+        if (subValor === 'Personalizado' && subCustom) {
+            return subCustom.value.trim() || '';
+        }
+        return subValor || '';
+    }
+    
+    // Si es una dirección directa
+    return valor || '';
 }
 // ============================================================
 // MOSTRAR/OCULTAR CAMPOS DE PAGO (Contado)
