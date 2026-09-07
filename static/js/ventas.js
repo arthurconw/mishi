@@ -12757,7 +12757,7 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
                 </div>
             </div>
-           <!-- Validez Oferta | Dirección de Recogo -->
+     <!-- Validez Oferta | Dirección de Entrega -->
 <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
     <div class="form-field">
         <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
@@ -12772,7 +12772,7 @@ function renderCotizacionFormContent(isEdit) {
         <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
     </div>
     <div class="form-field">
-        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Recogo</label>
+        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
         <select id="fDireccionEntrega" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
             <option value="">-- Seleccione --</option>
             <option value="direccion_recogo">📦 Dirección de Recogo</option>
@@ -12978,10 +12978,12 @@ function renderCotizacionFormContent(isEdit) {
 }
 
 // ============================================================
-// FUNCIONES PARA DIRECCIÓN DE RECOGO
+// FUNCIONES PARA DIRECCIÓN DE RECOGO - CORREGIDAS
 // ============================================================
 
 function mostrarSubDireccionRecogo(valor) {
+    console.log('🔄 mostrarSubDireccionRecogo:', valor);
+    
     const subContainer = document.getElementById('subDireccionRecogo');
     const customInput = document.getElementById('fDireccionEntregaCustom');
     
@@ -12995,25 +12997,26 @@ function mostrarSubDireccionRecogo(valor) {
             subContainer.style.display = 'block';
             // Resetear el sub-select
             const subSelect = document.getElementById('fSubDireccionRecogo');
-            if (subSelect) subSelect.value = '';
-            // Ocultar el input personalizado del sub
-            const subCustom = document.getElementById('fSubDireccionRecogoCustom');
-            if (subCustom) subCustom.style.display = 'none';
+            if (subSelect) {
+                subSelect.value = '';
+                // Asegurar que el campo personalizado del sub esté oculto
+                const subCustom = document.getElementById('fSubDireccionRecogoCustom');
+                if (subCustom) subCustom.style.display = 'none';
+            }
         }
     } else if (valor === 'Personalizado') {
         // Mostrar el input personalizado principal
-        if (customInput) customInput.style.display = 'block';
-        // Limpiar el valor del select principal
-        const mainSelect = document.getElementById('fDireccionEntrega');
-        if (mainSelect) mainSelect.value = 'Personalizado';
-    } else {
-        // Limpiar el valor del select principal
-        const mainSelect = document.getElementById('fDireccionEntrega');
-        if (mainSelect) mainSelect.value = '';
+        if (customInput) {
+            customInput.style.display = 'block';
+            customInput.focus();
+        }
     }
+    // Si es otro valor (dirección directa), no hacer nada
 }
 
 function actualizarDireccionRecogo(valor) {
+    console.log('🔄 actualizarDireccionRecogo:', valor);
+    
     const mainSelect = document.getElementById('fDireccionEntrega');
     const subContainer = document.getElementById('subDireccionRecogo');
     const subCustom = document.getElementById('fSubDireccionRecogoCustom');
@@ -13026,19 +13029,30 @@ function actualizarDireccionRecogo(valor) {
             subCustom.style.display = 'block';
             subCustom.focus();
         }
+        // Mantener el main select en 'direccion_recogo' mientras escribe
         mainSelect.value = 'direccion_recogo';
     } else if (valor) {
-        // Actualizar el select principal con la dirección seleccionada
+        // ✅ ACTUALIZAR EL SELECT PRINCIPAL CON LA DIRECCIÓN SELECCIONADA
         mainSelect.value = valor;
+        console.log('✅ Dirección actualizada en main select:', valor);
+        
         // Ocultar el input personalizado del sub
         if (subCustom) subCustom.style.display = 'none';
-        // 🔽 Ocultar el sub-container después de seleccionar
-        if (subContainer) subContainer.style.display = 'none';
+        
+        // ✅ Ocultar el sub-container después de seleccionar
+        if (subContainer) {
+            subContainer.style.display = 'none';
+        }
+        
+        // 🔽 FORZAR QUE SE VEA LA DIRECCIÓN EN EL SELECT PRINCIPAL
+        // (El select ya tiene el valor, pero a veces no se refresca visualmente)
+        // Disparamos un evento change para que se actualice
+        mainSelect.dispatchEvent(new Event('change'));
     }
 }
 
-// Función para obtener el valor final de la dirección de recogo
-function getDireccionRecogoValue() {
+// Función para obtener el valor final de la dirección de entrega
+function getDireccionEntregaValue() {
     const mainSelect = document.getElementById('fDireccionEntrega');
     const subSelect = document.getElementById('fSubDireccionRecogo');
     const subCustom = document.getElementById('fSubDireccionRecogoCustom');
@@ -13047,6 +13061,7 @@ function getDireccionRecogoValue() {
     if (!mainSelect) return '';
     
     const valor = mainSelect.value;
+    console.log('🔍 getDireccionEntregaValue - valor actual:', valor);
     
     // Si es Personalizado, usar el input personalizado principal
     if (valor === 'Personalizado' && customInput) {
@@ -13056,13 +13071,14 @@ function getDireccionRecogoValue() {
     // Si es dirección de recogo, ver el sub-select
     if (valor === 'direccion_recogo' && subSelect) {
         const subValor = subSelect.value;
+        console.log('🔍 subValor:', subValor);
         if (subValor === 'Personalizado' && subCustom) {
             return subCustom.value.trim() || '';
         }
         return subValor || '';
     }
     
-    // Si es una dirección directa
+    // Si es una dirección directa (o la sede seleccionada)
     return valor || '';
 }
 // ============================================================
