@@ -12981,9 +12981,6 @@ function renderCotizacionFormContent(isEdit) {
 // ============================================================
 // FUNCIONES PARA DIRECCIÓN DE RECOGO - VERSIÓN CORREGIDA
 // ============================================================
-// ============================================================
-// FUNCIONES PARA DIRECCIÓN DE RECOGO - VERSIÓN CORREGIDA
-// ============================================================
 
 function mostrarSubDireccionRecogo(valor) {
     console.log('🔄 mostrarSubDireccionRecogo - valor recibido:', valor);
@@ -13021,16 +13018,6 @@ function mostrarSubDireccionRecogo(valor) {
             customInput.focus();
         }
     }
-    // Si el valor es una dirección completa (sede seleccionada), NO hacer nada
-    // El sub-container ya está oculto y la dirección se muestra en el select principal
-    else if (valor && valor !== '' && valor !== '-- Seleccione --') {
-        // Es una dirección directa, no mostrar nada adicional
-        console.log('✅ Dirección seleccionada directamente:', valor);
-        // Asegurar que el sub-container esté oculto
-        if (subContainer) {
-            subContainer.style.display = 'none';
-        }
-    }
 }
 
 function actualizarDireccionRecogo(valor) {
@@ -13056,8 +13043,13 @@ function actualizarDireccionRecogo(valor) {
     // Si tiene un valor válido (sede seleccionada)
     if (valor && valor !== '') {
         // ✅ ACTUALIZAR EL SELECT PRINCIPAL CON LA DIRECCIÓN SELECCIONADA
-        mainSelect.value = valor;
-        console.log('✅ Dirección actualizada en main select:', valor);
+        // PERO EL SELECT PRINCIPAL NO TIENE ESTAS OPCIONES,
+        // así que usamos la opción "direccion_recogo" y guardamos la dirección en un campo oculto
+        mainSelect.value = 'direccion_recogo';
+        console.log('✅ Sede seleccionada:', valor);
+        
+        // Guardar la dirección seleccionada en un atributo data
+        mainSelect.dataset.direccionSeleccionada = valor;
         
         // Ocultar el input personalizado del sub
         if (subCustom) {
@@ -13091,20 +13083,31 @@ function getDireccionEntregaValue() {
         return customVal || '';
     }
     
-    // Si es dirección de recogo, ver el sub-select
-    if (valor === 'direccion_recogo' && subSelect) {
-        const subValor = subSelect.value;
-        console.log('🔍 Valor del sub-select:', subValor);
-        
-        if (subValor === 'Personalizado' && subCustom) {
-            const customSubVal = subCustom.value.trim();
-            console.log('🔍 Valor personalizado del sub:', customSubVal);
-            return customSubVal || '';
+    // Si es dirección de recogo, ver el sub-select o el dato guardado
+    if (valor === 'direccion_recogo') {
+        // Primero verificar si hay una dirección guardada en el dataset
+        const direccionGuardada = mainSelect.dataset.direccionSeleccionada;
+        if (direccionGuardada) {
+            console.log('🔍 Dirección guardada en dataset:', direccionGuardada);
+            return direccionGuardada;
         }
-        return subValor || '';
+        
+        // Si no hay dirección guardada, ver el sub-select
+        if (subSelect) {
+            const subValor = subSelect.value;
+            console.log('🔍 Valor del sub-select:', subValor);
+            
+            if (subValor === 'Personalizado' && subCustom) {
+                const customSubVal = subCustom.value.trim();
+                console.log('🔍 Valor personalizado del sub:', customSubVal);
+                return customSubVal || '';
+            }
+            return subValor || '';
+        }
+        return '';
     }
     
-    // Si es una dirección directa (sede seleccionada o cualquier otra)
+    // Si es una dirección directa
     if (valor && valor !== '' && valor !== '-- Seleccione --') {
         console.log('🔍 Devolviendo valor directo:', valor);
         return valor;
@@ -13134,8 +13137,9 @@ function cargarDireccionEntregaExistente(direccion) {
     
     // Verificar si es una sede
     if (direccion === sedeSanMartin || direccion === sedeBrena) {
-        // Es una sede, seleccionarla en el select principal (ahora existe como opción)
-        mainSelect.value = direccion;
+        // Es una sede, seleccionar "direccion_recogo" y guardar la dirección
+        mainSelect.value = 'direccion_recogo';
+        mainSelect.dataset.direccionSeleccionada = direccion;
         if (subSelect) {
             subSelect.value = direccion;
         }
@@ -13148,12 +13152,13 @@ function cargarDireccionEntregaExistente(direccion) {
     // Verificar si es la opción de recogo sin sede específica
     else if (direccion === 'direccion_recogo' || direccion.includes('Recogo')) {
         mainSelect.value = 'direccion_recogo';
+        delete mainSelect.dataset.direccionSeleccionada;
         if (subContainer) {
             subContainer.style.display = 'block';
         }
         console.log('✅ Cargada opción de recogo');
     }
-    // Verificar si está en las opciones del select principal
+    // Verificar si está en las opciones del select principal (Personalizado o directa)
     else {
         let found = false;
         for (let opt of mainSelect.options) {
