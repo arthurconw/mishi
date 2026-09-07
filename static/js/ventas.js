@@ -12757,7 +12757,7 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
                 </div>
             </div>
-            <!-- Validez Oferta | Dirección de Entrega -->
+        <!-- Validez Oferta | Dirección de Entrega -->
 <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
     <div class="form-field">
         <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
@@ -12774,11 +12774,14 @@ function renderCotizacionFormContent(isEdit) {
 
     <div class="form-field">
         <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-        <select id="fDireccionEntrega" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
-            <option value="">-- Seleccione --</option>
-            <option value="direccion_recogo">📦 Dirección de Recogo</option>
-            <option value="Personalizado">✏️ Personalizado...</option>
-        </select>
+        <div style="display:flex;gap:4px;align-items:center;">
+            <select id="fDireccionEntrega" style="flex:1;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
+                <option value="">-- Seleccione --</option>
+                <option value="direccion_recogo">📦 Dirección de Recogo</option>
+                <option value="Personalizado">✏️ Personalizado...</option>
+            </select>
+            <span id="sedeSeleccionadaLabel" style="display:none;font-size:9px;font-weight:800;color:#2563EB;background:#DBEAFE;padding:2px 10px;border-radius:4px;white-space:nowrap;"></span>
+        </div>
         <div id="subDireccionRecogo" style="display:none;margin-top:3px;">
             <select id="fSubDireccionRecogo" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="actualizarDireccionRecogo(this.value)">
                 <option value="">-- Seleccione Sede --</option>
@@ -12989,6 +12992,7 @@ function mostrarSubDireccionRecogo(valor) {
     const customInput = document.getElementById('fDireccionEntregaCustom');
     const subSelect = document.getElementById('fSubDireccionRecogo');
     const subCustom = document.getElementById('fSubDireccionRecogoCustom');
+    const sedeLabel = document.getElementById('sedeSeleccionadaLabel');
     
     // Ocultar todo primero
     if (subContainer) {
@@ -12999,6 +13003,10 @@ function mostrarSubDireccionRecogo(valor) {
     }
     if (subCustom) {
         subCustom.style.display = 'none';
+    }
+    if (sedeLabel) {
+        sedeLabel.style.display = 'none';
+        sedeLabel.textContent = '';
     }
     
     // Si el valor es "direccion_recogo", mostrar el sub-desplegable
@@ -13026,8 +13034,16 @@ function actualizarDireccionRecogo(valor) {
     const mainSelect = document.getElementById('fDireccionEntrega');
     const subContainer = document.getElementById('subDireccionRecogo');
     const subCustom = document.getElementById('fSubDireccionRecogoCustom');
+    const sedeLabel = document.getElementById('sedeSeleccionadaLabel');
     
     if (!mainSelect) return;
+    
+    // Función para obtener el nombre corto de la sede
+    function getNombreSede(direccion) {
+        if (direccion.includes('SAN MARTIN DE PORRES')) return '📍 San Martin de Porres';
+        if (direccion.includes('BREÑA')) return '📍 Breña';
+        return direccion;
+    }
     
     // Si es "Personalizado", mostrar el input personalizado del sub
     if (valor === 'Personalizado') {
@@ -13037,19 +13053,28 @@ function actualizarDireccionRecogo(valor) {
         }
         // Mantener el main select en 'direccion_recogo' mientras escribe
         mainSelect.value = 'direccion_recogo';
+        if (sedeLabel) {
+            sedeLabel.style.display = 'none';
+            sedeLabel.textContent = '';
+        }
         return;
     }
     
     // Si tiene un valor válido (sede seleccionada)
     if (valor && valor !== '') {
-        // ✅ ACTUALIZAR EL SELECT PRINCIPAL CON LA DIRECCIÓN SELECCIONADA
-        // PERO EL SELECT PRINCIPAL NO TIENE ESTAS OPCIONES,
-        // así que usamos la opción "direccion_recogo" y guardamos la dirección en un campo oculto
+        // Mantener el main select en 'direccion_recogo'
         mainSelect.value = 'direccion_recogo';
         console.log('✅ Sede seleccionada:', valor);
         
         // Guardar la dirección seleccionada en un atributo data
         mainSelect.dataset.direccionSeleccionada = valor;
+        
+        // ✅ MOSTRAR LA SEDE SELECCIONADA EN EL LABEL
+        if (sedeLabel) {
+            const nombreSede = getNombreSede(valor);
+            sedeLabel.textContent = `📍 ${nombreSede}`;
+            sedeLabel.style.display = 'inline-block';
+        }
         
         // Ocultar el input personalizado del sub
         if (subCustom) {
@@ -13128,8 +13153,16 @@ function cargarDireccionEntregaExistente(direccion) {
     const customInput = document.getElementById('fDireccionEntregaCustom');
     const subCustom = document.getElementById('fSubDireccionRecogoCustom');
     const subContainer = document.getElementById('subDireccionRecogo');
+    const sedeLabel = document.getElementById('sedeSeleccionadaLabel');
     
     if (!mainSelect) return;
+    
+    // Función para obtener el nombre corto de la sede
+    function getNombreSede(dir) {
+        if (dir.includes('SAN MARTIN DE PORRES')) return '📍 San Martin de Porres';
+        if (dir.includes('BREÑA')) return '📍 Breña';
+        return dir;
+    }
     
     // Definir las sedes
     const sedeSanMartin = 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES';
@@ -13143,6 +13176,11 @@ function cargarDireccionEntregaExistente(direccion) {
         if (subSelect) {
             subSelect.value = direccion;
         }
+        // ✅ MOSTRAR LA SEDE EN EL LABEL
+        if (sedeLabel) {
+            sedeLabel.textContent = `📍 ${getNombreSede(direccion)}`;
+            sedeLabel.style.display = 'inline-block';
+        }
         // Ocultar el sub-container
         if (subContainer) {
             subContainer.style.display = 'none';
@@ -13153,6 +13191,10 @@ function cargarDireccionEntregaExistente(direccion) {
     else if (direccion === 'direccion_recogo' || direccion.includes('Recogo')) {
         mainSelect.value = 'direccion_recogo';
         delete mainSelect.dataset.direccionSeleccionada;
+        if (sedeLabel) {
+            sedeLabel.style.display = 'none';
+            sedeLabel.textContent = '';
+        }
         if (subContainer) {
             subContainer.style.display = 'block';
         }
@@ -13174,6 +13216,10 @@ function cargarDireccionEntregaExistente(direccion) {
             if (customInput) {
                 customInput.value = direccion;
                 customInput.style.display = 'block';
+            }
+            if (sedeLabel) {
+                sedeLabel.style.display = 'none';
+                sedeLabel.textContent = '';
             }
             console.log('✅ Cargada dirección personalizada:', direccion);
         } else {
