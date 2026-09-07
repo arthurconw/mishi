@@ -2060,7 +2060,7 @@ async function guardarCotizacion(estado) {
         // ============================================================
         if (camposFaltantes.length > 0) {
             showValidationWarningModal(camposFaltantes);
-            return;
+            return null;
         }
 
         console.log('📋 RUC:', ruc);
@@ -2145,18 +2145,18 @@ async function guardarCotizacion(estado) {
                 } else {
                     console.error('❌ Error creando cliente:', result.error);
                     showToast('Error al crear el cliente: ' + (result.error || 'Desconocido'), 'error');
-                    return;
+                    return null;
                 }
             } catch (e) {
                 console.error('❌ Error en creación de cliente:', e);
                 showToast('Error al crear el cliente', 'error');
-                return;
+                return null;
             }
         }
 
         if (!clienteId) {
             showToast('⚠️ No se pudo identificar o crear el cliente', 'error');
-            return;
+            return null;
         }
 
         console.log('🎯 Cliente ID final:', clienteId);
@@ -2201,7 +2201,7 @@ async function guardarCotizacion(estado) {
             condicion_pago: condicionFinal,
             tiempo_entrega: tiempoFinal,
             validez: getFieldValue('fValidez', 'fValidezCustom') || '15 días',
-            direccion_entrega: getFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom') || '',
+            direccion_entrega: getDireccionEntregaValue() || '',
             descuento_valor: descuentoValor,
             descuento_tipo: descuentoTipo,
             subtotal: subtotal,
@@ -2213,7 +2213,6 @@ async function guardarCotizacion(estado) {
             transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
             parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
             nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '',
-            // 🔽 REQUERIMIENTO AGREGADO
             requerimiento: requerimiento,
             productos: quoteProducts.map(p => ({
                 codigo: p.codigo,
@@ -2238,7 +2237,8 @@ async function guardarCotizacion(estado) {
         console.log('  - productos:', data.productos.length);
         console.log('  - condicion_pago:', data.condicion_pago);
         console.log('  - tiempo_entrega:', data.tiempo_entrega);
-        console.log('  - requerimiento:', data.requerimiento);  // ← LOG DEL REQUERIMIENTO
+        console.log('  - requerimiento:', data.requerimiento);
+        console.log('  - direccion_entrega:', data.direccion_entrega);
 
         // ============================================================
         // 4. ENVIAR A LA API
@@ -2257,12 +2257,17 @@ async function guardarCotizacion(estado) {
             closeModal('cotizacionModal');
             await loadCotizaciones();
             await cargarClientesMaestros();
+            
+            // ✅ RETORNAR EL RESULTADO COMPLETO PARA OBTENER EL ID
+            return response;
         } else {
             showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
+            return null;
         }
     } catch (error) {
         console.error('❌ Error guardando cotización:', error);
         showToast('❌ Error al guardar la cotización: ' + error.message, 'error');
+        return null;
     }
 }
 
@@ -2539,11 +2544,24 @@ function generateCotizacionPdfAndSend() {
             }
             
             try {
-                // Guardar la cotización
-                await guardarCotizacion('Generada');
+                // ✅ GUARDAR LA COTIZACIÓN Y OBTENER EL RESULTADO
+                const result = await guardarCotizacion('Generada');
                 
-                // Mostrar modal de éxito con detalles
-                showSuccessModal();
+                // ✅ OBTENER EL ID DE LA COTIZACIÓN CREADA
+                let cotizacionId = null;
+                if (result && result.data && result.data.id) {
+                    cotizacionId = result.data.id;
+                } else {
+                    // Si no viene en la respuesta, buscar la última cotización
+                    await loadCotizaciones();
+                    if (cotizacionesData.length > 0) {
+                        cotizacionId = cotizacionesData[0].id;
+                    }
+                }
+                
+                // ✅ MOSTRAR MODAL DE ÉXITO CON EL ID
+                showSuccessModal(cotizacionId);
+                
             } catch (error) {
                 console.error('Error generando cotización:', error);
                 showToast('❌ Error al generar la cotización: ' + error.message, 'error');
@@ -2556,7 +2574,6 @@ function generateCotizacionPdfAndSend() {
         }
     );
 }
-
 
 
 // ============================================================
@@ -14942,8 +14959,16 @@ if (fechaFin) {
         renderCotizaciones();
     });
 }
-
-function showSuccessModal() {
+function showSuccessModal(cotizacionId) {
+    // Si no se pasó el ID, intentar obtenerlo de la respuesta
+    if (!cotizacionId) {
+        // Buscar la última cotización creada
+        const ultimaCotizacion = cotizacionesData.length > 0 ? cotizacionesData[0] : null;
+        if (ultimaCotizacion && ultimaCotizacion.id) {
+            cotizacionId = ultimaCotizacion.id;
+        }
+    }
+    
     // Obtener datos de la cotización generada
     const ruc = document.getElementById('fRuc')?.value?.trim() || '---';
     const razon = document.getElementById('fRazon')?.value?.trim() || '---';
@@ -14979,6 +15004,7 @@ function showSuccessModal() {
         align-items: center;
         justify-content: center;
         animation: fadeIn 0.4s ease;
+        padding: 20px;
     `;
     
     const modal = document.createElement('div');
@@ -15004,7 +15030,7 @@ function showSuccessModal() {
         <div style="background: #F8FAFC; border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #E5E7EB;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px;">
                 <div><span style="color: #64748B; font-weight: 600;">📄 N° Cotización</span></div>
-                <div style="font-weight: 900; color: #EF233C; text-align: right;">${numeroCotizacion}</div>
+                <div style="font-weight: 900; color: #EF233C; text-align: right;">${esc(numeroCotizacion)}</div>
                 
                 <div><span style="color: #64748B; font-weight: 600;">🕐 Fecha y hora</span></div>
                 <div style="font-weight: 700; color: #0F172A; text-align: right;">${fechaHora}</div>
@@ -15043,6 +15069,7 @@ function showSuccessModal() {
                 cursor: pointer;
                 transition: all 0.2s;
             ">Cerrar</button>
+            ${cotizacionId ? `
             <button class="success-pdf-btn" style="
                 padding: 10px 28px;
                 border-radius: 12px;
@@ -15053,7 +15080,9 @@ function showSuccessModal() {
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 0.2s;
+                box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
             ">📄 Descargar PDF</button>
+            ` : ''}
             <button class="success-email-btn" style="
                 padding: 10px 28px;
                 border-radius: 12px;
@@ -15064,6 +15093,7 @@ function showSuccessModal() {
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 0.2s;
+                box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
             ">✉ Enviar al cliente</button>
         </div>
     `;
@@ -15074,21 +15104,24 @@ function showSuccessModal() {
     // Event listeners
     modal.querySelector('.success-close-btn').addEventListener('click', function() {
         overlay.remove();
-        // Recargar la lista de cotizaciones
         loadCotizaciones();
     });
     
-    modal.querySelector('.success-pdf-btn').addEventListener('click', function() {
-        showToast('📄 Generando PDF...', 'info');
-        // Aquí puedes agregar la lógica para generar PDF
-        setTimeout(() => {
-            showToast('✅ PDF generado correctamente', 'success');
-        }, 1500);
-    });
+    // ✅ BOTÓN PDF QUE FUNCIONA
+    if (cotizacionId) {
+        modal.querySelector('.success-pdf-btn').addEventListener('click', function() {
+            console.log(`📄 Generando PDF para cotización ID: ${cotizacionId}`);
+            if (typeof window.generateCotizacionPdf === 'function') {
+                window.generateCotizacionPdf(cotizacionId);
+            } else {
+                const url = `/ventas/api/cotizaciones/${cotizacionId}/pdf`;
+                window.open(url, '_blank');
+            }
+        });
+    }
     
     modal.querySelector('.success-email-btn').addEventListener('click', function() {
         showToast('✉ Enviando email al cliente...', 'info');
-        // Aquí puedes agregar la lógica para enviar email
         setTimeout(() => {
             showToast('✅ Email enviado correctamente', 'success');
         }, 1500);
