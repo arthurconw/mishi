@@ -12757,29 +12757,32 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
                 </div>
             </div>
-            <!-- Validez Oferta | Dirección Entrega -->
-            <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
-                    <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-                         <option value="7 días" selected>7 días</option>
+           <!-- Validez Oferta | Dirección Entrega -->
+<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
+    <div class="form-field">
+        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
+        <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+            <option value="7 días" selected>7 días</option>
             <option value="15 días">15 días</option>
             <option value="30 días">30 días</option>
             <option value="45 días">45 días</option>
             <option value="60 días">60 días</option>
             <option value="Personalizado">✏️ Personalizado...</option>
-                    </select>
-                    <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-                </div>
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-                    <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-                        <option value="">Sin dirección</option>
-                        <option value="Personalizado">✏️ Personalizado...</option>
-                    </select>
-                    <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-                </div>
-            </div>
+        </select>
+        <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+    </div>
+    <div class="form-field">
+        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
+        <select id="fDireccionEntrega" onchange="toggleCustomField('fDireccionEntrega','fDireccionEntregaCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+            <option value="">-- Seleccione --</option>
+            <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres - Jr. Las Almendras Verdes Nro. 284</option>
+            <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña - Av. Brasil Nro. 1234</option>
+            <option value="Recojo en sede">📍 Recogo en sede - Elegir</option>
+            <option value="Personalizado">✏️ Personalizado...</option>
+        </select>
+        <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+    </div>
+</div>
             <!-- Nota Comercial -->
             <div style="display:grid;grid-template-columns:1fr;gap:3px;">
                 <div class="form-field">
