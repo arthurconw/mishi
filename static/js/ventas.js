@@ -205,9 +205,13 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
     
-    // Si es el modal de PC, forzar limpieza
+    // 🔑 LIMPIAR EDITING ID AL CERRAR EL MODAL DE COTIZACIÓN
+    if (modalId === 'cotizacionModal') {
+        editingId = null;
+        quoteProducts = [];
+    }
+    
     if (modalId === 'pedidoCompraModal') {
-        // Usar setTimeout para asegurar que la limpieza se ejecute después de cerrar
         setTimeout(() => {
             forzarLimpiezaModalPC();
         }, 100);
@@ -524,9 +528,6 @@ async function cargarClientesMaestros() {
     }
 }
 
-// ============================================================
-// FUNCIONES DE CARGA DE DATOS (CON API REAL)
-// ============================================================
 
 async function loadCotizaciones() {
     console.log('🔄 Cargando cotizaciones...');
@@ -536,7 +537,6 @@ async function loadCotizaciones() {
             cotizacionesData = data.data || [];
             console.log(`✅ ${cotizacionesData.length} cotizaciones cargadas`);
             renderCotizaciones();
-            // 🔽 RETORNAR LOS DATOS
             return cotizacionesData;
         } else {
             showToast('Error al cargar cotizaciones: ' + (data.error || 'Error desconocido'), 'error');
@@ -548,7 +548,6 @@ async function loadCotizaciones() {
         return [];
     }
 }
-
 
 
 
@@ -1957,7 +1956,7 @@ async function guardarCotizacion(estado) {
         console.log('🔄 Iniciando guardado de cotización...');
         
         // ============================================================
-        // 🔽 VALIDAR CAMPOS OBLIGATORIOS - VERSIÓN CORREGIDA
+        // 🔽 VALIDAR CAMPOS OBLIGATORIOS
         // ============================================================
         const ruc = document.getElementById('fRuc')?.value?.trim() || '';
         const condicionPagoSelect = document.getElementById('fCondicion')?.value || '';
@@ -2046,26 +2045,10 @@ async function guardarCotizacion(estado) {
             }
         }
 
-        console.log('🔍 Validación:');
-        console.log('  - condicionPagoSelect:', condicionPagoSelect);
-        console.log('  - condicionCustom:', condicionCustom);
-        console.log('  - condicionFinal:', condicionFinal);
-        console.log('  - tiempoEntregaSelect:', tiempoEntregaSelect);
-        console.log('  - tiempoCustom:', tiempoCustom);
-        console.log('  - tiempoFinal:', tiempoFinal);
-        console.log('  - camposFaltantes:', camposFaltantes);
-
-        // ============================================================
-        // 🔽 SI HAY CAMPOS FALTANTES, MOSTRAR MODAL GRANDE
-        // ============================================================
         if (camposFaltantes.length > 0) {
             showValidationWarningModal(camposFaltantes);
             return null;
         }
-
-        console.log('📋 RUC:', ruc);
-        console.log('📋 Condición de Pago:', condicionFinal);
-        console.log('📋 Tiempo de Entrega:', tiempoFinal);
 
         // ============================================================
         // 1. BUSCAR EL CLIENTE POR RUC
@@ -2092,13 +2075,10 @@ async function guardarCotizacion(estado) {
             try {
                 const resp = await fetch(`/maestros/api/clientes/buscar?q=${ruc}`);
                 const data = await resp.json();
-                console.log('📦 Respuesta búsqueda:', data);
-
                 if (data.success && data.data && data.data.length > 0) {
                     clienteId = data.data[0].id;
                     clienteData = data.data[0];
                     console.log('✅ Cliente encontrado en BD con ID:', clienteId);
-
                     if (!CLIENTES_MAESTROS.find(c => c.id === clienteId)) {
                         CLIENTES_MAESTROS.push(clienteData);
                     }
@@ -2126,8 +2106,6 @@ async function guardarCotizacion(estado) {
                 estado: 'Activo'
             };
 
-            console.log('📦 Datos nuevo cliente:', nuevoCliente);
-
             try {
                 const resp = await fetch('/maestros/api/clientes/guardar', {
                     method: 'POST',
@@ -2135,8 +2113,6 @@ async function guardarCotizacion(estado) {
                     body: JSON.stringify(nuevoCliente)
                 });
                 const result = await resp.json();
-                console.log('📦 Respuesta creación cliente:', result);
-
                 if (result.success && result.data && result.data.id) {
                     clienteId = result.data.id;
                     clienteData = result.data;
@@ -2176,18 +2152,11 @@ async function guardarCotizacion(estado) {
         const total = valorVenta + igv;
 
         // ============================================================
-        // 🔽 OBTENER EL REQUERIMIENTO DEL INPUT
+        // 3. PREPARAR DATOS - ¡ESTA ES LA PARTE CLAVE!
         // ============================================================
-        const requerimientoInput = document.getElementById('fReq');
-        const requerimiento = requerimientoInput ? requerimientoInput.value.trim() : '';
-        console.log('📝 REQUERIMIENTO OBTENIDO:', requerimiento);
-
-        // ============================================================
-        // 3. PREPARAR DATOS
-        // ============================================================
-
+        
         const data = {
-            id: editingId,
+            id: editingId,  // 🔑 Si es edición, se envía el ID
             estado: estado || 'Borrador',
             cliente_id: clienteId,
             ruc: ruc,
@@ -2213,7 +2182,7 @@ async function guardarCotizacion(estado) {
             transporte: document.getElementById('fTransporte')?.value || 'Seleccione',
             parihuela: document.getElementById('fParihuela')?.value || 'Seleccione',
             nota_interna: document.getElementById('fNotaInterna')?.value?.trim() || '',
-            requerimiento: requerimiento,
+            requerimiento: document.getElementById('fReq')?.value?.trim() || '',
             productos: quoteProducts.map(p => ({
                 codigo: p.codigo,
                 producto: p.producto || p.descripcion,
@@ -2227,18 +2196,7 @@ async function guardarCotizacion(estado) {
             }))
         };
 
-        // ============================================================
-        // 🔽 LOG CON REQUERIMIENTO
-        // ============================================================
-        console.log('📦 Enviando cotización:');
-        console.log('  - cliente_id:', data.cliente_id);
-        console.log('  - estado:', data.estado);
-        console.log('  - total:', data.total);
-        console.log('  - productos:', data.productos.length);
-        console.log('  - condicion_pago:', data.condicion_pago);
-        console.log('  - tiempo_entrega:', data.tiempo_entrega);
-        console.log('  - requerimiento:', data.requerimiento);
-        console.log('  - direccion_entrega:', data.direccion_entrega);
+        console.log('📦 Enviando cotización:', data);
 
         // ============================================================
         // 4. ENVIAR A LA API
@@ -2252,13 +2210,17 @@ async function guardarCotizacion(estado) {
         console.log('📦 Respuesta API:', response);
 
         if (response.success) {
+            // 🔑 GUARDAR EL ID DE EDICIÓN PARA FUTURAS ACTUALIZACIONES
+            if (response.data && response.data.id) {
+                editingId = response.data.id;
+                console.log('✅ ID de cotización guardado:', editingId);
+            }
+            
             const mensaje = estado === 'Borrador' ? 'guardada como borrador' : 'creada correctamente';
             showToast(`✅ Cotización ${mensaje}`, 'success');
             closeModal('cotizacionModal');
             await loadCotizaciones();
             await cargarClientesMaestros();
-            
-            // ✅ RETORNAR EL RESULTADO COMPLETO PARA OBTENER EL ID
             return response;
         } else {
             showToast('❌ Error: ' + (response.error || 'No se pudo guardar'), 'error');
@@ -13336,10 +13298,9 @@ document.head.appendChild(stylePago);
 
 window.openCotizacionModal = function(id = null) {
     console.log('📋 Abriendo modal de cotización', { id });
-    editingId = id;
+    editingId = id;  // 🔑 Guardar el ID para edición
     const isEdit = id !== null;
     
-    // Obtener el modal
     const modal = document.getElementById('cotizacionModal');
     if (!modal) {
         console.error('❌ Modal #cotizacionModal no encontrado');
@@ -13347,7 +13308,6 @@ window.openCotizacionModal = function(id = null) {
         return;
     }
     
-    // Limpiar el contenido anterior
     const body = document.getElementById('cotizacionForm');
     if (!body) {
         console.error('❌ #cotizacionForm no encontrado');
@@ -13355,39 +13315,30 @@ window.openCotizacionModal = function(id = null) {
         return;
     }
     
-    // Resetear variables globales
     quoteProducts = [];
     cotizacionSeleccionada = null;
     
-    // Establecer el título
     const title = document.getElementById('cotizacionModalTitle');
     if (title) {
         title.textContent = isEdit ? '✏️ Editar cotización' : '📄 Nueva cotización';
     }
     
-    // Renderizar el contenido del modal
     body.innerHTML = renderCotizacionFormContent(isEdit);
-    
-    // Renderizar los botones del footer según el rol
     renderCotizacionFooter(isEdit);
-    
-    // Inicializar eventos del formulario
     inicializarEventosCotizacion(isEdit);
     
-    // Si es edición, cargar los datos
     if (isEdit) {
+        // 🔑 CARGAR LA COTIZACIÓN PARA EDITAR
         setTimeout(() => {
             cargarCotizacionParaEditar(id);
         }, 100);
     } else {
-        // Nueva cotización: valores por defecto
         const now = new Date();
         const fechaStr = now.toISOString().slice(0, 16);
         document.getElementById('fFecha')?.setAttribute('value', fechaStr);
         document.getElementById('fVendedor')?.setAttribute('value', CONFIG.asesorDefault);
     }
     
-    // Mostrar el modal
     modal.classList.add('show');
     console.log('✅ Modal de cotización abierto correctamente');
 };
