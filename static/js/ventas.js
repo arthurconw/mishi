@@ -12776,8 +12776,6 @@ function renderCotizacionFormContent(isEdit) {
         <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
         <select id="fDireccionEntrega" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
             <option value="">-- Seleccione --</option>
-            <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
-            <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
             <option value="direccion_recogo">📦 Dirección de Recogo</option>
             <option value="Personalizado">✏️ Personalizado...</option>
         </select>
