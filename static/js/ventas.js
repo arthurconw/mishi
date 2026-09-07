@@ -6568,8 +6568,11 @@ if (c.validez_oferta) {
     setFieldValue('fValidez', 'fValidezCustom', c.validez_oferta);
 }
 
+// ============================================================
+// CARGAR DIRECCIÓN DE ENTREGA CON SOPORTE PARA RECOGO
+// ============================================================
 if (c.direccion_entrega) {
-    setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', c.direccion_entrega);
+    cargarDireccionEntregaExistente(c.direccion_entrega);
 }
         
         // Nota interna
