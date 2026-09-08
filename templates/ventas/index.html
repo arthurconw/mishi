@@ -3301,6 +3301,60 @@
 </div>
 
 
+<button class="tab-btn" data-tab="revision">
+    🔍 Revisión
+    <span class="tab-badge">📍</span>
+</button>
+<!-- ============================================================ -->
+<!-- REVISIÓN - SOLO PARA HELLEN Y ERIKA                         -->
+<!-- ============================================================ -->
+<div id="revision" class="section">
+    <div class="panel">
+        <div class="clean-header">
+            <div class="master-title-wrap">
+                <div class="master-title">🔍 Revisión de Cotizaciones</div>
+                <div class="master-subtitle">Cotizaciones en estado "Validado por Hellen" - Solo para Hellen/Erika</div>
+            </div>
+            <div class="search-box">
+                <input id="revisionSearch" placeholder="Buscar por cotización / cliente / RUC..." oninput="renderRevision()">
+            </div>
+            <div class="clean-actions">
+                <select id="revisionStatus" onchange="renderRevision()">
+                    <option value="">Todos los estados</option>
+                    <option value="Validado por Hellen">📋 En revisión</option>
+                    <option value="Aceptada">✅ Aceptadas</option>
+                    <option value="Rechazada">❌ Rechazadas</option>
+                </select>
+                <button class="btn btn-secondary" onclick="exportData('revision')">📥 Exportar</button>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="master-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha / Hora</th>
+                        <th>Estado</th>
+                        <th>N° Cotización</th>
+                        <th>RUC</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Monto</th>
+                        <th>Validado por</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="revisionRows">
+                    <tr><td colspan="10" style="text-align:center;color:#94A3B8;padding:40px;">📭 No hay cotizaciones en revisión</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="footer-table">
+            <span id="revisionCount">Mostrando 0 de 0</span>
+            <span><b>Regla:</b> Solo Hellen y Erika pueden aceptar o rechazar cotizaciones.</span>
+        </div>
+    </div>
+</div>
 
 
 <!-- MODAL SELECCIÓN MÚLTIPLE DE PRODUCTOS -->
@@ -3366,7 +3420,6 @@
 <!-- PRIMERO: Cargar ventas.js -->
 <script src="{{ url_for('static', filename='js/ventas.js') }}"></script>
 
-<!-- SEGUNDO: Ejecutar el código de inicialización -->
 <script>
     (function() {
         'use strict';
@@ -3612,6 +3665,15 @@
             console.log('✅ Badge observer inicializado');
         });
     })();
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Ocultar pestaña de revisión si no está autorizado
+    if (typeof mostrarPestanasPorRol === 'function') {
+        mostrarPestanasPorRol();
+    }
+});
+
 </script>
 {% endblock %}
 

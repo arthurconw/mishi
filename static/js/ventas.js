@@ -12204,7 +12204,341 @@ function reordenarItemsSAP() {
         }
     });
 }
+// ============================================================
+// REVISIÓN - FUNCIONES COMPLETAS
+// ============================================================
 
+// Variables globales para revisión
+let revisionData = [];
+let currentRevisionFilter = '';
+
+/**
+ * Obtiene el rol del usuario desde la sesión
+ */
+function getUsuarioRol() {
+    // Intentar desde el elemento HTML
+    const rolElement = document.getElementById('usuarioRol');
+    if (rolElement) return rolElement.value || 'vendedor';
+    
+    // Intentar desde sessionStorage
+    try {
+        const session = JSON.parse(sessionStorage.getItem('erp_session') || '{}');
+        if (session.rol) return session.rol;
+    } catch (e) {}
+    
+    // Intentar desde FLASK_SESSION
+    if (typeof FLASK_SESSION !== 'undefined' && FLASK_SESSION.rol) {
+        return FLASK_SESSION.rol;
+    }
+    
+    return 'vendedor';
+}
+
+/**
+ * Verifica si el usuario tiene permisos para ver el módulo de revisión
+ */
+function esUsuarioAutorizado() {
+    const rol = getUsuarioRol();
+    const rolesPermitidos = ['hellen', 'erika', 'admin', 'superadmin', 'administrador'];
+    return rolesPermitidos.includes(rol);
+}
+
+/**
+ * Carga las cotizaciones en estado de revisión
+ */
+async function loadRevision() {
+    console.log('🔄 Cargando cotizaciones en revisión...');
+    
+    // Verificar autorización
+    if (!esUsuarioAutorizado()) {
+        console.warn('⚠️ Usuario no autorizado para ver revisiones');
+        const tbody = document.getElementById('revisionRows');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#DC2626;padding:40px;">
+                🔒 No tienes permisos para ver este módulo.<br>
+                <small style="color:#94A3B8;">Solo Hellen y Erika pueden acceder a Revisiones.</small>
+            </td></tr>`;
+        }
+        return;
+    }
+    
+    try {
+        const response = await apiFetch('/ventas/api/cotizaciones/revision');
+        if (response.success) {
+            revisionData = response.data || [];
+            console.log(`✅ ${revisionData.length} cotizaciones en revisión cargadas`);
+            renderRevision();
+        } else {
+            showToast('Error al cargar revisiones: ' + (response.error || 'Desconocido'), 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error cargando revisiones:', error);
+        showToast('Error al cargar revisiones', 'error');
+    }
+}
+
+/**
+ * Renderiza la tabla de cotizaciones en revisión
+ */
+function renderRevision() {
+    const q = document.getElementById('revisionSearch')?.value?.toLowerCase() || '';
+    const st = document.getElementById('revisionStatus')?.value || '';
+    
+    const list = revisionData.filter(r => {
+        const searchStr = `${r.numero || ''} ${r.cliente || ''} ${r.ruc || ''} ${r.vendedor || ''} ${r.codigo || ''}`.toLowerCase();
+        const matchText = !q || searchStr.includes(q);
+        const matchStatus = !st || r.estado === st;
+        return matchText && matchStatus;
+    });
+    
+    const tbody = document.getElementById('revisionRows');
+    if (!tbody) return;
+    
+    // Verificar si el usuario está autorizado
+    const puedeActuar = esUsuarioAutorizado();
+    
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#94A3B8;padding:40px;">
+            📭 No hay cotizaciones en revisión que coincidan con los filtros.
+            ${revisionData.length > 0 ? `(${revisionData.length} registros cargados)` : ''}
+        </td></tr>`;
+        const countEl = document.getElementById('revisionCount');
+        if (countEl) countEl.textContent = `Mostrando 0 de ${revisionData.length}`;
+        return;
+    }
+    
+    tbody.innerHTML = list.map((r, i) => {
+        const estado = r.estado || 'Validado por Hellen';
+        let badgeEstado = badgeStatus(estado);
+        
+        // Mostrar estado especial para rechazadas/aceptadas
+        if (estado === 'Rechazada') {
+            badgeEstado = `<span class="badge b-canceled">❌ ${estado}</span>`;
+            if (r.motivo_rechazo) {
+                badgeEstado += `<br><small style="color:#DC2626;font-size:7px;">${r.motivo_rechazo}</small>`;
+            }
+        } else if (estado === 'Aceptada') {
+            badgeEstado = `<span class="badge b-accepted">✅ ${estado}</span>`;
+        }
+        
+        // Botones de acción - solo para usuarios autorizados y solo si está en revisión
+        let accionesHtml = '';
+        const esRevisable = estado === 'Validado por Hellen' || estado === 'Validado';
+        
+        if (puedeActuar && esRevisable) {
+            accionesHtml = `
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;">
+                    <div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;">
+                        <button onclick="openCotizacionModal(${r.id})" 
+                                style="height:24px;padding:0 10px;font-size:9px;border-radius:4px;background:#2563EB;color:#fff;border:0;font-weight:800;cursor:pointer;"
+                                onmouseover="this.style.background='#1D4ED8'"
+                                onmouseout="this.style.background='#2563EB'">
+                            👁️ Ver/Editar
+                        </button>
+                        <button onclick="aceptarRevision(${r.id})" 
+                                style="height:24px;padding:0 10px;font-size:9px;border-radius:4px;background:#16A34A;color:#fff;border:0;font-weight:800;cursor:pointer;"
+                                onmouseover="this.style.background='#15803D'"
+                                onmouseout="this.style.background='#16A34A'">
+                            ✅ Aceptar
+                        </button>
+                        <button onclick="rechazarRevision(${r.id})" 
+                                style="height:24px;padding:0 10px;font-size:9px;border-radius:4px;background:#DC2626;color:#fff;border:0;font-weight:800;cursor:pointer;"
+                                onmouseover="this.style.background='#B91C1C'"
+                                onmouseout="this.style.background='#DC2626'">
+                            ❌ Rechazar
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else if (estado === 'Aceptada') {
+            accionesHtml = `
+                <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
+                    <span class="badge b-ok">✅ Aceptada</span>
+                    <button onclick="openCotizacionModal(${r.id})" 
+                            style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;"
+                            onmouseover="this.style.background='#E2E8F0'"
+                            onmouseout="this.style.background='#F8FAFC'">
+                        👁️ Ver
+                    </button>
+                </div>
+            `;
+        } else if (estado === 'Rechazada') {
+            accionesHtml = `
+                <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
+                    <span class="badge b-canceled">❌ Rechazada</span>
+                    <button onclick="openCotizacionModal(${r.id})" 
+                            style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;"
+                            onmouseover="this.style.background='#E2E8F0'"
+                            onmouseout="this.style.background='#F8FAFC'">
+                        👁️ Ver
+                    </button>
+                </div>
+            `;
+        } else {
+            accionesHtml = `
+                <button onclick="openCotizacionModal(${r.id})" 
+                        style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;"
+                        onmouseover="this.style.background='#E2E8F0'"
+                        onmouseout="this.style.background='#F8FAFC'">
+                    👁️ Ver
+                </button>
+            `;
+        }
+        
+        // Formatear fecha
+        const fechaDisplay = formatearFecha(r.fecha || r.updated_at || r.created_at);
+        const validador = r.validado_por || 'Hellen';
+        
+        return `
+        <tr>
+            <td style="font-weight:900;font-size:11px;">${i + 1}</td>
+            <td class="date-cell" style="font-size:9px;">${fechaDisplay}</td>
+            <td>${badgeEstado}</td>
+            <td style="font-weight:1000;font-size:12px;color:#0F172A;">${sd(r.numero)}${badgeNuevo(r, 'fecha')}</td>
+            <td style="font-weight:800;">${sd(r.ruc)}</td>
+            <td class="left" style="font-weight:900;font-size:11px;">${sd(r.cliente)}</td>
+            <td style="font-size:10px;">${sd(r.vendedor || '--')}</td>
+            <td style="font-weight:900;color:#EF233C;font-size:12px;">${money(r.total || r.monto || 0)}</td>
+            <td style="font-size:9px;font-weight:800;color:#2563EB;">${sd(validador)}</td>
+            <td>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                    ${accionesHtml}
+                </div>
+            </td>
+        </tr>
+        `;
+    }).join('');
+    
+    const countEl = document.getElementById('revisionCount');
+    if (countEl) {
+        countEl.textContent = `Mostrando ${list.length} de ${revisionData.length}`;
+    }
+}
+
+/**
+ * Acepta una cotización en revisión
+ */
+async function aceptarRevision(id) {
+    const cotizacion = revisionData.find(c => c.id === id);
+    if (!cotizacion) {
+        showToast('❌ Cotización no encontrada', 'error');
+        return;
+    }
+    
+    // Verificar que el usuario esté autorizado
+    if (!esUsuarioAutorizado()) {
+        showToast('❌ No tienes permisos para aceptar cotizaciones', 'error');
+        return;
+    }
+    
+    showConfirmModal(
+        '✅ ¿Aceptar cotización?',
+        `Estás a punto de <b>ACEPTAR</b> la cotización <b>${cotizacion.numero || 'COT-XXXX'}</b> del cliente <b>${cotizacion.cliente || 'Cliente'}</b>.`,
+        '⚠️ Al aceptar, la cotización pasará a estado "Aceptada" y podrá ser generada por el vendedor.',
+        async function() {
+            try {
+                showToast('⏳ Procesando...', 'info');
+                
+                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/aceptar`, {
+                    method: 'POST'
+                });
+                
+                if (response.success) {
+                    showToast('✅ Cotización aceptada correctamente', 'success');
+                    
+                    // Recargar datos
+                    await loadRevision();
+                    await loadCotizaciones();
+                    
+                    // Si estamos en el tab de revisión, actualizar vista
+                    if (currentModule === 'revision') {
+                        renderRevision();
+                    }
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo aceptar'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showToast('❌ Error al aceptar: ' + error.message, 'error');
+            }
+        },
+        '✅ Sí, aceptar'
+    );
+}
+
+/**
+ * Rechaza una cotización en revisión con motivo
+ */
+async function rechazarRevision(id) {
+    const cotizacion = revisionData.find(c => c.id === id);
+    if (!cotizacion) {
+        showToast('❌ Cotización no encontrada', 'error');
+        return;
+    }
+    
+    // Verificar que el usuario esté autorizado
+    if (!esUsuarioAutorizado()) {
+        showToast('❌ No tienes permisos para rechazar cotizaciones', 'error');
+        return;
+    }
+    
+    // Crear un modal con campo de motivo usando showDeleteConfirmModal
+    showDeleteConfirmModal(
+        '❌ ¿Rechazar cotización?',
+        `Estás a punto de <b>RECHAZAR</b> la cotización <b>${cotizacion.numero || 'COT-XXXX'}</b> del cliente <b>${cotizacion.cliente || 'Cliente'}</b>.`,
+        '⚠️ La cotización pasará a estado "Rechazada". El vendedor deberá corregirla y volver a enviarla a revisión.',
+        async function(motivo) {
+            if (!motivo || motivo.trim() === '') {
+                showToast('⚠️ Debes ingresar un motivo de rechazo', 'warning');
+                return;
+            }
+            
+            try {
+                showToast('⏳ Procesando...', 'info');
+                
+                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/rechazar`, {
+                    method: 'POST',
+                    body: JSON.stringify({ motivo_rechazo: motivo })
+                });
+                
+                if (response.success) {
+                    showToast('❌ Cotización rechazada', 'warning');
+                    
+                    // Recargar datos
+                    await loadRevision();
+                    await loadCotizaciones();
+                    
+                    if (currentModule === 'revision') {
+                        renderRevision();
+                    }
+                } else {
+                    showToast('❌ Error: ' + (response.error || 'No se pudo rechazar'), 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showToast('❌ Error al rechazar: ' + error.message, 'error');
+            }
+        },
+        '❌ Sí, rechazar'
+    );
+}
+
+/**
+ * Muestra/oculta la pestaña de revisión según el rol del usuario
+ */
+function mostrarPestanasPorRol() {
+    const rol = getUsuarioRol();
+    const tabRevision = document.querySelector('.tab-btn[data-tab="revision"]');
+    
+    if (tabRevision) {
+        const autorizado = esUsuarioAutorizado();
+        tabRevision.style.display = autorizado ? 'inline-flex' : 'none';
+        
+        if (!autorizado) {
+            console.log('🔒 Pestaña "Revisión" oculta para usuario con rol:', rol);
+        }
+    }
+}
 
 // ============================================================
 // MODAL DE CONFIRMACIÓN UNIVERSAL (MEJORADO)
@@ -15881,6 +16215,18 @@ window.limpiarFiltrosEliminadas = limpiarFiltrosEliminadas;
 window.verDetalleEliminada = verDetalleEliminada;
 window.exportarEliminadasCSV = exportarEliminadasCSV;
 
+
+
+// ============================================================
+// EXPORTAR FUNCIONES DE REVISIÓN
+// ============================================================
+window.loadRevision = loadRevision;
+window.renderRevision = renderRevision;
+window.aceptarRevision = aceptarRevision;
+window.rechazarRevision = rechazarRevision;
+window.esUsuarioAutorizado = esUsuarioAutorizado;
+window.getUsuarioRol = getUsuarioRol;
+window.mostrarPestanasPorRol = mostrarPestanasPorRol;
 // ============================================================
 // 14. FUNCIONES DE FORMATO
 // ============================================================

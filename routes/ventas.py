@@ -6943,3 +6943,282 @@ def api_ver_eliminada(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================
+# REVISIÓN - API (COMPLETO)
+# ============================================================
+
+@ventas_bp.route('/ventas/api/cotizaciones/revision', methods=['GET'])
+@login_required
+def api_cotizaciones_revision():
+    """Obtiene cotizaciones en estado 'Validado por Hellen' para revisión"""
+    try:
+        # Verificar que el usuario tenga acceso
+        rol = session.get('rol', '').lower()
+        usuario = session.get('usuario', '')
+        
+        # Solo Hellen, Erika, Admin pueden ver este módulo
+        roles_permitidos = ['hellen', 'erika', 'admin', 'superadmin', 'administrador']
+        if rol not in roles_permitidos:
+            # Si no es autorizado, devolver lista vacía
+            print(f"⚠️ Usuario no autorizado para revisión: {rol}")
+            return jsonify({
+                'success': True, 
+                'data': [],
+                'message': 'No autorizado - solo Hellen y Erika'
+            })
+        
+        query = """
+            SELECT 
+                c.id, 
+                c.numero_cotizacion as numero,
+                c.codigo_cotizacion as codigo,
+                c.fecha_creacion as fecha,
+                c.estado,
+                c.subtotal,
+                c.igv,
+                c.total,
+                c.condicion_pago,
+                c.vendedor,
+                c.requerimiento,
+                c.direccion_entrega,
+                c.nota_cotizacion as notas,
+                c.tiempo_entrega,
+                c.validez_oferta,
+                c.seguimiento,
+                c.motivo,
+                c.transporte,
+                c.parihuela,
+                c.nota_interna,
+                cl.id as cliente_id,
+                cl.razon_social as cliente,
+                cl.numero_documento as ruc,
+                cl.codigo_cliente as cod_cliente,
+                cl.direccion_fiscal as direccion,
+                cl.telefono_contacto as telefono,
+                cl.nombre_contacto as contacto,
+                cl.email_contacto as email,
+                c.usuario_validacion_id,
+                c.validado_por_nombre as validado_por,
+                c.motivo_rechazo,
+                c.updated_at,
+                u.nombre_completo as validador_nombre
+            FROM cotizaciones c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
+            LEFT JOIN usuarios u ON u.id = c.usuario_validacion_id
+            WHERE c.estado IN ('Validado por Hellen', 'Validado', 'Aceptada', 'Rechazada')
+            ORDER BY c.updated_at DESC
+        """
+        
+        results = db_query(query)
+        
+        # Formatear datos
+        formatted_data = []
+        for row in results:
+            formatted_data.append({
+                'id': row.get('id'),
+                'numero': row.get('numero'),
+                'codigo': row.get('codigo'),
+                'fecha': row.get('fecha'),
+                'estado': row.get('estado'),
+                'subtotal': float(row.get('subtotal', 0)),
+                'igv': float(row.get('igv', 0)),
+                'total': float(row.get('total', 0)),
+                'condicion_pago': row.get('condicion_pago'),
+                'vendedor': row.get('vendedor', '--'),
+                'requerimiento': row.get('requerimiento'),
+                'direccion_entrega': row.get('direccion_entrega'),
+                'notas': row.get('notas'),
+                'tiempo_entrega': row.get('tiempo_entrega'),
+                'validez_oferta': row.get('validez_oferta'),
+                'seguimiento': row.get('seguimiento'),
+                'motivo': row.get('motivo'),
+                'transporte': row.get('transporte'),
+                'parihuela': row.get('parihuela'),
+                'nota_interna': row.get('nota_interna'),
+                'cliente_id': row.get('cliente_id'),
+                'cliente': row.get('cliente'),
+                'ruc': row.get('ruc'),
+                'cod_cliente': row.get('cod_cliente'),
+                'direccion': row.get('direccion'),
+                'telefono': row.get('telefono'),
+                'contacto': row.get('contacto'),
+                'email': row.get('email'),
+                'validado_por': row.get('validado_por') or row.get('validador_nombre') or 'Hellen',
+                'motivo_rechazo': row.get('motivo_rechazo'),
+                'updated_at': row.get('updated_at')
+            })
+        
+        print(f"✅ {len(formatted_data)} cotizaciones en revisión")
+        return jsonify({'success': True, 'data': formatted_data})
+        
+    except Exception as e:
+        print(f"❌ Error en api_cotizaciones_revision: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/cotizaciones/<int:id>/validar', methods=['POST'])
+@login_required
+def api_cotizaciones_validar(id):
+    """Registra quién validó una cotización"""
+    try:
+        data = request.get_json()
+        usuario_id = session.get('usuario_id', 8)
+        nombre = session.get('nombre', '')
+        
+        # Si no viene nombre, obtener de la sesión
+        if not nombre:
+            query_user = "SELECT nombre_completo FROM usuarios WHERE id = %s"
+            user_result = db_query(query_user, (usuario_id,))
+            if user_result:
+                nombre = user_result[0].get('nombre_completo', 'Hellen')
+        
+        query = """
+            UPDATE cotizaciones 
+            SET 
+                usuario_validacion_id = %s,
+                validado_por_nombre = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id
+        """
+        result = db_query(query, (usuario_id, nombre, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': f'Validación registrada por {nombre}',
+                'data': {'id': id, 'validado_por': nombre}
+            })
+        return jsonify({'success': False, 'error': 'No se pudo registrar la validación'}), 400
+        
+    except Exception as e:
+        print(f"❌ Error en api_cotizaciones_validar: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/cotizaciones/<int:id>/aceptar', methods=['POST'])
+@login_required
+def api_cotizaciones_aceptar(id):
+    """Acepta una cotización en revisión y la pasa a estado 'Aceptada'"""
+    try:
+        # Verificar que el usuario tenga permisos
+        rol = session.get('rol', '').lower()
+        roles_permitidos = ['hellen', 'erika', 'admin', 'superadmin', 'administrador']
+        
+        if rol not in roles_permitidos:
+            return jsonify({
+                'success': False, 
+                'error': 'No tienes permisos para aceptar cotizaciones'
+            }), 403
+        
+        # Verificar que la cotización existe y está en estado correcto
+        query_check = """
+            SELECT id, estado FROM cotizaciones 
+            WHERE id = %s AND estado IN ('Validado por Hellen', 'Validado')
+        """
+        check = db_query(query_check, (id,))
+        
+        if not check:
+            return jsonify({
+                'success': False, 
+                'error': 'Cotización no encontrada o no está en estado "Validado por Hellen"'
+            }), 404
+        
+        # Actualizar estado a "Aceptada"
+        query_update = """
+            UPDATE cotizaciones 
+            SET 
+                estado = 'Aceptada',
+                fecha_aceptacion = NOW(),
+                usuario_aceptacion_id = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        
+        usuario_id = session.get('usuario_id', 8)
+        result = db_query(query_update, (usuario_id, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': 'Cotización aceptada correctamente',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'No se pudo aceptar la cotización'}), 400
+        
+    except Exception as e:
+        print(f"❌ Error en api_cotizaciones_aceptar: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ventas_bp.route('/ventas/api/cotizaciones/<int:id>/rechazar', methods=['POST'])
+@login_required
+def api_cotizaciones_rechazar(id):
+    """Rechaza una cotización en revisión con motivo"""
+    try:
+        # Verificar que el usuario tenga permisos
+        rol = session.get('rol', '').lower()
+        roles_permitidos = ['hellen', 'erika', 'admin', 'superadmin', 'administrador']
+        
+        if rol not in roles_permitidos:
+            return jsonify({
+                'success': False, 
+                'error': 'No tienes permisos para rechazar cotizaciones'
+            }), 403
+        
+        data = request.get_json()
+        motivo = data.get('motivo_rechazo', '').strip()
+        
+        if not motivo:
+            return jsonify({
+                'success': False, 
+                'error': 'El motivo de rechazo es obligatorio'
+            }), 400
+        
+        # Verificar que la cotización existe y está en estado correcto
+        query_check = """
+            SELECT id, estado FROM cotizaciones 
+            WHERE id = %s AND estado IN ('Validado por Hellen', 'Validado')
+        """
+        check = db_query(query_check, (id,))
+        
+        if not check:
+            return jsonify({
+                'success': False, 
+                'error': 'Cotización no encontrada o no está en estado "Validado por Hellen"'
+            }), 404
+        
+        # Actualizar estado a "Rechazada"
+        query_update = """
+            UPDATE cotizaciones 
+            SET 
+                estado = 'Rechazada',
+                motivo_rechazo = %s,
+                fecha_rechazo = NOW(),
+                usuario_rechazo_id = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, estado
+        """
+        
+        usuario_id = session.get('usuario_id', 8)
+        result = db_query(query_update, (motivo, usuario_id, id))
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'message': 'Cotización rechazada correctamente',
+                'data': result[0]
+            })
+        
+        return jsonify({'success': False, 'error': 'No se pudo rechazar la cotización'}), 400
+        
+    except Exception as e:
+        print(f"❌ Error en api_cotizaciones_rechazar: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
