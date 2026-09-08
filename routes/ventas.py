@@ -4026,7 +4026,7 @@ def api_cotizaciones_generar_pdf(id):
         
         print(f"📊 Datos preparados: {len(productos_list)} productos, Total: {total}")
         
-        # 5. Template HTML CON COLORES CORPORATIVOS Y NOTA ACLARATORIA SIMÉTRICA
+        # 5. Template HTML - SIN FONDOS DE COLOR, SOLO TEXTOS Y BORDES ROJOS
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -4053,7 +4053,6 @@ def api_cotizaciones_generar_pdf(id):
         /* ===== COLORES CORPORATIVOS ===== */
         .color-rojo { color: #CC0000; }
         .color-rojo-oscuro { color: #990000; }
-        .bg-rojo-claro { background: #FFF5F5; }
         .border-rojo { border-color: #CC0000; }
         
         /* ===== HEADER CON BORDE ROJO ===== */
@@ -4122,7 +4121,6 @@ def api_cotizaciones_generar_pdf(id):
             padding: 6px 18px;
             text-align: center;
             min-width: 180px;
-            background: #FFF5F5;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -4156,7 +4154,6 @@ def api_cotizaciones_generar_pdf(id):
             border: 1px solid #d5d5d5;
             border-radius: 8px;
             padding: 8px 12px; 
-            background: #f9f9f9;
         }
         .seccion-cliente h3, .seccion-condiciones h3 { 
             color: #990000;
@@ -4190,9 +4187,8 @@ def api_cotizaciones_generar_pdf(id):
             font-size: 8.5px; 
             line-height: 1.4; 
             text-align: justify; 
-            background: #fafafa;
-            border-radius: 6px;
             border: 1px solid #e5e7eb;
+            border-radius: 6px;
         }
         .texto-introductorio .saludo { 
             font-size: 9px; 
@@ -4209,7 +4205,6 @@ def api_cotizaciones_generar_pdf(id):
             font-size: 8px; 
         }
         .tabla-productos th { 
-            background: #FFF0F0;
             color: #990000;
             padding: 5px 4px; 
             border: 1px solid #CC0000;
@@ -4224,7 +4219,7 @@ def api_cotizaciones_generar_pdf(id):
             color: #333333;
         }
         .tabla-productos tr:nth-child(even) td {
-            background: #f8f8f8;
+            background: #f9f9f9;
         }
         
         .col-item { text-align: center; width: 30px; }
@@ -4238,7 +4233,6 @@ def api_cotizaciones_generar_pdf(id):
         .col-valor-total { 
             text-align: right; 
             width: 85px; 
-            background: #FFF5F5; 
             font-weight: bold; 
             color: #990000;
         }
@@ -4263,7 +4257,6 @@ def api_cotizaciones_generar_pdf(id):
             border: 2px solid #CC0000;
             border-radius: 8px;
             padding: 8px 12px; 
-            background: #FFF5F5;
         }
         .total-line { 
             display: flex; 
@@ -4297,7 +4290,7 @@ def api_cotizaciones_generar_pdf(id):
             color: #CC0000;
         }
         
-        /* ===== NOTA ACLARATORIA - SIMÉTRICA CON BORDE ROJO ===== */
+        /* ===== NOTA ACLARATORIA ===== */
         .seccion-aclaratoria { 
             margin: 10px 0; 
             padding: 10px 16px; 
@@ -4306,7 +4299,6 @@ def api_cotizaciones_generar_pdf(id):
             font-size: 8.5px; 
             text-align: justify;
             line-height: 1.6; 
-            background: #FFF8F8;
         }
         .seccion-aclaratoria .titulo { 
             font-weight: bold; 
@@ -4322,14 +4314,13 @@ def api_cotizaciones_generar_pdf(id):
             font-weight: bold; 
         }
         
-        /* ===== CUENTAS BANCARIAS - NÚMEROS MÁS GRANDES ===== */
+        /* ===== CUENTAS BANCARIAS ===== */
         .cuentas-bancarias { 
             margin-top: 8px; 
             padding: 8px 14px; 
             border: 2px solid #CC0000;
             border-radius: 8px;
             font-size: 8px; 
-            background: #FFF5F5;
         }
         .cuentas-bancarias h3 { 
             color: #990000;
@@ -4447,7 +4438,7 @@ def api_cotizaciones_generar_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- TEXTO INTRODUCTORIO - CON SALUDO EN ROJO                   -->
+    <!-- TEXTO INTRODUCTORIO                                          -->
     <!-- ============================================================ -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
@@ -4493,7 +4484,7 @@ def api_cotizaciones_generar_pdf(id):
     </table>
 
     <!-- ============================================================ -->
-    <!-- NOTA ACLARATORIA - SIMÉTRICA (ELIMINADA LA NOTA DE IMÁGENES)-->
+    <!-- NOTA ACLARATORIA                                             -->
     <!-- ============================================================ -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 NOTA ACLARATORIA</div>
@@ -4517,7 +4508,7 @@ def api_cotizaciones_generar_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- CUENTAS BANCARIAS - NÚMEROS MÁS GRANDES                     -->
+    <!-- CUENTAS BANCARIAS                                            -->
     <!-- ============================================================ -->
     <div class="cuentas-bancarias">
         <h3>💰 CUENTAS BANCARIAS</h3>
@@ -4572,7 +4563,7 @@ def api_cotizaciones_generar_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-    
+
 # ventas.py - Reemplazar la función generar_pdf_guia_endpoint
 
 @ventas_bp.route('/ventas/api/guias/<int:guia_id>/pdf', methods=['GET'])
@@ -5739,7 +5730,7 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML - CON COLORES CORPORATIVOS Y NOTA ACLARATORIA SIMÉTRICA
+        # 4. Template HTML - SIN FONDOS DE COLOR, SOLO TEXTOS Y BORDES ROJOS
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -5766,7 +5757,6 @@ def api_cotizaciones_preview_pdf(id):
         /* ===== COLORES CORPORATIVOS ===== */
         .color-rojo { color: #CC0000; }
         .color-rojo-oscuro { color: #990000; }
-        .bg-rojo-claro { background: #FFF5F5; }
         .border-rojo { border-color: #CC0000; }
         
         /* ===== HEADER ===== */
@@ -5835,7 +5825,6 @@ def api_cotizaciones_preview_pdf(id):
             padding: 6px 18px;
             text-align: center;
             min-width: 180px;
-            background: #FFF5F5;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -5869,7 +5858,6 @@ def api_cotizaciones_preview_pdf(id):
             border: 1px solid #d5d5d5;
             border-radius: 8px;
             padding: 8px 12px; 
-            background: #f9f9f9;
         }
         .seccion-cliente h3, .seccion-condiciones h3 { 
             color: #990000;
@@ -5903,9 +5891,8 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 8.5px; 
             line-height: 1.4; 
             text-align: justify; 
-            background: #fafafa;
-            border-radius: 6px;
             border: 1px solid #e5e7eb;
+            border-radius: 6px;
         }
         .texto-introductorio .saludo { 
             font-size: 9px; 
@@ -5922,7 +5909,6 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 8px; 
         }
         .tabla-productos th { 
-            background: #FFF0F0;
             color: #990000;
             padding: 5px 4px; 
             border: 1px solid #CC0000;
@@ -5937,7 +5923,7 @@ def api_cotizaciones_preview_pdf(id):
             color: #333333;
         }
         .tabla-productos tr:nth-child(even) td {
-            background: #f8f8f8;
+            background: #f9f9f9;
         }
         
         .col-item { text-align: center; width: 30px; }
@@ -5951,7 +5937,6 @@ def api_cotizaciones_preview_pdf(id):
         .col-valor-total { 
             text-align: right; 
             width: 85px; 
-            background: #FFF5F5; 
             font-weight: bold; 
             color: #990000;
         }
@@ -5976,7 +5961,6 @@ def api_cotizaciones_preview_pdf(id):
             border: 2px solid #CC0000;
             border-radius: 8px;
             padding: 8px 12px; 
-            background: #FFF5F5;
         }
         .total-line { 
             display: flex; 
@@ -6010,7 +5994,7 @@ def api_cotizaciones_preview_pdf(id):
             color: #CC0000;
         }
         
-        /* ===== NOTA ACLARATORIA - SIMÉTRICA CON BORDE ROJO ===== */
+        /* ===== NOTA ACLARATORIA ===== */
         .seccion-aclaratoria { 
             margin: 10px 0; 
             padding: 10px 16px; 
@@ -6019,7 +6003,6 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 8.5px; 
             text-align: justify;
             line-height: 1.6; 
-            background: #FFF8F8;
         }
         .seccion-aclaratoria .titulo { 
             font-weight: bold; 
@@ -6035,14 +6018,13 @@ def api_cotizaciones_preview_pdf(id):
             font-weight: bold; 
         }
         
-        /* ===== CUENTAS BANCARIAS - NÚMEROS MÁS GRANDES ===== */
+        /* ===== CUENTAS BANCARIAS ===== */
         .cuentas-bancarias { 
             margin-top: 8px; 
             padding: 8px 14px; 
             border: 2px solid #CC0000;
             border-radius: 8px;
             font-size: 8px; 
-            background: #FFF5F5;
         }
         .cuentas-bancarias h3 { 
             color: #990000;
@@ -6160,7 +6142,7 @@ def api_cotizaciones_preview_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- TEXTO INTRODUCTORIO - CON SALUDO EN ROJO                   -->
+    <!-- TEXTO INTRODUCTORIO                                         -->
     <!-- ============================================================ -->
     <div class="texto-introductorio">
         <div class="saludo">Estimado Cliente,</div>
@@ -6206,7 +6188,7 @@ def api_cotizaciones_preview_pdf(id):
     </table>
 
     <!-- ============================================================ -->
-    <!-- NOTA ACLARATORIA - SIMÉTRICA (ELIMINADA LA NOTA DE IMÁGENES)-->
+    <!-- NOTA ACLARATORIA                                             -->
     <!-- ============================================================ -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 NOTA ACLARATORIA</div>
@@ -6230,7 +6212,7 @@ def api_cotizaciones_preview_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- CUENTAS BANCARIAS - NÚMEROS MÁS GRANDES                     -->
+    <!-- CUENTAS BANCARIAS                                            -->
     <!-- ============================================================ -->
     <div class="cuentas-bancarias">
         <h3>💰 CUENTAS BANCARIAS</h3>
@@ -6280,7 +6262,6 @@ def api_cotizaciones_preview_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/pedido-compra/<int:id>', methods=['DELETE'])
 @login_required
