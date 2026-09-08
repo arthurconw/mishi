@@ -12310,9 +12310,6 @@ async function loadRevision() {
     }
 }
 
-/**
- * Renderiza la tabla de cotizaciones en revisión
- */
 function renderRevision() {
     const q = document.getElementById('revisionSearch')?.value?.toLowerCase() || '';
     const st = document.getElementById('revisionStatus')?.value || '';
@@ -12327,7 +12324,6 @@ function renderRevision() {
     const tbody = document.getElementById('revisionRows');
     if (!tbody) return;
     
-    // Verificar si el usuario está autorizado
     const puedeActuar = esUsuarioAutorizado();
     
     if (list.length === 0) {
@@ -12341,7 +12337,7 @@ function renderRevision() {
     }
     
     tbody.innerHTML = list.map((r, i) => {
-        const estado = r.estado || 'Validado por Hellen';
+        const estado = r.estado || 'Por validar';
         let badgeEstado = badgeStatus(estado);
         
         // Mostrar estado especial para rechazadas/aceptadas
@@ -12350,13 +12346,16 @@ function renderRevision() {
             if (r.motivo_rechazo) {
                 badgeEstado += `<br><small style="color:#DC2626;font-size:7px;">${r.motivo_rechazo}</small>`;
             }
-        } else if (estado === 'Aceptada') {
+        } else if (estado === 'Aceptada por Cliente' || estado === 'Aceptada') {
             badgeEstado = `<span class="badge b-accepted">✅ ${estado}</span>`;
+        } else if (estado === 'Por validar') {
+            badgeEstado = `<span class="badge b-pending">⭐ ${estado}</span>`;
         }
         
-        // Botones de acción - solo para usuarios autorizados y solo si está en revisión
+        // 🔽 CORRECCIÓN AQUÍ: Incluir "Por validar" como estado revisable
+        const esRevisable = estado === 'Por validar' || estado === 'Validado por Hellen' || estado === 'Validado';
+        
         let accionesHtml = '';
-        const esRevisable = estado === 'Validado por Hellen' || estado === 'Validado';
         
         if (puedeActuar && esRevisable) {
             accionesHtml = `
@@ -12383,7 +12382,7 @@ function renderRevision() {
                     </div>
                 </div>
             `;
-        } else if (estado === 'Aceptada') {
+        } else if (estado === 'Aceptada por Cliente' || estado === 'Aceptada') {
             accionesHtml = `
                 <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
                     <span class="badge b-ok">✅ Aceptada</span>
@@ -12418,9 +12417,8 @@ function renderRevision() {
             `;
         }
         
-        // Formatear fecha
-        const fechaDisplay = formatearFecha(r.fecha || r.updated_at || r.created_at);
-        const validador = r.validado_por || 'Hellen';
+        const fechaDisplay = formatearFecha(r.fecha || r.created_at);
+        const validador = r.validado_por || '--';
         
         return `
         <tr>
