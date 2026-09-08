@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN SIN FONDOS DE COLOR
+# pdf_generator.py - VERSIÓN GUÍA EN NEGRO CON NÚMERO ROJO
 
 import os
 from jinja2 import Template
@@ -83,14 +83,12 @@ class PDFGenerator:
             if numero == 0:
                 return "CERO"
             
-            # Diccionarios para conversión
             unidades = ["", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"]
             decenas = ["", "DIEZ", "VEINTE", "TREINTA", "CUARENTA", "CINCUENTA", 
                       "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"]
             centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", 
                        "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"]
             
-            # Separar parte entera y decimal
             entero = int(numero)
             decimal = int(round((numero - entero) * 100, 2))
             
@@ -101,7 +99,6 @@ class PDFGenerator:
                     return "CIEN"
                 
                 texto = ""
-                # Centenas
                 if n >= 100:
                     c = n // 100
                     texto += centenas[c]
@@ -109,12 +106,10 @@ class PDFGenerator:
                     if n > 0:
                         texto += " "
                 
-                # Decenas y unidades
                 if n >= 10:
                     d = n // 10
                     u = n % 10
                     if d == 1 and u > 0:
-                        # Números del 11 al 19
                         especiales = {11: "ONCE", 12: "DOCE", 13: "TRECE", 14: "CATORCE", 
                                      15: "QUINCE", 16: "DIECISÉIS", 17: "DIECISIETE", 
                                      18: "DIECIOCHO", 19: "DIECINUEVE"}
@@ -123,7 +118,6 @@ class PDFGenerator:
                         texto += decenas[d]
                         if u > 0:
                             if d == 2:
-                                # Veinti...
                                 especiales = {1: "UN", 2: "DOS", 3: "TRES", 4: "CUATRO", 
                                              5: "CINCO", 6: "SEIS", 7: "SIETE", 8: "OCHO", 9: "NUEVE"}
                                 texto += "Y" + especiales[u]
@@ -136,7 +130,6 @@ class PDFGenerator:
             
             texto_final = ""
             
-            # Millones
             millones = entero // 1000000
             if millones > 0:
                 if millones == 1:
@@ -147,7 +140,6 @@ class PDFGenerator:
                 if entero > 0:
                     texto_final += " "
             
-            # Miles
             miles = entero // 1000
             if miles > 0:
                 if miles == 1:
@@ -158,11 +150,9 @@ class PDFGenerator:
                 if entero > 0:
                     texto_final += " "
             
-            # Unidades
             if entero > 0:
                 texto_final += convertir_grupo(entero)
             
-            # Parte decimal
             if decimal > 0:
                 texto_final += f" CON {decimal:02d}/100"
             else:
@@ -175,7 +165,7 @@ class PDFGenerator:
             return str(numero)
 
     # ============================================================
-    # GENERAR GUÍA DE REMISIÓN - CON COLORES CORPORATIVOS (SIN FONDOS)
+    # GENERAR GUÍA DE REMISIÓN - EN NEGRO, SOLO NÚMERO ROJO
     # ============================================================
     def _generar_guia_remision(self, datos_guia):
         try:
@@ -218,11 +208,6 @@ class PDFGenerator:
             background: #ffffff;
         }
         
-        /* ===== COLORES CORPORATIVOS ===== */
-        .color-rojo { color: #CC0000; }
-        .color-rojo-oscuro { color: #990000; }
-        .border-rojo { border-color: #CC0000; }
-        
         .header-superior { 
             display: flex; 
             justify-content: space-between; 
@@ -230,7 +215,7 @@ class PDFGenerator:
             margin-bottom: 15px; 
             gap: 20px; 
             padding-top: 5px;
-            border-bottom: 2px solid #CC0000;
+            border-bottom: 1px solid #999999;
             padding-bottom: 8px;
         }
         .empresa-izquierda { 
@@ -261,7 +246,7 @@ class PDFGenerator:
             font-size: 13px; 
             font-weight: bold; 
             text-transform: uppercase; 
-            color: #990000;
+            color: #000000;
             letter-spacing: 0.5px;
             margin-bottom: 2px;
         }
@@ -283,8 +268,8 @@ class PDFGenerator:
         }
         .recuadro-derecha { 
             flex-shrink: 0; 
-            border: 2px solid #CC0000;
-            border-radius: 10px; 
+            border: 1px solid #999999;
+            border-radius: 4px; 
             padding: 8px 18px; 
             text-align: center; 
             min-width: 180px; 
@@ -300,14 +285,15 @@ class PDFGenerator:
         .recuadro-derecha .titulo { 
             font-size: 11px; 
             font-weight: bold; 
-            letter-spacing: 1px; 
+            letter-spacing: 0.5px; 
             margin: 2px 0; 
-            color: #990000;
+            color: #000000;
         }
         .recuadro-derecha .numero { 
-            font-size: 13px; 
+            font-size: 16px; 
             font-weight: bold; 
             color: #CC0000;
+            letter-spacing: 1px;
         }
         
         .seccion { 
@@ -315,8 +301,8 @@ class PDFGenerator:
         }
         
         .seccion-con-borde {
-            border: 1px solid #d5d5d5;
-            border-radius: 6px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
             padding: 0;
             margin-bottom: 5px;
             overflow: hidden;
@@ -325,23 +311,18 @@ class PDFGenerator:
             font-weight: bold;
             font-size: 8.5px;
             text-transform: uppercase;
-            color: #990000;
+            color: #000000;
             padding: 3px 10px;
             margin: 0;
-            border-bottom: 2px solid #CC0000;
-            letter-spacing: 0.5px;
+            border-bottom: 1px solid #cccccc;
+            letter-spacing: 0.3px;
+            background: #f5f5f5;
         }
         .seccion-con-borde .seccion-contenido {
             padding: 4px 10px;
             background: #ffffff;
         }
         
-        .info-destinatario, .datos-traslado, .datos-ruta, .datos-transporte, .referencias, .observaciones {
-            border: none;
-            padding: 0;
-            margin-bottom: 0;
-            background: transparent;
-        }
         .fila { 
             display: flex; 
             padding: 1px 0; 
@@ -366,15 +347,16 @@ class PDFGenerator:
             font-size: 8px; 
         }
         .products-table th { 
-            color: #990000;
+            color: #000000;
             padding: 3px 5px; 
             text-align: center; 
-            border: 1px solid #CC0000;
+            border: 1px solid #cccccc;
             font-weight: bold;
+            background: #f5f5f5;
         }
         .products-table td { 
             padding: 2px 5px; 
-            border: 1px solid #d5d5d5;
+            border: 1px solid #cccccc;
             text-align: center; 
             color: #333333;
         }
@@ -388,8 +370,8 @@ class PDFGenerator:
             text-align: center; 
             margin: 8px 0 5px 0; 
             padding: 6px; 
-            border: 2px solid #CC0000;
-            border-radius: 6px; 
+            border: 1px solid #999999;
+            border-radius: 4px; 
         }
         .qr-container img { 
             width: 80px; 
@@ -405,7 +387,7 @@ class PDFGenerator:
             text-align: center; 
             font-size: 7px; 
             color: #888888;
-            border-top: 2px solid #CC0000;
+            border-top: 1px solid #999999;
             padding-top: 6px; 
         }
         .referencias-grid { 
@@ -454,43 +436,33 @@ class PDFGenerator:
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DESTINATARIO</div>
         <div class="seccion-contenido">
-            <div class="info-destinatario">
-                <div class="fila"><span class="label">RUC.:</span><span class="value">{{ ruc_destinatario }}</span></div>
-                <div class="fila"><span class="label">DENOMINACIÓN:</span><span class="value">{{ destinatario_nombre }}</span></div>
-            </div>
+            <div class="fila"><span class="label">RUC.:</span><span class="value">{{ ruc_destinatario }}</span></div>
+            <div class="fila"><span class="label">DENOMINACIÓN:</span><span class="value">{{ destinatario_nombre }}</span></div>
         </div>
     </div>
     
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DATOS DEL TRASLADO</div>
         <div class="seccion-contenido">
-            <div class="datos-traslado">
-                <div class="fila"><span class="label">FECHA EMISIÓN:</span><span class="value">{{ fecha_emision }}</span></div>
-                <div class="fila"><span class="label">FECHA INICIO TRASLADO:</span><span class="value">{{ fecha_inicio_traslado }}</span></div>
-                <div class="fila"><span class="label">MOTIVO DE TRASLADO:</span><span class="value">{{ motivo_texto }}</span></div>
-                <div class="fila"><span class="label">MODALIDAD DE TRANSPORTE:</span><span class="value">{{ modalidad_texto }}</span></div>
-                <div class="fila"><span class="label">PESO BRUTO TOTAL (KGM):</span><span class="value">{{ peso_bruto_total }}</span></div>
-                <div class="fila"><span class="label">NÚMERO DE BULTOS:</span><span class="value">{{ numero_bultos }}</span></div>
-            </div>
+            <div class="fila"><span class="label">FECHA EMISIÓN:</span><span class="value">{{ fecha_emision }}</span></div>
+            <div class="fila"><span class="label">FECHA INICIO TRASLADO:</span><span class="value">{{ fecha_inicio_traslado }}</span></div>
+            <div class="fila"><span class="label">MOTIVO DE TRASLADO:</span><span class="value">{{ motivo_texto }}</span></div>
+            <div class="fila"><span class="label">MODALIDAD DE TRANSPORTE:</span><span class="value">{{ modalidad_texto }}</span></div>
+            <div class="fila"><span class="label">PESO BRUTO TOTAL (KGM):</span><span class="value">{{ peso_bruto_total }}</span></div>
+            <div class="fila"><span class="label">NÚMERO DE BULTOS:</span><span class="value">{{ numero_bultos }}</span></div>
         </div>
     </div>
     
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DATOS DE RUTA</div>
         <div class="seccion-contenido">
-            <div class="datos-ruta">
-                <div class="fila">
-                    <span class="label">PUNTO DE PARTIDA:</span>
-                    <span class="value" style="white-space: pre-line; line-height: 1.6;">
-                        {{ remitente_direccion }}
-                    </span>
-                </div>
-                <div class="fila">
-                    <span class="label">PUNTO DE LLEGADA:</span>
-                    <span class="value" style="white-space: pre-line; line-height: 1.6;">
-                        {{ destinatario_direccion }}
-                    </span>
-                </div>
+            <div class="fila">
+                <span class="label">PUNTO DE PARTIDA:</span>
+                <span class="value">{{ remitente_direccion }}</span>
+            </div>
+            <div class="fila">
+                <span class="label">PUNTO DE LLEGADA:</span>
+                <span class="value">{{ destinatario_direccion }}</span>
             </div>
         </div>
     </div>
@@ -498,13 +470,11 @@ class PDFGenerator:
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DATOS DEL TRANSPORTE</div>
         <div class="seccion-contenido">
-            <div class="datos-transporte">
-                <div class="fila"><span class="label">TRANSPORTISTA:</span><span class="value">{{ transportista_nombre }}</span></div>
-                <div class="fila"><span class="label">CONDUCTOR:</span><span class="value">{{ conductor_nombre }}</span></div>
-                <div class="fila"><span class="label">DNI:</span><span class="value">{{ conductor_dni }}</span></div>
-                <div class="fila"><span class="label">PLACA:</span><span class="value">{{ placa_vehiculo }}</span></div>
-                <div class="fila"><span class="label">LICENCIA:</span><span class="value">{{ licencia_conductor }}</span></div>
-            </div>
+            <div class="fila"><span class="label">TRANSPORTISTA:</span><span class="value">{{ transportista_nombre }}</span></div>
+            <div class="fila"><span class="label">CONDUCTOR:</span><span class="value">{{ conductor_nombre }}</span></div>
+            <div class="fila"><span class="label">DNI:</span><span class="value">{{ conductor_dni }}</span></div>
+            <div class="fila"><span class="label">PLACA:</span><span class="value">{{ placa_vehiculo }}</span></div>
+            <div class="fila"><span class="label">LICENCIA:</span><span class="value">{{ licencia_conductor }}</span></div>
         </div>
     </div>
     
@@ -521,12 +491,10 @@ class PDFGenerator:
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
         <div class="seccion-contenido">
-            <div class="referencias">
-                <div class="referencias-grid">
-                    <div class="ref-item"><span class="ref-label">NRO ORDEN DE COMPRA</span><span class="ref-value">{{ orden_compra_cliente or '—' }}</span></div>
-                    <div class="ref-item"><span class="ref-label">NRO DE FACTURA</span><span class="ref-value">{{ factura or '—' }}</span></div>
-                    <div class="ref-item"><span class="ref-label">NRO DE COTIZACION</span><span class="ref-value">{{ nro_cotizacion or '—' }}</span></div>
-                </div>
+            <div class="referencias-grid">
+                <div class="ref-item"><span class="ref-label">NRO ORDEN DE COMPRA</span><span class="ref-value">{{ orden_compra_cliente or '—' }}</span></div>
+                <div class="ref-item"><span class="ref-label">NRO DE FACTURA</span><span class="ref-value">{{ factura or '—' }}</span></div>
+                <div class="ref-item"><span class="ref-label">NRO DE COTIZACION</span><span class="ref-value">{{ nro_cotizacion or '—' }}</span></div>
             </div>
         </div>
     </div>
@@ -534,16 +502,13 @@ class PDFGenerator:
     <div class="seccion seccion-con-borde">
         <div class="seccion-titulo">OBSERVACIONES</div>
         <div class="seccion-contenido">
-            <div class="observaciones">
-                <div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div>
-            </div>
+            <div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div>
         </div>
     </div>
     
     <div class="qr-container">
         <img src="{{ qr_base64 }}" alt="QR">
-        <div class="qr-text">Representación impresa de la GUIA DE REMISIÓN REMITENTE ELECTRÓNICA, consulte el documento en https://see.conflux.pe
-Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
+        <div class="qr-text">Representación impresa de la GUIA DE REMISIÓN REMITENTE ELECTRÓNICA</div>
     </div>
     
     <div class="footer">
@@ -694,7 +659,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return template
         
     # ============================================================
-    # GENERAR FACTURA / BOLETA - CON COLORES CORPORATIVOS (SIN FONDOS)
+    # GENERAR FACTURA / BOLETA - CON COLORES CORPORATIVOS
     # ============================================================
     def _generar_comprobante(self, datos_comprobante):
         try:
@@ -885,7 +850,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             background: #ffffff;
         }
         
-        /* ===== COLORES CORPORATIVOS ===== */
         .color-rojo { color: #CC0000; }
         .color-rojo-oscuro { color: #990000; }
         .border-rojo { border-color: #CC0000; }
@@ -1047,7 +1011,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             background: #f9f9f9;
         }
         
-        /* ===== CUADRO DE RESUMEN CON BORDE ROJO ===== */
         .totales-box { 
             border: 2px solid #CC0000;
             border-radius: 6px; 
@@ -1453,7 +1416,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return ""
 
     # ============================================================
-    # GENERAR COTIZACIÓN - CON COLORES CORPORATIVOS (SIN FONDOS)
+    # GENERAR COTIZACIÓN - CON COLORES CORPORATIVOS
     # ============================================================
     def _generar_cotizacion(self, datos):
         try:
@@ -1586,7 +1549,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             background: #ffffff;
         }
         
-        /* ===== COLORES CORPORATIVOS ===== */
         .color-rojo { color: #CC0000; }
         .color-rojo-oscuro { color: #990000; }
         .border-rojo { border-color: #CC0000; }
@@ -1982,8 +1944,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
 
     <div class="qr-container">
         <img src="{{ qr_base64 }}" alt="QR">
-        <div class="qr-text">Representación impresa de la COTIZACIÓN
-Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
+        <div class="qr-text">Representación impresa de la COTIZACIÓN</div>
     </div>
 
     <div class="footer">
