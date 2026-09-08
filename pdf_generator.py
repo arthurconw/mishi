@@ -428,7 +428,7 @@ class PDFGenerator:
         </div>
         <div class="recuadro-derecha">
             <div class="ruc">RUC Nº {{ ruc_remitente }}</div>
-            <div class="titulo">GUIA DE REMISIÓN REMITENTE</div>
+            <div class="titulo color-rojo">GUIA DE REMISIÓN REMITENTE</div>
             <div class="numero">{{ serie }}-{{ numero }}</div>
         </div>
     </div>
