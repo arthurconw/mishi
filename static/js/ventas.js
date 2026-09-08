@@ -15819,6 +15819,7 @@ function setFieldValue(selectId, inputId, value) {
         input.value = '';
     }
 }
+
 window.initVentas = async function(tab) {
     console.log(`🚀 Inicializando ventas con tab: ${tab}`);
     currentModule = tab || 'cotizaciones';
@@ -15837,7 +15838,7 @@ window.initVentas = async function(tab) {
         case 'pedido_compra':
             await loadPedidos();
             break;
-        case 'validacion':   // NUEVO
+        case 'validacion':
             await loadPedidos();
             renderValidacion();
             break;
@@ -15857,8 +15858,11 @@ window.initVentas = async function(tab) {
         case 'devoluciones':
             await loadDevoluciones();
             break;
-         case 'eliminadas': 
+        case 'eliminadas': 
             await loadEliminadas();
+            break;
+        case 'revision':  // 🔽 NUEVO
+            await loadRevision();
             break;
         default:
             break;

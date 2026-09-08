@@ -2833,6 +2833,11 @@
         🗑️ Eliminadas
         <span class="tab-badge">📍</span>
     </button>
+
+    <button class="tab-btn" data-tab="revision">
+    🔍 Revisión
+    <span class="tab-badge">📍</span>
+</button>
 </div>
 
 <!-- COTIZACIONES -->
@@ -3301,10 +3306,7 @@
 </div>
 
 
-<button class="tab-btn" data-tab="revision">
-    🔍 Revisión
-    <span class="tab-badge">📍</span>
-</button>
+
 <!-- ============================================================ -->
 <!-- REVISIÓN - SOLO PARA HELLEN Y ERIKA                         -->
 <!-- ============================================================ -->
@@ -3431,6 +3433,8 @@
             console.log('🔄 DOM Content Loaded - Inicializando');
             
             const tabs = document.querySelectorAll('.tab-btn');
+            
+            // ⚠️ IMPORTANTE: Incluir TODAS las secciones aquí
             const sections = {
                 cotizaciones: document.getElementById('cotizaciones'),
                 pedido_compra: document.getElementById('pedido_compra'),
@@ -3440,7 +3444,8 @@
                 comprobantes: document.getElementById('comprobantes'),
                 notas_credito: document.getElementById('notas_credito'),
                 devoluciones: document.getElementById('devoluciones'),
-                eliminadas: document.getElementById('eliminadas') 
+                eliminadas: document.getElementById('eliminadas'),
+                revision: document.getElementById('revision')  // 🔽 AGREGADO
             };
             
             // Función para actualizar el badge de la pestaña activa
@@ -3499,7 +3504,10 @@
                     window.loadCotizaciones();
                 }
                 
-                if (tabId === 'pedido_compra' && typeof window.loadPedidos === 'function') {
+                // 🔽 AGREGAR REVISIÓN AL FALLBACK
+                if (tabId === 'revision' && typeof window.loadRevision === 'function') {
+                    window.loadRevision();
+                } else if (tabId === 'pedido_compra' && typeof window.loadPedidos === 'function') {
                     window.loadPedidos();
                 } else if (tabId === 'despachar' && typeof window.loadDespachos === 'function') {
                     window.loadDespachos();
@@ -3633,7 +3641,6 @@
             }, 300);
             
             // 🔽 OBSERVADOR PARA MANTENER EL BADGE VISIBLE 🔽
-            // Observar cambios en las clases de los tabs
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.attributeName === 'class') {
@@ -3663,17 +3670,13 @@
             });
             
             console.log('✅ Badge observer inicializado');
+            
+            // 🔽 OCULTAR PESTAÑA DE REVISIÓN SI NO ESTÁ AUTORIZADO 🔽
+            if (typeof mostrarPestanasPorRol === 'function') {
+                mostrarPestanasPorRol();
+            }
         });
     })();
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Ocultar pestaña de revisión si no está autorizado
-    if (typeof mostrarPestanasPorRol === 'function') {
-        mostrarPestanasPorRol();
-    }
-});
-
 </script>
 {% endblock %}
 
