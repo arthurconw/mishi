@@ -5730,8 +5730,9 @@ def api_cotizaciones_preview_pdf(id):
             'hay_descuentos': hay_descuentos
         }
         
-        # 4. Template HTML - SIN FONDOS DE COLOR, SOLO TEXTOS Y BORDES ROJOS
-        template_html = '''<!DOCTYPE html>
+
+        # 4. Template HTML - CON COLORES SUAVES Y SOLO ROJO PARA COTIZACIÓN Y NÚMERO
+template_html = '''<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -5754,10 +5755,10 @@ def api_cotizaciones_preview_pdf(id):
             background: #ffffff; 
         }
         
-        /* ===== COLORES CORPORATIVOS ===== */
+        /* ===== COLORES ===== */
         .color-rojo { color: #CC0000; }
-        .color-rojo-oscuro { color: #990000; }
-        .border-rojo { border-color: #CC0000; }
+        .color-gris { color: #555555; }
+        .color-gris-oscuro { color: #333333; }
         
         /* ===== HEADER ===== */
         .header-superior {
@@ -5767,7 +5768,7 @@ def api_cotizaciones_preview_pdf(id):
             margin-bottom: 12px;
             gap: 20px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #CC0000;
+            border-bottom: 2px solid #CCCCCC;
         }
         .empresa-izquierda {
             flex: 1;
@@ -5797,7 +5798,7 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 13px;
             font-weight: bold;
             text-transform: uppercase;
-            color: #990000;
+            color: #333333;
             letter-spacing: 0.5px;
             margin-bottom: 1px;
         }
@@ -5820,7 +5821,7 @@ def api_cotizaciones_preview_pdf(id):
         
         .recuadro-derecha {
             flex-shrink: 0;
-            border: 2px solid #CC0000;
+            border: 2px solid #CCCCCC;
             border-radius: 10px;
             padding: 6px 18px;
             text-align: center;
@@ -5832,14 +5833,14 @@ def api_cotizaciones_preview_pdf(id):
         .recuadro-derecha .ruc {
             font-size: 9px;
             font-weight: bold;
-            color: #333333;
+            color: #555555;
         }
         .recuadro-derecha .titulo {
             font-size: 11px;
             font-weight: bold;
             letter-spacing: 1px;
             margin: 2px 0;
-            color: #990000;
+            color: #CC0000;
         }
         .recuadro-derecha .numero {
             font-size: 14px;
@@ -5860,8 +5861,8 @@ def api_cotizaciones_preview_pdf(id):
             padding: 8px 12px; 
         }
         .seccion-cliente h3, .seccion-condiciones h3 { 
-            color: #990000;
-            border-bottom: 2px solid #CC0000;
+            color: #333333;
+            border-bottom: 2px solid #CCCCCC;
             padding-bottom: 3px; 
             font-size: 9.5px; 
             margin-top: 0; 
@@ -5898,7 +5899,7 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 9px; 
             font-weight: bold; 
             margin-bottom: 3px; 
-            color: #990000;
+            color: #333333;
         }
         
         /* ===== TABLA DE PRODUCTOS ===== */
@@ -5909,12 +5910,13 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 8px; 
         }
         .tabla-productos th { 
-            color: #990000;
+            color: #333333;
             padding: 5px 4px; 
-            border: 1px solid #CC0000;
+            border: 1px solid #CCCCCC;
             font-weight: bold; 
             text-align: center; 
             vertical-align: middle; 
+            background-color: #f5f5f5;
         }
         .tabla-productos td { 
             padding: 4px 4px; 
@@ -5938,7 +5940,7 @@ def api_cotizaciones_preview_pdf(id):
             text-align: right; 
             width: 85px; 
             font-weight: bold; 
-            color: #990000;
+            color: #333333;
         }
         
         .numero-formateado { 
@@ -5958,7 +5960,7 @@ def api_cotizaciones_preview_pdf(id):
             margin-right: 0; 
             margin-top: 8px; 
             margin-bottom: 10px; 
-            border: 2px solid #CC0000;
+            border: 2px solid #CCCCCC;
             border-radius: 8px;
             padding: 8px 12px; 
         }
@@ -5980,25 +5982,25 @@ def api_cotizaciones_preview_pdf(id):
             color: #333333;
         }
         
-        /* TOTAL A PAGAR - ROJO Y MÁS GRANDE */
+        /* TOTAL A PAGAR - NEGRO, NO ROJO */
         .total-final { 
-            border-top: 3px solid #CC0000; 
+            border-top: 2px solid #CCCCCC; 
             padding-top: 8px; 
             margin-top: 6px; 
             font-weight: bold; 
             font-size: 14px;
-            color: #990000; 
+            color: #333333; 
         }
         .total-final .numero-formateado {
             font-size: 18px;
-            color: #CC0000;
+            color: #333333;
         }
         
         /* ===== NOTA ACLARATORIA ===== */
         .seccion-aclaratoria { 
             margin: 10px 0; 
             padding: 10px 16px; 
-            border: 2px solid #CC0000;
+            border: 2px solid #CCCCCC;
             border-radius: 8px;
             font-size: 8.5px; 
             text-align: justify;
@@ -6008,12 +6010,12 @@ def api_cotizaciones_preview_pdf(id):
             font-weight: bold; 
             font-size: 9.5px; 
             margin-bottom: 4px; 
-            color: #990000; 
+            color: #333333; 
             text-align: center;
             text-transform: uppercase;
         }
         .seccion-aclaratoria .web-link { 
-            color: #990000; 
+            color: #333333; 
             text-decoration: underline; 
             font-weight: bold; 
         }
@@ -6022,13 +6024,13 @@ def api_cotizaciones_preview_pdf(id):
         .cuentas-bancarias { 
             margin-top: 8px; 
             padding: 8px 14px; 
-            border: 2px solid #CC0000;
+            border: 2px solid #CCCCCC;
             border-radius: 8px;
             font-size: 8px; 
         }
         .cuentas-bancarias h3 { 
-            color: #990000;
-            border-bottom: 2px solid #CC0000;
+            color: #333333;
+            border-bottom: 2px solid #CCCCCC;
             padding-bottom: 3px; 
             font-size: 9.5px; 
             margin-top: 0; 
@@ -6043,7 +6045,7 @@ def api_cotizaciones_preview_pdf(id):
         }
         .cuenta-line .banco { 
             font-weight: bold; 
-            color: #990000; 
+            color: #333333; 
             font-size: 10px;
         }
         .cuenta-line .tipo { 
@@ -6066,7 +6068,7 @@ def api_cotizaciones_preview_pdf(id):
         /* ===== CONTACTO FINAL ===== */
         .seccion-contacto { 
             margin-top: 12px; 
-            border-top: 2px solid #CC0000;
+            border-top: 2px solid #CCCCCC;
             padding-top: 10px; 
             text-align: left; 
             font-size: 8.5px; 
@@ -6074,11 +6076,11 @@ def api_cotizaciones_preview_pdf(id):
         .contacto-nombre { 
             font-size: 10px; 
             font-weight: bold; 
-            color: #990000;
+            color: #333333;
             margin-bottom: 3px; 
         }
         .contacto-line { margin-bottom: 2px; color: #555555; }
-        .web-link { color: #990000; text-decoration: underline; }
+        .web-link { color: #333333; text-decoration: underline; }
         
         .seccion-totales, .cuentas-bancarias, .seccion-aclaratoria, .seccion-contacto { 
             page-break-inside: avoid; 
@@ -6089,7 +6091,7 @@ def api_cotizaciones_preview_pdf(id):
 </head>
 <body>
     <!-- ============================================================ -->
-    <!-- HEADER CON BORDE ROJO                                       -->
+    <!-- HEADER CON BORDE GRIS                                        -->
     <!-- ============================================================ -->
     <div class="header-superior">
         <div class="empresa-izquierda">
@@ -6150,7 +6152,7 @@ def api_cotizaciones_preview_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- TABLA DE PRODUCTOS - CABECERA ROJA                          -->
+    <!-- TABLA DE PRODUCTOS - CABECERA GRIS                          -->
     <!-- ============================================================ -->
     <table class="tabla-productos">
         <thead>
@@ -6188,7 +6190,7 @@ def api_cotizaciones_preview_pdf(id):
     </table>
 
     <!-- ============================================================ -->
-    <!-- NOTA ACLARATORIA                                             -->
+    <!-- NOTA ACLARATORIA - BORDE GRIS                              -->
     <!-- ============================================================ -->
     <div class="seccion-aclaratoria">
         <div class="titulo">📌 NOTA ACLARATORIA</div>
@@ -6199,12 +6201,12 @@ def api_cotizaciones_preview_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- TOTALES - TOTAL A PAGAR EN ROJO Y MÁS GRANDE               -->
+    <!-- TOTALES - BORDE GRIS, TOTAL EN NEGRO                       -->
     <!-- ============================================================ -->
     <div class="seccion-totales">
         <div class="total-line"><span>Subtotal (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
         {% if hay_descuentos %}
-        <div class="total-line"><span>Descuentos aplicados (S/):</span><span class="numero-formateado" style="color:#CC0000;">- S/ {{ "%.2f"|format(total_descuento_subtotal|default(0)) }}</span></div>
+        <div class="total-line"><span>Descuentos aplicados (S/):</span><span class="numero-formateado" style="color:#555555;">- S/ {{ "%.2f"|format(total_descuento_subtotal|default(0)) }}</span></div>
         {% endif %}
         <div class="total-line"><span>Subtotal con descuento (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta_desc|default(0)) }}</span></div>
         <div class="total-line"><span>IGV (18%):</span><span class="numero-formateado">S/ {{ "%.2f"|format(summary_igv|default(0)) }}</span></div>
@@ -6212,7 +6214,7 @@ def api_cotizaciones_preview_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- CUENTAS BANCARIAS                                            -->
+    <!-- CUENTAS BANCARIAS - BORDE GRIS                             -->
     <!-- ============================================================ -->
     <div class="cuentas-bancarias">
         <h3>💰 CUENTAS BANCARIAS</h3>
@@ -6225,7 +6227,7 @@ def api_cotizaciones_preview_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- CONTACTO FINAL                                              -->
+    <!-- CONTACTO FINAL - TODOS LOS TEXTOS EN NEGRO                 -->
     <!-- ============================================================ -->
     <div class="seccion-contacto">
         <div class="contacto-nombre">Cordialmente,</div>
@@ -6239,7 +6241,6 @@ def api_cotizaciones_preview_pdf(id):
 
 </body>
 </html>'''
-        
         html_content = render_template_string(template_html, **datos_pdf)
         
         # 5. Generar PDF en memoria
