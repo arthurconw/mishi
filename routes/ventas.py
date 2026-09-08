@@ -6952,23 +6952,14 @@ def api_ver_eliminada(id):
 @ventas_bp.route('/ventas/api/cotizaciones/revision', methods=['GET'])
 @login_required
 def api_cotizaciones_revision():
-    """Obtiene cotizaciones en estado 'Validado por Hellen' para revisión"""
     try:
-        # Verificar que el usuario tenga acceso
         rol = session.get('rol', '').lower()
-        usuario = session.get('usuario', '')
-        
-        # Solo Hellen, Erika, Admin pueden ver este módulo
         roles_permitidos = ['hellen', 'erika', 'admin', 'superadmin', 'administrador']
-        if rol not in roles_permitidos:
-            # Si no es autorizado, devolver lista vacía
-            print(f"⚠️ Usuario no autorizado para revisión: {rol}")
-            return jsonify({
-                'success': True, 
-                'data': [],
-                'message': 'No autorizado - solo Hellen y Erika'
-            })
         
+        if rol not in roles_permitidos:
+            return jsonify({'success': True, 'data': [], 'message': 'No autorizado'})
+        
+        # 🔽 Incluir "Por validar" y "Validado por Hellen"
         query = """
             SELECT 
                 c.id, 
@@ -7002,18 +6993,17 @@ def api_cotizaciones_revision():
                 c.usuario_validacion_id,
                 c.validado_por_nombre as validado_por,
                 c.motivo_rechazo,
-                c.updated_at,
+                c.fecha_creacion as created_at,
                 u.nombre_completo as validador_nombre
             FROM cotizaciones c
             LEFT JOIN clientes cl ON cl.id = c.cliente_id::integer
             LEFT JOIN usuarios u ON u.id = c.usuario_validacion_id
-            WHERE c.estado IN ('Validado por Hellen', 'Validado', 'Aceptada', 'Rechazada')
-            ORDER BY c.updated_at DESC
+            WHERE c.estado IN ('Por validar', 'Validado por Hellen', 'Aceptada', 'Rechazada')
+            ORDER BY c.fecha_creacion DESC
         """
         
         results = db_query(query)
         
-        # Formatear datos
         formatted_data = []
         for row in results:
             formatted_data.append({
@@ -7045,12 +7035,11 @@ def api_cotizaciones_revision():
                 'telefono': row.get('telefono'),
                 'contacto': row.get('contacto'),
                 'email': row.get('email'),
-                'validado_por': row.get('validado_por') or row.get('validador_nombre') or 'Hellen',
+                'validado_por': row.get('validado_por') or row.get('validador_nombre') or '--',
                 'motivo_rechazo': row.get('motivo_rechazo'),
-                'updated_at': row.get('updated_at')
+                'created_at': row.get('created_at')
             })
         
-        print(f"✅ {len(formatted_data)} cotizaciones en revisión")
         return jsonify({'success': True, 'data': formatted_data})
         
     except Exception as e:
@@ -7058,7 +7047,6 @@ def api_cotizaciones_revision():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/validar', methods=['POST'])
 @login_required

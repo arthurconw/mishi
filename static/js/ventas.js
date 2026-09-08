@@ -138,9 +138,9 @@ function badgeStatus(s) {
     const estado = String(s || '').trim();
     const estadoLower = estado.toLowerCase();
     
-    // Mapeo de estados (en minúsculas) a clases CSS
     const map = {
         'borrador': 'b-draft',
+        'por validar': 'b-pending',  // 🔽 NUEVO - Color amarillo
         'en revisión': 'b-review',
         'en revision': 'b-review',
         'en proceso': 'b-review',
@@ -152,11 +152,11 @@ function badgeStatus(s) {
         'generado': 'b-generated',
         'emitida': 'b-ok',
         'emitido': 'b-ok',
-        'despachado': 'b-info',              // 🔥 AZUL fluorescente
-        'entregado': 'b-info',               // 🔥 AZUL fluorescente
-        'pendiente despacho': 'b-draft',     // 🔥 ROJO fluorescente
-        'pendiente': 'b-draft',              // 🔥 ROJO fluorescente
-        'en preparación': 'b-pending',       // AMARILLO
+        'despachado': 'b-info',
+        'entregado': 'b-info',
+        'pendiente despacho': 'b-draft',
+        'pendiente': 'b-draft',
+        'en preparación': 'b-pending',
         'aceptada por cliente': 'b-accepted',
         'aceptada': 'b-accepted',
         'aceptado': 'b-accepted',
@@ -171,26 +171,24 @@ function badgeStatus(s) {
         'perdido': 'b-lost'
     };
     
-    // Buscar coincidencia exacta primero
     let clase = map[estadoLower];
     
-    // Si no hay coincidencia exacta, buscar por coincidencia parcial
     if (!clase) {
         if (estadoLower.includes('borrador')) clase = 'b-draft';
+        else if (estadoLower.includes('por validar')) clase = 'b-pending';  // 🔽 NUEVO
         else if (estadoLower.includes('revisión') || estadoLower.includes('revision') || estadoLower.includes('proceso')) clase = 'b-review';
-        else if (estadoLower.includes('validado') || estadoLower.includes('validada')) clase = 'b-validated';
+        else if (estadoLower.includes('validado')) clase = 'b-validated';
         else if (estadoLower.includes('generada') || estadoLower.includes('generado')) clase = 'b-generated';
         else if (estadoLower.includes('emitida') || estadoLower.includes('emitido')) clase = 'b-ok';
-        else if (estadoLower.includes('despachado') || estadoLower.includes('entregado')) clase = 'b-info';  // 🔥 AZUL
-        else if (estadoLower.includes('pendiente despacho') || estadoLower.includes('pendiente')) clase = 'b-draft';  // 🔥 ROJO
-        else if (estadoLower.includes('en preparación')) clase = 'b-pending';  // AMARILLO
+        else if (estadoLower.includes('despachado') || estadoLower.includes('entregado')) clase = 'b-info';
+        else if (estadoLower.includes('pendiente despacho') || estadoLower.includes('pendiente')) clase = 'b-draft';
+        else if (estadoLower.includes('en preparación')) clase = 'b-pending';
         else if (estadoLower.includes('aceptada') || estadoLower.includes('aceptado')) clase = 'b-accepted';
         else if (estadoLower.includes('anulada') || estadoLower.includes('anulado') || estadoLower.includes('cancelada') || estadoLower.includes('cancelado')) clase = 'b-canceled';
         else if (estadoLower.includes('no concretada') || estadoLower.includes('no concretado') || estadoLower.includes('perdida') || estadoLower.includes('perdido')) clase = 'b-lost';
         else clase = 'b-gray';
     }
     
-    // Renderizar el badge con la clase correspondiente
     return `<span class="badge ${clase}">${estado || 'Sin estado'}</span>`;
 }
 
@@ -1133,23 +1131,25 @@ function renderCotizaciones() {
     
     // ============================================================
     // KPIs
-    // ============================================================
-    const kpiContainer = document.getElementById('cotizacionesKPI');
-    if (kpiContainer) {
-        const total = cotizacionesData.length;
-        const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
-        const revision = cotizacionesData.filter(x => x.estado === 'En revisión' || x.estado === 'En Proceso').length;
-        const generadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
-        const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada por Cliente' || x.estado === 'Aceptada' || x.estado === 'Aceptado').length;
-        
-        kpiContainer.innerHTML = `
-            <div class="status-card"><div class="status-dot dot-total-plomo">T</div><div><small>Total</small><b>${total}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${generadas}</b></div></div>
-            <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
-        `;
-    }
+   // En renderCotizaciones(), en la sección de KPIs
+const kpiContainer = document.getElementById('cotizacionesKPI');
+if (kpiContainer) {
+    const total = cotizacionesData.length;
+    const borradores = cotizacionesData.filter(x => x.estado === 'Borrador').length;
+    const porValidar = cotizacionesData.filter(x => x.estado === 'Por validar').length;  // 🔽 NUEVO
+    const revision = cotizacionesData.filter(x => x.estado === 'En revisión' || x.estado === 'En Proceso').length;
+    const generadas = cotizacionesData.filter(x => x.estado === 'Generada').length;
+    const aceptadas = cotizacionesData.filter(x => x.estado === 'Aceptada por Cliente' || x.estado === 'Aceptada').length;
+    
+    kpiContainer.innerHTML = `
+        <div class="status-card"><div class="status-dot dot-total-plomo">T</div><div><small>Total</small><b>${total}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-draft">B</div><div><small>Borradores</small><b>${borradores}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-pending">⭐</div><div><small>Por validar</small><b>${porValidar}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-review">R</div><div><small>En revisión</small><b>${revision}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-send">E</div><div><small>Generadas</small><b>${generadas}</b></div></div>
+        <div class="status-card"><div class="status-dot dot-ok">A</div><div><small>Aceptadas</small><b>${aceptadas}</b></div></div>
+    `;
+}
     
     const tbody = document.getElementById('qRows');
     const thead = document.getElementById('cotizacionesTableHead');
@@ -6362,10 +6362,6 @@ function getUsuarioRol() {
     return 'vendedor';
 }
 
-
-// ============================================================
-// RENDERIZAR BOTONES DEL FOOTER SEGÚN ROL
-// ============================================================
 function renderCotizacionFooter(esEdicion = false) {
     const footer = document.getElementById('cotizacionModalFooter');
     if (!footer) return;
@@ -6379,43 +6375,37 @@ function renderCotizacionFooter(esEdicion = false) {
     
     if (isAdminOrHellen) {
         // ============================================================
-        // MODO ADMIN / HELLEN - Botones: Cancelar, Borrador, Validado, Revisión, Generar
+        // MODO ADMIN / HELLEN
         // ============================================================
         botonesHtml = `
-            <!-- Cancelar - Gris -->
-            <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
+            <!-- Cancelar -->
+            <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;" onclick="closeModal('cotizacionModal')">Cancelar</button>
             
             <!-- 💾 Guardar Borrador - ROJO -->
-            <button class="btn btn-danger" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #DC2626;background:#DC2626;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(220,38,38,0.3);" onmouseover="this.style.background='#B91C1C';this.style.boxShadow='0 0 25px rgba(220,38,38,0.5)'" onmouseout="this.style.background='#DC2626';this.style.boxShadow='0 0 15px rgba(220,38,38,0.3)'" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
+            <button class="btn btn-danger" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #DC2626;background:#DC2626;color:#fff;font-weight:900;cursor:pointer;box-shadow:0 0 15px rgba(220,38,38,0.3);" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
             
-            <!-- Validado por Hellen - Verde Oscuro -->
-            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado por Hellen</button>
-            
-            <!-- Revisión - Azul (para enviar a revisión) -->
-            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #0d6efd;background:#0d6efd;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(13,110,253,0.3);" onmouseover="this.style.background='#0b5ed7';this.style.boxShadow='0 0 25px rgba(13,110,253,0.5)'" onmouseout="this.style.background='#0d6efd';this.style.boxShadow='0 0 15px rgba(13,110,253,0.3)'" onclick="sendCotizacionToReview()">📤 Solicitar Revisión</button>
+            <!-- 🔽 NUEVO: Solicitar Validación - Amarillo -->
+            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #F59E0B;background:#F59E0B;color:#fff;font-weight:900;cursor:pointer;box-shadow:0 0 15px rgba(245,158,11,0.3);" onclick="solicitarValidacion()">⭐ Solicitar Validación</button>
             
             <!-- Generar - Verde Fluorescente NEON -->
-            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
+            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;box-shadow:0 0 25px rgba(0,255,65,0.5);" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
         `;
     } else {
         // ============================================================
-        // MODO VENDEDOR - Botones: Cancelar, Borrador (ROJO), Solicitar revisión, Validado, Generar
+        // MODO VENDEDOR
         // ============================================================
         botonesHtml = `
-            <!-- Cancelar - Gris -->
-            <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#4B5563'" onmouseout="this.style.background='#6B7280'" onclick="closeModal('cotizacionModal')">Cancelar</button>
+            <!-- Cancelar -->
+            <button class="btn btn-secondary" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #9CA3AF;background:#6B7280;color:#fff;font-weight:800;cursor:pointer;" onclick="closeModal('cotizacionModal')">Cancelar</button>
             
             <!-- 💾 Guardar Borrador - ROJO -->
-            <button class="btn btn-danger" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #DC2626;background:#DC2626;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(220,38,38,0.3);" onmouseover="this.style.background='#B91C1C';this.style.boxShadow='0 0 25px rgba(220,38,38,0.5)'" onmouseout="this.style.background='#DC2626';this.style.boxShadow='0 0 15px rgba(220,38,38,0.3)'" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
+            <button class="btn btn-danger" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #DC2626;background:#DC2626;color:#fff;font-weight:900;cursor:pointer;box-shadow:0 0 15px rgba(220,38,38,0.3);" onclick="saveCotizacionDraft()">💾 Guardar Borrador</button>
             
-            <!-- Solicitar revisión - Amarillo Fluorescente -->
-            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #FFDD00;background:#FFDD00;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(255,221,0,0.5);" onmouseover="this.style.background='#FFE733';this.style.boxShadow='0 0 35px rgba(255,221,0,0.7)'" onmouseout="this.style.background='#FFDD00';this.style.boxShadow='0 0 25px rgba(255,221,0,0.5)'" onclick="sendCotizacionToReview()">⭐ Solicitar revisión</button>
-            
-            <!-- Validado por Hellen - Verde Oscuro -->
-            <button class="btn btn-blue" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #15803D;background:#166534;color:#fff;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 15px rgba(22,101,52,0.3);" onmouseover="this.style.background='#15803D';this.style.boxShadow='0 0 25px rgba(22,101,52,0.5)'" onmouseout="this.style.background='#166534';this.style.boxShadow='0 0 15px rgba(22,101,52,0.3)'" onclick="validateByHellen()">✅ Validado</button>
+            <!-- 🔽 NUEVO: Solicitar Validación - Amarillo -->
+            <button class="btn btn-warning" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #F59E0B;background:#F59E0B;color:#fff;font-weight:900;cursor:pointer;box-shadow:0 0 15px rgba(245,158,11,0.3);" onclick="solicitarValidacion()">⭐ Solicitar Validación</button>
             
             <!-- Generar - Verde Fluorescente NEON -->
-            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 0 25px rgba(0,255,65,0.5);" onmouseover="this.style.background='#44FF77';this.style.boxShadow='0 0 35px rgba(0,255,65,0.7)'" onmouseout="this.style.background='#00FF41';this.style.boxShadow='0 0 25px rgba(0,255,65,0.5)'" onclick="generateCotizacionPdfAndSend()">📄 Generar Nueva Cotizacion</button>
+            <button class="btn btn-green" style="padding:4px 14px;font-size:0.8rem;line-height:1.2;min-height:30px;border-radius:8px;border:1px solid #00FF41;background:#00FF41;color:#000;font-weight:900;cursor:pointer;box-shadow:0 0 25px rgba(0,255,65,0.5);" onclick="generateCotizacionPdfAndSend()">📄 Generar</button>
         `;
     }
     
@@ -6432,28 +6422,21 @@ function renderCotizacionFooter(esEdicion = false) {
 
             <div class="flow-step">
                 <span class="flow-number">2</span>
-                <span>En revisión</span>
+                <span>Por validar</span>
             </div>
 
             <span class="flow-line"></span>
 
             <div class="flow-step">
                 <span class="flow-number">3</span>
-                <span>Validado</span>
+                <span>Aceptada</span>
             </div>
 
             <span class="flow-line"></span>
 
             <div class="flow-step">
                 <span class="flow-number">4</span>
-                <span>Generada Nueva Cotización</span>
-            </div>
-
-            <span class="flow-line"></span>
-
-            <div class="flow-step">
-                <span class="flow-number">5</span>
-                <span>Aceptada</span>
+                <span>Generada</span>
             </div>
         </div>
     `;
@@ -6467,6 +6450,56 @@ function renderCotizacionFooter(esEdicion = false) {
     `;
 }
 
+
+// ============================================================
+// SOLICITAR VALIDACIÓN - NUEVA FUNCIÓN
+// ============================================================
+
+function solicitarValidacion() {
+    // Verificar que hay productos en la cotización
+    if (quoteProducts.length === 0) {
+        showToast('⚠️ Agrega al menos un producto a la cotización', 'warning');
+        return;
+    }
+    
+    // Verificar que hay un cliente seleccionado
+    const ruc = document.getElementById('fRuc')?.value?.trim() || '';
+    if (!ruc) {
+        showToast('⚠️ Primero busca un cliente por RUC', 'warning');
+        return;
+    }
+    
+    showConfirmModal(
+        '⭐ ¿Solicitar validación?',
+        'Estás a punto de enviar esta cotización a <b>"Por validar"</b>.',
+        '⚠️ Hellen o Erika revisarán la cotización y la aceptarán o rechazarán.',
+        async function() {
+            const btn = document.querySelector('#cotizacionModal .btn-warning');
+            const originalText = btn?.textContent || '⭐ Solicitar Validación';
+            if (btn) {
+                btn.textContent = '⏳ Enviando...';
+                btn.disabled = true;
+            }
+            
+            try {
+                // Guardar con estado "Por validar"
+                await guardarCotizacion('Por validar');
+                showToast('⭐ Cotización enviada a validación', 'success');
+                closeModal('cotizacionModal');
+                await loadCotizaciones();
+            } catch (error) {
+                console.error('Error enviando a validación:', error);
+                showToast('❌ Error al enviar: ' + error.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            }
+        },
+        '⭐ Sí, solicitar validación'
+    );
+}
 // ============================================================
 // OBTENER ROL DEL USUARIO
 // ============================================================
@@ -12415,9 +12448,6 @@ function renderRevision() {
     }
 }
 
-/**
- * Acepta una cotización en revisión
- */
 async function aceptarRevision(id) {
     const cotizacion = revisionData.find(c => c.id === id);
     if (!cotizacion) {
@@ -12425,7 +12455,6 @@ async function aceptarRevision(id) {
         return;
     }
     
-    // Verificar que el usuario esté autorizado
     if (!esUsuarioAutorizado()) {
         showToast('❌ No tienes permisos para aceptar cotizaciones', 'error');
         return;
@@ -12434,23 +12463,21 @@ async function aceptarRevision(id) {
     showConfirmModal(
         '✅ ¿Aceptar cotización?',
         `Estás a punto de <b>ACEPTAR</b> la cotización <b>${cotizacion.numero || 'COT-XXXX'}</b> del cliente <b>${cotizacion.cliente || 'Cliente'}</b>.`,
-        '⚠️ Al aceptar, la cotización pasará a estado "Aceptada" y podrá ser generada por el vendedor.',
+        '⚠️ Al aceptar, la cotización pasará a estado "Aceptada por Cliente" y podrá ser generada por el vendedor.',
         async function() {
             try {
                 showToast('⏳ Procesando...', 'info');
                 
-                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/aceptar`, {
-                    method: 'POST'
+                // 🔽 Cambiar a "Aceptada por Cliente"
+                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/toggle`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Aceptada por Cliente' })
                 });
                 
                 if (response.success) {
                     showToast('✅ Cotización aceptada correctamente', 'success');
-                    
-                    // Recargar datos
                     await loadRevision();
                     await loadCotizaciones();
-                    
-                    // Si estamos en el tab de revisión, actualizar vista
                     if (currentModule === 'revision') {
                         renderRevision();
                     }
