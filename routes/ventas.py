@@ -5732,7 +5732,7 @@ def api_cotizaciones_preview_pdf(id):
         
 
         # 4. Template HTML - CON COLORES SUAVES Y SOLO ROJO PARA COTIZACIÓN Y NÚMERO
-template_html = '''<!DOCTYPE html>
+        template_html = '''<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
