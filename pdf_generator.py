@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN GUÍA EN NEGRO CON NÚMERO ROJO
+# pdf_generator.py - VERSIÓN FACTURA EN NEGRO CON NÚMERO ROJO
 
 import os
 from jinja2 import Template
@@ -13,11 +13,11 @@ class PDFGenerator:
     def __init__(self):
         self.templates_dir = 'templates/cotizacion_oc/'
         self.logo_base64 = None
-        # Colores corporativos
+        # Colores corporativos (solo para número y título)
         self.COLOR_ROJO = '#CC0000'
-        self.COLOR_ROJO_OSCURO = '#990000'
-        self.COLOR_ROJO_CLARO = '#FFF5F5'
-        self.COLOR_FONDO_ROJO = '#FFF0F0'
+        self.COLOR_GRIS = '#999999'
+        self.COLOR_GRIS_CLARO = '#cccccc'
+        self.COLOR_FONDO_GRIS = '#f5f5f5'
 
     # ============================================================
     # OBTENER LOGO EN BASE64
@@ -165,7 +165,788 @@ class PDFGenerator:
             return str(numero)
 
     # ============================================================
-    # GENERAR GUÍA DE REMISIÓN - EN NEGRO, SOLO NÚMERO ROJO
+    # GENERAR FACTURA / BOLETA - EN NEGRO, SOLO NÚMERO ROJO
+    # ============================================================
+    def _generar_comprobante(self, datos_comprobante):
+        try:
+            print("📄 Generando PDF de comprobante...")
+
+            EMPRESA = {
+                'ruc': '20602095704',
+                'nombre': 'KCF CORPORACION E.I.R.L',
+                'direccion': 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
+                'telefono': '999 932 051',
+                'email': 'ventas@kcfcorporacion.com',
+                'web': 'https://kcfcorporacion.com/'
+            }
+
+            logo_base64 = self._obtener_logo_base64()
+            logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
+
+            items = datos_comprobante.get('items', [])
+            
+            if not items and 'items_json' in datos_comprobante:
+                items_json = datos_comprobante['items_json']
+                if isinstance(items_json, str):
+                    try:
+                        items = json.loads(items_json)
+                    except:
+                        items = []
+                elif isinstance(items_json, list):
+                    items = items_json
+
+            if not items and 'productos' in datos_comprobante:
+                items = datos_comprobante['productos']
+            
+            if not items and 'detalle' in datos_comprobante:
+                items = datos_comprobante['detalle']
+
+            if not items:
+                items = [
+                    {'codigo': 'PRD-001', 'producto': 'Producto de ejemplo 1', 'cantidad': 2, 'valorVenta': 100.00},
+                    {'codigo': 'PRD-002', 'producto': 'Producto de ejemplo 2', 'cantidad': 1, 'valorVenta': 250.00}
+                ]
+
+            items_formateados = []
+            for idx, item in enumerate(items, 1):
+                try:
+                    if isinstance(item, dict):
+                        cantidad = float(item.get('cantidad', item.get('cant', item.get('qty', 1))))
+                        precio = float(item.get('valorVenta', item.get('precio', item.get('precio_unitario', item.get('price', 0)))))
+                        total_item = cantidad * precio
+                        
+                        descripcion = item.get('producto', item.get('descripcion', item.get('nombre', item.get('name', 'Sin descripción'))))
+                        
+                        items_formateados.append({
+                            'item': idx,
+                            'codigo': item.get('codigo', item.get('code', '')),
+                            'descripcion': descripcion,
+                            'marca': item.get('marca', item.get('brand', '')),
+                            'modelo': item.get('modelo', item.get('model', '')),
+                            'unidad': item.get('um', item.get('unidad', item.get('unit', 'NIU'))),
+                            'cantidad': cantidad,
+                            'precio_unitario': precio,
+                            'total_item': total_item
+                        })
+                    elif isinstance(item, (list, tuple)):
+                        codigo = item[0] if len(item) > 0 else ''
+                        descripcion = item[1] if len(item) > 1 else 'Sin descripción'
+                        cantidad = float(item[2] if len(item) > 2 else 1)
+                        precio = float(item[3] if len(item) > 3 else 0)
+                        total_item = cantidad * precio
+                        
+                        items_formateados.append({
+                            'item': idx,
+                            'codigo': codigo,
+                            'descripcion': descripcion,
+                            'marca': item[4] if len(item) > 4 else '',
+                            'modelo': item[5] if len(item) > 5 else '',
+                            'unidad': 'NIU',
+                            'cantidad': cantidad,
+                            'precio_unitario': precio,
+                            'total_item': total_item
+                        })
+                except Exception as e:
+                    print(f"❌ Error procesando item {idx}: {e}")
+                    continue
+
+            subtotal = float(datos_comprobante.get('subtotal', 0))
+            igv = float(datos_comprobante.get('igv', 0))
+            total = float(datos_comprobante.get('total', datos_comprobante.get('monto', 0)))
+            
+            descuento = float(datos_comprobante.get('descuento', 0))
+            op_inafecta = float(datos_comprobante.get('op_inafecta', 0))
+            op_exonerada = float(datos_comprobante.get('op_exonerada', 0))
+            op_gratuita = float(datos_comprobante.get('op_gratuita', 0))
+            
+            if subtotal == 0 and items_formateados:
+                subtotal = sum(item['total_item'] for item in items_formateados)
+                igv = subtotal * 0.18
+                total = subtotal + igv
+
+            total_letras = self.numero_a_letras(total)
+
+            orden_compra_cliente = datos_comprobante.get('orden_compra_cliente', '—')
+            factura = datos_comprobante.get('factura', '—')
+            nro_cotizacion = datos_comprobante.get('nro_cotizacion', '—')
+            
+            if nro_cotizacion == '—':
+                nro_cotizacion = (
+                    datos_comprobante.get('documento_asociado', '') or
+                    datos_comprobante.get('cotizacion', '') or
+                    datos_comprobante.get('cotizacion_numero', '') or
+                    datos_comprobante.get('numero_cotizacion', '') or
+                    '—'
+                )
+
+            qr_base64 = self._generar_qr_comprobante(datos_comprobante)
+
+            tipo_doc = datos_comprobante.get('tipo', datos_comprobante.get('tipo_comprobante', 'Factura'))
+            if tipo_doc.lower() == 'factura':
+                tipo_doc = 'FACTURA ELECTRÓNICA'
+            elif tipo_doc.lower() == 'boleta':
+                tipo_doc = 'BOLETA ELECTRÓNICA'
+
+            datos_mapeados = {
+                'logo_src': logo_src,
+                'empresa_ruc': EMPRESA['ruc'],
+                'empresa_nombre': EMPRESA['nombre'],
+                'empresa_telefono': EMPRESA['telefono'],
+                'empresa_email': EMPRESA['email'],
+                'empresa_web': EMPRESA['web'],
+                'tipo': tipo_doc,
+                'serie': datos_comprobante.get('serie', 'F001'),
+                'numero': datos_comprobante.get('numero', ''),
+                'fecha_emision': self._formatear_fecha(datos_comprobante.get('fecha_emision', datos_comprobante.get('fecha'))),
+                'cliente_nombre': datos_comprobante.get('cliente_nombre', datos_comprobante.get('cliente', '')),
+                'cliente_ruc': datos_comprobante.get('cliente_ruc', datos_comprobante.get('ruc', '')),
+                'cliente_direccion': datos_comprobante.get('cliente_direccion', datos_comprobante.get('direccion', '')),
+                'cliente_email': datos_comprobante.get('cliente_email', datos_comprobante.get('email', '')),
+                'cliente_telefono': datos_comprobante.get('cliente_telefono', datos_comprobante.get('telefono', '')),
+                'moneda': 'S/',
+                'subtotal': f"{subtotal:.2f}",
+                'igv': f"{igv:.2f}",
+                'total': f"{total:.2f}",
+                'total_letras': total_letras,
+                'descuento': f"{descuento:.2f}",
+                'op_inafecta': f"{op_inafecta:.2f}",
+                'op_exonerada': f"{op_exonerada:.2f}",
+                'op_gratuita': f"{op_gratuita:.2f}",
+                'condicion_pago': datos_comprobante.get('condicion_pago', datos_comprobante.get('condicion', 'Contado')),
+                'estado': datos_comprobante.get('estado', 'Borrador'),
+                'observaciones': datos_comprobante.get('observaciones', ''),
+                'orden_compra_cliente': orden_compra_cliente if orden_compra_cliente else '—',
+                'factura': factura if factura else '—',
+                'nro_cotizacion': nro_cotizacion if nro_cotizacion else '—',
+                'fecha_vencimiento': datos_comprobante.get('fecha_vencimiento', ''),
+                'guia_vinculada': datos_comprobante.get('guia_vinculada', '—'),
+                'items': items_formateados,
+                'qr_base64': qr_base64
+            }
+
+            template_content = self._obtener_template_comprobante()
+            html_content = self._reemplazar_variables_template_comprobante(template_content, datos_mapeados)
+
+            fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
+            nombre_archivo = f"factura_{datos_mapeados['serie']}_{datos_mapeados['numero']}_{fecha}.pdf"
+            
+            base_url = f"file://{os.getcwd()}/"
+            HTML(string=html_content, base_url=base_url).write_pdf(nombre_archivo)
+
+            print(f"✅ PDF generado: {nombre_archivo}")
+            return nombre_archivo
+
+        except Exception as e:
+            print(f"❌ Error en _generar_comprobante: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+    def _obtener_template_comprobante(self):
+        return """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ tipo }} {{ serie }}-{{ numero }}</title>
+    <style>
+        @page { size: A4; margin: 1.2cm 1.5cm; }
+        body { 
+            font-family: 'Helvetica', Arial, sans-serif; 
+            font-size: 9.5px; 
+            color: #333333;
+            line-height: 1.6; 
+            background: #ffffff;
+        }
+        
+        /* ===== COLORES ===== */
+        .color-rojo { color: #CC0000; }
+        .color-gris { color: #555555; }
+        .color-gris-oscuro { color: #333333; }
+        
+        /* ===== HEADER ===== */
+        .header-superior { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: stretch; 
+            margin-bottom: 10px; 
+            gap: 20px; 
+            border-bottom: 2px solid #999999;
+            padding-bottom: 8px;
+        }
+        .empresa-izquierda { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            gap: 18px; 
+        }
+        .empresa-izquierda .logo-container { 
+            flex-shrink: 0; 
+            width: 120px; 
+            height: 80px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .empresa-izquierda .logo-container img { 
+            max-height: 75px; 
+            max-width: 130px; 
+            object-fit: contain; 
+        }
+        .empresa-izquierda .info-texto { 
+            font-size: 8.5px; 
+            line-height: 1.5; 
+            color: #444444;
+        }
+        .empresa-izquierda .info-texto .nombre { 
+            font-size: 13px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            color: #333333;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .empresa-izquierda .info-texto .ruc-line {
+            font-size: 9px;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .slogan {
+            font-size: 8px;
+            color: #666666;
+            font-style: italic;
+            margin-bottom: 1px;
+        }
+        .empresa-izquierda .info-texto .contacto-line {
+            font-size: 7.5px;
+            color: #555555;
+        }
+        .recuadro-derecha { 
+            flex-shrink: 0; 
+            border: 2px solid #999999;
+            border-radius: 12px; 
+            padding: 10px 20px; 
+            text-align: center; 
+            min-width: 200px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .recuadro-derecha .ruc { 
+            font-size: 10px; 
+            font-weight: bold; 
+            color: #333333;
+        }
+        .recuadro-derecha .titulo { 
+            font-size: 13px; 
+            font-weight: bold; 
+            letter-spacing: 1px; 
+            margin: 2px 0; 
+            color: #CC0000;
+        }
+        .recuadro-derecha .numero { 
+            font-size: 15px; 
+            font-weight: bold; 
+            color: #CC0000;
+        }
+        
+        /* ===== LAYOUT DOS COLUMNAS - SIMÉTRICAS ===== */
+        .layout-dos-columnas {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 6px;
+        }
+        .layout-dos-columnas .columna {
+            flex: 1;
+            border: 1px solid #cccccc;
+            border-radius: 6px;
+            padding: 6px 12px;
+        }
+        .layout-dos-columnas .columna .seccion-titulo {
+            font-weight: bold;
+            font-size: 9px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #999999;
+            padding-bottom: 2px;
+            color: #333333;
+        }
+        .layout-dos-columnas .columna .fila {
+            display: flex;
+            padding: 1px 0;
+            align-items: baseline;
+            font-size: 8.5px;
+        }
+        .layout-dos-columnas .columna .fila .label {
+            font-weight: bold;
+            min-width: 110px;
+            flex-shrink: 0;
+            color: #555555;
+        }
+        .layout-dos-columnas .columna .fila .value {
+            flex: 1;
+            text-align: left;
+            padding-left: 5px;
+            color: #333333;
+        }
+        
+        /* ===== SECCIÓN ===== */
+        .seccion { 
+            margin-bottom: 6px; 
+        }
+        .seccion-titulo { 
+            font-weight: bold; 
+            font-size: 9.5px; 
+            margin-bottom: 3px; 
+            text-transform: uppercase; 
+            border-bottom: 2px solid #999999;
+            padding-bottom: 2px; 
+            color: #333333;
+        }
+        
+        /* ===== REFERENCIAS ===== */
+        .referencias { 
+            border: 1px solid #cccccc;
+            border-radius: 6px; 
+            padding: 4px 12px; 
+            margin-bottom: 6px; 
+        }
+        .referencias-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 8px; 
+            padding: 4px 0; 
+        }
+        .ref-item { 
+            text-align: center; 
+        }
+        .ref-item .ref-label { 
+            font-weight: bold; 
+            display: block; 
+            font-size: 7px; 
+            color: #777777;
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+        }
+        .ref-item .ref-value { 
+            font-size: 8.5px; 
+            font-weight: 600; 
+            color: #333333;
+        }
+        
+        /* ===== TABLA DE PRODUCTOS ===== */
+        .products-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 4px 0; 
+            font-size: 8px; 
+        }
+        .products-table th { 
+            color: #333333;
+            padding: 4px 5px; 
+            text-align: center; 
+            border: 1px solid #cccccc;
+            font-weight: bold;
+            background: #f5f5f5;
+        }
+        .products-table td { 
+            padding: 3px 5px; 
+            border: 1px solid #cccccc;
+            text-align: center; 
+            color: #333333;
+        }
+        .products-table td.descripcion { 
+            text-align: left; 
+        }
+        .products-table tr:nth-child(even) td {
+            background: #f9f9f9;
+        }
+        
+        /* ===== TOTALES ===== */
+        .totales-box { 
+            border: 2px solid #999999;
+            border-radius: 6px; 
+            padding: 6px 12px; 
+            margin-top: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-start;
+            width: 100%;
+            max-width: 320px;
+            margin-left: auto;
+        }
+        .totales-box .linea {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 1px 0;
+            font-size: 7.5px;
+            color: #444444;
+            border-bottom: 1px dotted #e8e8e8;
+        }
+        .totales-box .linea .label-total {
+            font-weight: normal;
+            color: #555555;
+            font-size: 7.5px;
+        }
+        .totales-box .linea .value-total {
+            font-weight: bold;
+            color: #333333;
+            text-align: right;
+            font-size: 7.5px;
+        }
+        .totales-box .linea.total {
+            font-weight: bold;
+            font-size: 11px;
+            border-top: 2px solid #999999;
+            border-bottom: none;
+            padding-top: 4px;
+            margin-top: 2px;
+            color: #333333;
+        }
+        .totales-box .linea.total .label-total {
+            font-weight: bold;
+            font-size: 11px;
+            color: #333333;
+        }
+        .totales-box .linea.total .value-total {
+            font-weight: bold;
+            font-size: 14px;
+            color: #333333;
+        }
+        .total-letras {
+            font-size: 7px;
+            color: #555555;
+            margin-top: 4px;
+            padding-top: 4px;
+            border-top: 1px solid #d5d5d5;
+            width: 100%;
+            text-align: left;
+            font-style: italic;
+        }
+        .total-letras strong {
+            color: #333333;
+        }
+        
+        /* ===== QR ===== */
+        .qr-container { 
+            text-align: center; 
+            margin: 6px 0 4px 0; 
+            padding: 4px; 
+            border: 2px solid #999999;
+            border-radius: 8px; 
+        }
+        .qr-container img { 
+            width: 80px; 
+            height: 80px; 
+        }
+        .qr-container .qr-text { 
+            font-size: 6.5px; 
+            color: #888888;
+            margin-top: 2px; 
+        }
+        
+        /* ===== OBSERVACIONES ===== */
+        .observaciones { 
+            margin-top: 4px; 
+            padding: 4px 10px; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 6px; 
+            font-size: 8px; 
+            color: #555555;
+        }
+        
+        /* ===== FOOTER ===== */
+        .footer { 
+            margin-top: 10px; 
+            text-align: center; 
+            font-size: 7px; 
+            color: #888888;
+            padding-top: 4px; 
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- HEADER CON BORDE GRIS                                        -->
+    <!-- ============================================================ -->
+    <div class="header-superior">
+        <div class="empresa-izquierda">
+            <div class="logo-container"><img src="{{ logo_src }}" alt="Logo"></div>
+            <div class="info-texto">
+                <div class="nombre">{{ empresa_nombre }}</div>
+                <div class="ruc-line">RUC: {{ empresa_ruc }}</div>
+                <div class="slogan">Soluciones integrales en abastecimientos</div>
+                <div class="contacto-line">Telf: {{ empresa_telefono }} | Email: {{ empresa_email }}</div>
+                <div class="contacto-line">Web: {{ empresa_web }}</div>
+            </div>
+        </div>
+        <div class="recuadro-derecha">
+            <div class="ruc">RUC Nº {{ empresa_ruc }}</div>
+            <div class="titulo">{{ tipo }}</div>
+            <div class="numero">{{ serie }}-{{ numero }}</div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- DATOS DEL CLIENTE Y COMPROBANTE - SIMÉTRICOS                -->
+    <!-- ============================================================ -->
+    <div class="layout-dos-columnas">
+        <div class="columna">
+            <div class="seccion-titulo">DATOS DEL CLIENTE</div>
+            <div class="fila"><span class="label">CLIENTE:</span><span class="value">{{ cliente_nombre }}</span></div>
+            <div class="fila"><span class="label">RUC:</span><span class="value">{{ cliente_ruc }}</span></div>
+            <div class="fila"><span class="label">DIRECCIÓN:</span><span class="value">{{ cliente_direccion }}</span></div>
+            <div class="fila"><span class="label">EMAIL:</span><span class="value">{{ cliente_email }}</span></div>
+            <div class="fila"><span class="label">TELÉFONO:</span><span class="value">{{ cliente_telefono }}</span></div>
+        </div>
+        <div class="columna">
+            <div class="seccion-titulo">DATOS DEL COMPROBANTE</div>
+            <div class="fila"><span class="label">FECHA EMISIÓN:</span><span class="value">{{ fecha_emision }}</span></div>
+            <div class="fila"><span class="label">FECHA VENCIMIENTO:</span><span class="value">{{ fecha_vencimiento or '—' }}</span></div>
+            <div class="fila"><span class="label">FORMA DE PAGO:</span><span class="value">{{ condicion_pago }}</span></div>
+            <div class="fila"><span class="label">MONEDA:</span><span class="value">{{ moneda }}</span></div>
+            <div class="fila"><span class="label">VENDEDOR:</span><span class="value">Helen Blas Príncipe</span></div>
+            <div class="fila"><span class="label">TELÉFONO:</span><span class="value">999932051</span></div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- DOCUMENTOS RELACIONADOS                                      -->
+    <!-- ============================================================ -->
+    <div class="seccion">
+        <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
+        <div class="referencias">
+            <div class="referencias-grid">
+                <div class="ref-item">
+                    <span class="ref-label">NRO ORDEN DE COMPRA</span>
+                    <span class="ref-value">{{ orden_compra_cliente }}</span>
+                </div>
+                <div class="ref-item">
+                    <span class="ref-label">NRO DE GUÍA</span>
+                    <span class="ref-value">{{ guia_vinculada or '—' }}</span>
+                </div>
+                <div class="ref-item">
+                    <span class="ref-label">NRO DE COTIZACION</span>
+                    <span class="ref-value">{{ nro_cotizacion }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- DETALLE DE PRODUCTOS                                         -->
+    <!-- ============================================================ -->
+    <div class="seccion">
+        <div class="seccion-titulo">DETALLE DE PRODUCTOS</div>
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th style="width:5%">Item</th>
+                    <th style="width:12%">Código</th>
+                    <th style="width:28%">Descripción</th>
+                    <th style="width:10%">Modelo</th>
+                    <th style="width:10%">Marca</th>
+                    <th style="width:6%">Cant.</th>
+                    <th style="width:6%">UM</th>
+                    <th style="width:11%">Precio Unit.</th>
+                    <th style="width:12%">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.item }}</td>
+                    <td>{{ item.codigo }}</td>
+                    <td class="descripcion">{{ item.descripcion }}</td>
+                    <td>{{ item.modelo }}</td>
+                    <td>{{ item.marca }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>{{ item.unidad }}</td>
+                    <td>{{ moneda }} {{ "%.2f"|format(item.precio_unitario) }}</td>
+                    <td>{{ moneda }} {{ "%.2f"|format(item.total_item) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TOTALES - TOTAL EN NEGRO                                    -->
+    <!-- ============================================================ -->
+    <div class="totales-box">
+        <div class="linea">
+            <span class="label-total">OP. GRAVADA</span>
+            <span class="value-total">{{ moneda }} {{ subtotal }}</span>
+        </div>
+        <div class="linea">
+            <span class="label-total">IGV (18%)</span>
+            <span class="value-total">{{ moneda }} {{ igv }}</span>
+        </div>
+        <div class="linea">
+            <span class="label-total">OP. DESCUENTO</span>
+            <span class="value-total">{{ moneda }} {{ descuento }}</span>
+        </div>
+        <div class="linea">
+            <span class="label-total">OP. INAFECTA</span>
+            <span class="value-total">{{ moneda }} {{ op_inafecta }}</span>
+        </div>
+        <div class="linea">
+            <span class="label-total">OP. EXONERADA</span>
+            <span class="value-total">{{ moneda }} {{ op_exonerada }}</span>
+        </div>
+        <div class="linea">
+            <span class="label-total">TOTAL OP. GRATUITA</span>
+            <span class="value-total">{{ moneda }} {{ op_gratuita }}</span>
+        </div>
+        <div class="linea total">
+            <span class="label-total">TOTAL VENTA</span>
+            <span class="value-total">{{ moneda }} {{ total }}</span>
+        </div>
+        <div class="total-letras">
+            <strong>SON:</strong> {{ total_letras }}
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- OBSERVACIONES                                                -->
+    <!-- ============================================================ -->
+    {% if observaciones %}
+    <div class="observaciones">
+        <strong>Observaciones:</strong> {{ observaciones }}
+    </div>
+    {% endif %}
+
+    <!-- ============================================================ -->
+    <!-- QR - SIN LÍNEA ADICIONAL DESPUÉS                           -->
+    <!-- ============================================================ -->
+    <div class="qr-container">
+        <img src="{{ qr_base64 }}" alt="QR">
+        <div class="qr-text">Representación impresa del {{ tipo }}</div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <div class="footer">
+        <div>Pag. 1 de 1</div>
+        <div>Powered by KCF CORPORACION</div>
+    </div>
+</body>
+</html>"""
+
+    def _reemplazar_variables_template_comprobante(self, template, datos):
+        try:
+            return Template(template).render(**datos)
+        except Exception as e:
+            print(f"❌ Error renderizando template Jinja2 de comprobante: {e}")
+            html = template
+            
+            variables = {
+                'logo_src': datos.get('logo_src', ''),
+                'empresa_ruc': '20602095704',
+                'empresa_nombre': 'KCF CORPORACION E.I.R.L',
+                'empresa_telefono': '999 932 051',
+                'empresa_email': 'ventas@kcfcorporacion.com',
+                'empresa_web': 'https://kcfcorporacion.com/',
+                'tipo': datos.get('tipo', 'FACTURA ELECTRÓNICA'),
+                'serie': datos.get('serie', 'F001'),
+                'numero': datos.get('numero', ''),
+                'fecha_emision': datos.get('fecha_emision', ''),
+                'cliente_nombre': datos.get('cliente_nombre', ''),
+                'cliente_ruc': datos.get('cliente_ruc', ''),
+                'cliente_direccion': datos.get('cliente_direccion', ''),
+                'cliente_email': datos.get('cliente_email', ''),
+                'cliente_telefono': datos.get('cliente_telefono', ''),
+                'moneda': 'S/',
+                'subtotal': datos.get('subtotal', '0.00'),
+                'igv': datos.get('igv', '0.00'),
+                'total': datos.get('total', '0.00'),
+                'total_letras': datos.get('total_letras', ''),
+                'descuento': datos.get('descuento', '0.00'),
+                'op_inafecta': datos.get('op_inafecta', '0.00'),
+                'op_exonerada': datos.get('op_exonerada', '0.00'),
+                'op_gratuita': datos.get('op_gratuita', '0.00'),
+                'condicion_pago': datos.get('condicion_pago', 'Contado'),
+                'estado': datos.get('estado', 'Borrador'),
+                'observaciones': datos.get('observaciones', ''),
+                'orden_compra_cliente': datos.get('orden_compra_cliente', '—'),
+                'factura': datos.get('factura', '—'),
+                'nro_cotizacion': datos.get('nro_cotizacion', '—'),
+                'fecha_vencimiento': datos.get('fecha_vencimiento', ''),
+                'guia_vinculada': datos.get('guia_vinculada', '—'),
+                'qr_base64': datos.get('qr_base64', ''),
+            }
+            
+            for key, value in variables.items():
+                html = html.replace(f"{{{{ {key} }}}}", str(value))
+            
+            items_html = ""
+            for item in datos.get('items', []):
+                items_html += f"""
+                <tr>
+                    <td>{item.get('item', '')}</td>
+                    <td>{item.get('codigo', '')}</td>
+                    <td class="descripcion">{item.get('descripcion', '')}</td>
+                    <td>{item.get('modelo', '')}</td>
+                    <td>{item.get('marca', '')}</td>
+                    <td>{item.get('cantidad', 0)}</td>
+                    <td>{item.get('unidad', 'NIU')}</td>
+                    <td>{item.get('precio_unitario', 0):.2f}</td>
+                    <td>{item.get('total_item', 0):.2f}</td>
+                </tr>
+                """
+            html = html.replace("{% for item in items %}", items_html)
+            html = html.replace("{% endfor %}", "")
+            
+            html = re.sub(r'{%.*?%}', '', html, flags=re.DOTALL)
+            html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
+            
+            return html
+
+    def _generar_qr_comprobante(self, datos_comprobante):
+        try:
+            import qrcode
+            from io import BytesIO
+            
+            qr_data = {
+                'tipo': datos_comprobante.get('tipo', 'FACTURA'),
+                'serie': datos_comprobante.get('serie', 'F001'),
+                'numero': datos_comprobante.get('numero', ''),
+                'ruc_emisor': '20602095704',
+                'ruc_cliente': datos_comprobante.get('ruc', ''),
+                'fecha_emision': self._formatear_fecha(datos_comprobante.get('fecha_emision')),
+                'total': str(datos_comprobante.get('total', 0))
+            }
+            
+            qr = qrcode.QRCode(version=2, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=4, border=2)
+            qr.add_data(json.dumps(qr_data))
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffered = BytesIO()
+            img.save(buffered, format="PNG")
+            img_base64 = base64.b64encode(buffered.getvalue()).decode()
+            return f"data:image/png;base64,{img_base64}"
+        except:
+            return ""
+
+    def _formatear_fecha(self, fecha):
+        if not fecha:
+            return datetime.now().strftime('%d/%m/%Y')
+        try:
+            if isinstance(fecha, str):
+                if '/' in fecha:
+                    return fecha
+                dt = datetime.fromisoformat(fecha.replace('Z', '+00:00'))
+                return dt.strftime('%d/%m/%Y')
+            elif isinstance(fecha, datetime):
+                return fecha.strftime('%d/%m/%Y')
+            return str(fecha)
+        except:
+            return str(fecha)
+
+    # ============================================================
+    # GUÍA DE REMISIÓN - MÉTODOS EXISTENTES
     # ============================================================
     def _generar_guia_remision(self, datos_guia):
         try:
@@ -387,7 +1168,6 @@ class PDFGenerator:
             text-align: center; 
             font-size: 7px; 
             color: #888888;
-            border-top: 1px solid #999999;
             padding-top: 6px; 
         }
         .referencias-grid { 
@@ -428,7 +1208,7 @@ class PDFGenerator:
         </div>
         <div class="recuadro-derecha">
             <div class="ruc">RUC Nº {{ ruc_remitente }}</div>
-           <div class="titulo" style="color: #CC0000;">GUIA DE REMISIÓN REMITENTE</div>
+            <div class="titulo" style="color: #CC0000;">GUIA DE REMISIÓN REMITENTE</div>
             <div class="numero">{{ serie }}-{{ numero }}</div>
         </div>
     </div>
@@ -599,29 +1379,6 @@ class PDFGenerator:
             'qr_base64': self._generar_qr_guia(datos_guia)
         }
 
-    def _formatear_fecha(self, fecha):
-        if not fecha:
-            return datetime.now().strftime('%d/%m/%Y')
-        try:
-            if isinstance(fecha, str):
-                if '/' in fecha:
-                    return fecha
-                dt = datetime.fromisoformat(fecha.replace('Z', '+00:00'))
-                return dt.strftime('%d/%m/%Y')
-            elif isinstance(fecha, datetime):
-                return fecha.strftime('%d/%m/%Y')
-            return str(fecha)
-        except:
-            return str(fecha)
-
-    def _get_motivo_texto(self, codigo):
-        motivos = {
-            '01': 'Venta', '02': 'Compra', '03': 'Traslado entre establecimientos',
-            '04': 'Consignación', '05': 'Devolución', '06': 'Exportación',
-            '07': 'Importación', '08': 'Donación', '09': 'Traslado por cuenta de terceros'
-        }
-        return motivos.get(codigo, codigo or 'Venta')
-
     def _generar_qr_guia(self, datos_guia):
         try:
             import qrcode
@@ -657,763 +1414,14 @@ class PDFGenerator:
         except Exception as e:
             print(f"❌ Error renderizando template Jinja2 de guía: {e}")
             return template
-        
-    # ============================================================
-    # GENERAR FACTURA / BOLETA - CON COLORES CORPORATIVOS
-    # ============================================================
-    def _generar_comprobante(self, datos_comprobante):
-        try:
-            print("📄 Generando PDF de comprobante...")
 
-            EMPRESA = {
-                'ruc': '20602095704',
-                'nombre': 'KCF CORPORACION E.I.R.L',
-                'direccion': 'JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES',
-                'telefono': '999 932 051',
-                'email': 'ventas@kcfcorporacion.com',
-                'web': 'https://kcfcorporacion.com/'
-            }
-
-            logo_base64 = self._obtener_logo_base64()
-            logo_src = f"data:image/png;base64,{logo_base64}" if logo_base64 else ""
-
-            items = datos_comprobante.get('items', [])
-            
-            if not items and 'items_json' in datos_comprobante:
-                items_json = datos_comprobante['items_json']
-                if isinstance(items_json, str):
-                    try:
-                        items = json.loads(items_json)
-                    except:
-                        items = []
-                elif isinstance(items_json, list):
-                    items = items_json
-
-            if not items and 'productos' in datos_comprobante:
-                items = datos_comprobante['productos']
-            
-            if not items and 'detalle' in datos_comprobante:
-                items = datos_comprobante['detalle']
-
-            if not items:
-                items = [
-                    {'codigo': 'PRD-001', 'producto': 'Producto de ejemplo 1', 'cantidad': 2, 'valorVenta': 100.00},
-                    {'codigo': 'PRD-002', 'producto': 'Producto de ejemplo 2', 'cantidad': 1, 'valorVenta': 250.00}
-                ]
-
-            items_formateados = []
-            for idx, item in enumerate(items, 1):
-                try:
-                    if isinstance(item, dict):
-                        cantidad = float(item.get('cantidad', item.get('cant', item.get('qty', 1))))
-                        precio = float(item.get('valorVenta', item.get('precio', item.get('precio_unitario', item.get('price', 0)))))
-                        total_item = cantidad * precio
-                        
-                        descripcion = item.get('producto', item.get('descripcion', item.get('nombre', item.get('name', 'Sin descripción'))))
-                        
-                        items_formateados.append({
-                            'item': idx,
-                            'codigo': item.get('codigo', item.get('code', '')),
-                            'descripcion': descripcion,
-                            'marca': item.get('marca', item.get('brand', '')),
-                            'modelo': item.get('modelo', item.get('model', '')),
-                            'unidad': item.get('um', item.get('unidad', item.get('unit', 'NIU'))),
-                            'cantidad': cantidad,
-                            'precio_unitario': precio,
-                            'total_item': total_item
-                        })
-                    elif isinstance(item, (list, tuple)):
-                        codigo = item[0] if len(item) > 0 else ''
-                        descripcion = item[1] if len(item) > 1 else 'Sin descripción'
-                        cantidad = float(item[2] if len(item) > 2 else 1)
-                        precio = float(item[3] if len(item) > 3 else 0)
-                        total_item = cantidad * precio
-                        
-                        items_formateados.append({
-                            'item': idx,
-                            'codigo': codigo,
-                            'descripcion': descripcion,
-                            'marca': item[4] if len(item) > 4 else '',
-                            'modelo': item[5] if len(item) > 5 else '',
-                            'unidad': 'NIU',
-                            'cantidad': cantidad,
-                            'precio_unitario': precio,
-                            'total_item': total_item
-                        })
-                except Exception as e:
-                    print(f"❌ Error procesando item {idx}: {e}")
-                    continue
-
-            subtotal = float(datos_comprobante.get('subtotal', 0))
-            igv = float(datos_comprobante.get('igv', 0))
-            total = float(datos_comprobante.get('total', datos_comprobante.get('monto', 0)))
-            
-            descuento = float(datos_comprobante.get('descuento', 0))
-            op_inafecta = float(datos_comprobante.get('op_inafecta', 0))
-            op_exonerada = float(datos_comprobante.get('op_exonerada', 0))
-            op_gratuita = float(datos_comprobante.get('op_gratuita', 0))
-            
-            if subtotal == 0 and items_formateados:
-                subtotal = sum(item['total_item'] for item in items_formateados)
-                igv = subtotal * 0.18
-                total = subtotal + igv
-
-            total_letras = self.numero_a_letras(total)
-
-            orden_compra_cliente = datos_comprobante.get('orden_compra_cliente', '—')
-            factura = datos_comprobante.get('factura', '—')
-            nro_cotizacion = datos_comprobante.get('nro_cotizacion', '—')
-            
-            if nro_cotizacion == '—':
-                nro_cotizacion = (
-                    datos_comprobante.get('documento_asociado', '') or
-                    datos_comprobante.get('cotizacion', '') or
-                    datos_comprobante.get('cotizacion_numero', '') or
-                    datos_comprobante.get('numero_cotizacion', '') or
-                    '—'
-                )
-
-            qr_base64 = self._generar_qr_comprobante(datos_comprobante)
-
-            tipo_doc = datos_comprobante.get('tipo', datos_comprobante.get('tipo_comprobante', 'Factura'))
-            if tipo_doc.lower() == 'factura':
-                tipo_doc = 'FACTURA ELECTRÓNICA'
-
-            datos_mapeados = {
-                'logo_src': logo_src,
-                'empresa_ruc': EMPRESA['ruc'],
-                'empresa_nombre': EMPRESA['nombre'],
-                'empresa_telefono': EMPRESA['telefono'],
-                'empresa_email': EMPRESA['email'],
-                'empresa_web': EMPRESA['web'],
-                'tipo': tipo_doc,
-                'serie': datos_comprobante.get('serie', 'F001'),
-                'numero': datos_comprobante.get('numero', ''),
-                'fecha_emision': self._formatear_fecha(datos_comprobante.get('fecha_emision', datos_comprobante.get('fecha'))),
-                'cliente_nombre': datos_comprobante.get('cliente_nombre', datos_comprobante.get('cliente', '')),
-                'cliente_ruc': datos_comprobante.get('cliente_ruc', datos_comprobante.get('ruc', '')),
-                'cliente_direccion': datos_comprobante.get('cliente_direccion', datos_comprobante.get('direccion', '')),
-                'cliente_email': datos_comprobante.get('cliente_email', datos_comprobante.get('email', '')),
-                'cliente_telefono': datos_comprobante.get('cliente_telefono', datos_comprobante.get('telefono', '')),
-                'moneda': 'S/',
-                'subtotal': f"{subtotal:.2f}",
-                'igv': f"{igv:.2f}",
-                'total': f"{total:.2f}",
-                'total_letras': total_letras,
-                'descuento': f"{descuento:.2f}",
-                'op_inafecta': f"{op_inafecta:.2f}",
-                'op_exonerada': f"{op_exonerada:.2f}",
-                'op_gratuita': f"{op_gratuita:.2f}",
-                'condicion_pago': datos_comprobante.get('condicion_pago', datos_comprobante.get('condicion', 'Contado')),
-                'estado': datos_comprobante.get('estado', 'Borrador'),
-                'observaciones': datos_comprobante.get('observaciones', ''),
-                'orden_compra_cliente': orden_compra_cliente if orden_compra_cliente else '—',
-                'factura': factura if factura else '—',
-                'nro_cotizacion': nro_cotizacion if nro_cotizacion else '—',
-                'fecha_vencimiento': datos_comprobante.get('fecha_vencimiento', ''),
-                'guia_vinculada': datos_comprobante.get('guia_vinculada', '—'),
-                'items': items_formateados,
-                'qr_base64': qr_base64
-            }
-
-            template_content = self._obtener_template_comprobante()
-            html_content = self._reemplazar_variables_template_comprobante(template_content, datos_mapeados)
-
-            fecha = datetime.now().strftime('%Y%m%d_%H%M%S')
-            nombre_archivo = f"factura_{datos_mapeados['serie']}_{datos_mapeados['numero']}_{fecha}.pdf"
-            
-            base_url = f"file://{os.getcwd()}/"
-            HTML(string=html_content, base_url=base_url).write_pdf(nombre_archivo)
-
-            print(f"✅ PDF generado: {nombre_archivo}")
-            return nombre_archivo
-
-        except Exception as e:
-            print(f"❌ Error en _generar_comprobante: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
-
-    def _obtener_template_comprobante(self):
-        return """<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>{{ tipo }} {{ serie }}-{{ numero }}</title>
-    <style>
-        @page { size: A4; margin: 1.2cm 1.5cm; }
-        body { 
-            font-family: 'Helvetica', Arial, sans-serif; 
-            font-size: 9.5px; 
-            color: #333333;
-            line-height: 1.6; 
-            background: #ffffff;
+    def _get_motivo_texto(self, codigo):
+        motivos = {
+            '01': 'Venta', '02': 'Compra', '03': 'Traslado entre establecimientos',
+            '04': 'Consignación', '05': 'Devolución', '06': 'Exportación',
+            '07': 'Importación', '08': 'Donación', '09': 'Traslado por cuenta de terceros'
         }
-        
-        .color-rojo { color: #CC0000; }
-        .color-rojo-oscuro { color: #990000; }
-        .border-rojo { border-color: #CC0000; }
-        
-        .header-superior { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: stretch; 
-            margin-bottom: 10px; 
-            gap: 20px; 
-            border-bottom: 2px solid #CC0000;
-            padding-bottom: 8px;
-        }
-        .empresa-izquierda { 
-            flex: 1; 
-            display: flex; 
-            align-items: center; 
-            gap: 18px; 
-        }
-        .empresa-izquierda .logo-container { 
-            flex-shrink: 0; 
-            width: 120px; 
-            height: 80px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-        }
-        .empresa-izquierda .logo-container img { 
-            max-height: 75px; 
-            max-width: 130px; 
-            object-fit: contain; 
-        }
-        .empresa-izquierda .info-texto { 
-            font-size: 8.5px; 
-            line-height: 1.5; 
-            color: #444444;
-        }
-        .empresa-izquierda .info-texto .nombre { 
-            font-size: 13px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            color: #990000;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
-        }
-        .empresa-izquierda .info-texto .ruc-line {
-            font-size: 9px;
-            font-weight: bold;
-            color: #333333;
-            margin-bottom: 1px;
-        }
-        .empresa-izquierda .info-texto .slogan {
-            font-size: 8px;
-            color: #666666;
-            font-style: italic;
-            margin-bottom: 1px;
-        }
-        .empresa-izquierda .info-texto .contacto-line {
-            font-size: 7.5px;
-            color: #555555;
-        }
-        .recuadro-derecha { 
-            flex-shrink: 0; 
-            border: 2px solid #CC0000;
-            border-radius: 12px; 
-            padding: 10px 20px; 
-            text-align: center; 
-            min-width: 200px; 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .recuadro-derecha .ruc { 
-            font-size: 10px; 
-            font-weight: bold; 
-            color: #333333;
-        }
-        .recuadro-derecha .titulo { 
-            font-size: 13px; 
-            font-weight: bold; 
-            letter-spacing: 1px; 
-            margin: 2px 0; 
-            color: #990000;
-        }
-        .recuadro-derecha .numero { 
-            font-size: 15px; 
-            font-weight: bold; 
-            color: #CC0000;
-        }
-        
-        .seccion { 
-            margin-bottom: 6px; 
-        }
-        .seccion-titulo { 
-            font-weight: bold; 
-            font-size: 9.5px; 
-            margin-bottom: 3px; 
-            text-transform: uppercase; 
-            border-bottom: 2px solid #CC0000;
-            padding-bottom: 2px; 
-            color: #990000;
-        }
-        .info-cliente { 
-            border: 1px solid #d5d5d5;
-            border-radius: 8px; 
-            padding: 6px 12px; 
-            margin-bottom: 6px; 
-        }
-        .fila { 
-            display: flex; 
-            padding: 2px 0; 
-            align-items: baseline; 
-        }
-        .fila .label { 
-            font-weight: bold; 
-            min-width: 130px; 
-            flex-shrink: 0; 
-            color: #555555;
-        }
-        .fila .value { 
-            flex: 1; 
-            text-align: left; 
-            padding-left: 5px; 
-            color: #333333;
-        }
-        
-        .layout-dos-columnas {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 6px;
-        }
-        .layout-dos-columnas .columna {
-            flex: 1;
-        }
-        
-        .products-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 4px 0; 
-            font-size: 8.5px; 
-        }
-        .products-table th { 
-            color: #990000;
-            padding: 4px 5px; 
-            text-align: center; 
-            border: 1px solid #CC0000;
-            font-weight: bold;
-        }
-        .products-table td { 
-            padding: 3px 5px; 
-            border: 1px solid #d5d5d5;
-            text-align: center; 
-            color: #333333;
-        }
-        .products-table td.descripcion { 
-            text-align: left; 
-        }
-        .products-table tr:nth-child(even) td {
-            background: #f9f9f9;
-        }
-        
-        .totales-box { 
-            border: 2px solid #CC0000;
-            border-radius: 6px; 
-            padding: 6px 12px; 
-            margin-top: 6px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: flex-start;
-            width: 100%;
-            max-width: 320px;
-            margin-left: auto;
-        }
-        .totales-box .linea {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            padding: 1px 0;
-            font-size: 7.5px;
-            color: #444444;
-            border-bottom: 1px dotted #e8e8e8;
-        }
-        .totales-box .linea .label-total {
-            font-weight: normal;
-            color: #555555;
-            font-size: 7.5px;
-        }
-        .totales-box .linea .value-total {
-            font-weight: bold;
-            color: #333333;
-            text-align: right;
-            font-size: 7.5px;
-        }
-        .totales-box .linea.total {
-            font-weight: bold;
-            font-size: 11px;
-            border-top: 2px solid #CC0000;
-            border-bottom: none;
-            padding-top: 4px;
-            margin-top: 2px;
-            color: #990000;
-        }
-        .totales-box .linea.total .label-total {
-            font-weight: bold;
-            font-size: 11px;
-            color: #990000;
-        }
-        .totales-box .linea.total .value-total {
-            font-weight: bold;
-            font-size: 14px;
-            color: #CC0000;
-        }
-        .total-letras {
-            font-size: 7px;
-            color: #555555;
-            margin-top: 4px;
-            padding-top: 4px;
-            border-top: 1px solid #d5d5d5;
-            width: 100%;
-            text-align: left;
-            font-style: italic;
-        }
-        .total-letras strong {
-            color: #990000;
-        }
-        
-        .referencias { 
-            border: 1px solid #d5d5d5;
-            border-radius: 8px; 
-            padding: 4px 12px; 
-            margin-bottom: 6px; 
-        }
-        .referencias-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr 1fr; 
-            gap: 8px; 
-            padding: 4px 0; 
-        }
-        .ref-item { 
-            text-align: center; 
-        }
-        .ref-item .ref-label { 
-            font-weight: bold; 
-            display: block; 
-            font-size: 7px; 
-            color: #777777;
-            text-transform: uppercase; 
-            letter-spacing: 0.3px; 
-        }
-        .ref-item .ref-value { 
-            font-size: 8.5px; 
-            font-weight: 600; 
-            color: #333333;
-        }
-        .qr-container { 
-            text-align: center; 
-            margin: 6px 0 4px 0; 
-            padding: 4px; 
-            border: 2px solid #CC0000;
-            border-radius: 8px; 
-        }
-        .qr-container img { 
-            width: 80px; 
-            height: 80px; 
-        }
-        .qr-container .qr-text { 
-            font-size: 6.5px; 
-            color: #888888;
-            margin-top: 2px; 
-        }
-        .footer { 
-            margin-top: 10px; 
-            text-align: center; 
-            font-size: 7px; 
-            color: #888888;
-            border-top: 2px solid #CC0000;
-            padding-top: 4px; 
-        }
-        .observaciones { 
-            margin-top: 4px; 
-            padding: 4px 10px; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 6px; 
-            font-size: 8px; 
-            color: #555555;
-        }
-        .seccion-con-borde {
-            border: 1px solid #d5d5d5;
-            border-radius: 8px;
-            padding: 6px 12px;
-            margin-bottom: 6px;
-        }
-        .seccion-con-borde .seccion-titulo {
-            font-weight: bold;
-            font-size: 9px;
-            margin-bottom: 3px;
-            text-transform: uppercase;
-            border-bottom: 2px solid #CC0000;
-            padding-bottom: 2px;
-            color: #990000;
-        }
-        .seccion-con-borde .fila {
-            display: flex;
-            padding: 1px 0;
-            align-items: baseline;
-        }
-        .seccion-con-borde .fila .label {
-            font-weight: bold;
-            min-width: 130px;
-            flex-shrink: 0;
-            color: #555555;
-            font-size: 8.5px;
-        }
-        .seccion-con-borde .fila .value {
-            flex: 1;
-            text-align: left;
-            padding-left: 5px;
-            color: #333333;
-            font-size: 8.5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="header-superior">
-        <div class="empresa-izquierda">
-            <div class="logo-container"><img src="{{ logo_src }}" alt="Logo"></div>
-            <div class="info-texto">
-                <div class="nombre">{{ empresa_nombre }}</div>
-                <div class="ruc-line">RUC: {{ empresa_ruc }}</div>
-                <div class="slogan">Soluciones integrales en abastecimientos</div>
-                <div class="contacto-line">Telf: {{ empresa_telefono }} | Email: {{ empresa_email }}</div>
-                <div class="contacto-line">Web: {{ empresa_web }}</div>
-            </div>
-        </div>
-        <div class="recuadro-derecha">
-            <div class="ruc">RUC Nº {{ empresa_ruc }}</div>
-            <div class="titulo">{{ tipo }}</div>
-            <div class="numero">{{ serie }}-{{ numero }}</div>
-        </div>
-    </div>
-
-    <div class="layout-dos-columnas">
-        <div class="columna">
-            <div class="seccion-con-borde">
-                <div class="seccion-titulo">DATOS DEL CLIENTE</div>
-                <div class="fila"><span class="label">CLIENTE:</span><span class="value">{{ cliente_nombre }}</span></div>
-                <div class="fila"><span class="label">RUC:</span><span class="value">{{ cliente_ruc }}</span></div>
-                <div class="fila"><span class="label">DIRECCIÓN:</span><span class="value">{{ cliente_direccion }}</span></div>
-                <div class="fila"><span class="label">EMAIL:</span><span class="value">{{ cliente_email }}</span></div>
-                <div class="fila"><span class="label">TELÉFONO:</span><span class="value">{{ cliente_telefono }}</span></div>
-            </div>
-        </div>
-        
-        <div class="columna">
-            <div class="seccion-con-borde">
-                <div class="seccion-titulo">DATOS DEL COMPROBANTE</div>
-                <div class="fila"><span class="label">FECHA EMISIÓN:</span><span class="value">{{ fecha_emision }}</span></div>
-                <div class="fila"><span class="label">FECHA VENCIMIENTO:</span><span class="value">{{ fecha_vencimiento or '—' }}</span></div>
-                <div class="fila"><span class="label">FORMA DE PAGO:</span><span class="value">{{ condicion_pago }}</span></div>
-                <div class="fila"><span class="label">MONEDA:</span><span class="value">{{ moneda }}</span></div>
-                <div class="fila"><span class="label">VENDEDOR:</span><span class="value">Helen Blas Príncipe</span></div>
-                <div class="fila"><span class="label">TELÉFONO:</span><span class="value">999932051</span></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="seccion">
-        <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
-        <div class="referencias">
-            <div class="referencias-grid">
-                <div class="ref-item">
-                    <span class="ref-label">NRO ORDEN DE COMPRA</span>
-                    <span class="ref-value">{{ orden_compra_cliente }}</span>
-                </div>
-                <div class="ref-item">
-                    <span class="ref-label">NRO DE GUÍA</span>
-                    <span class="ref-value">{{ guia_vinculada or '—' }}</span>
-                </div>
-                <div class="ref-item">
-                    <span class="ref-label">NRO DE COTIZACION</span>
-                    <span class="ref-value">{{ nro_cotizacion }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="seccion">
-        <div class="seccion-titulo">DETALLE DE PRODUCTOS</div>
-        <table class="products-table">
-            <thead>
-                <tr>
-                    <th style="width:5%">Item</th>
-                    <th style="width:12%">Código</th>
-                    <th style="width:28%">Descripción</th>
-                    <th style="width:10%">Modelo</th>
-                    <th style="width:10%">Marca</th>
-                    <th style="width:6%">Cant.</th>
-                    <th style="width:8%">UM</th>
-                    <th style="width:10%">Precio Unit.</th>
-                    <th style="width:11%">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr>
-                    <td>{{ item.item }}</td>
-                    <td>{{ item.codigo }}</td>
-                    <td class="descripcion">{{ item.descripcion }}</td>
-                    <td>{{ item.modelo }}</td>
-                    <td>{{ item.marca }}</td>
-                    <td>{{ item.cantidad }}</td>
-                    <td>{{ item.unidad }}</td>
-                    <td>{{ moneda }} {{ "%.2f"|format(item.precio_unitario) }}</td>
-                    <td>{{ moneda }} {{ "%.2f"|format(item.total_item) }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="totales-box">
-        <div class="linea">
-            <span class="label-total">OP. GRAVADA</span>
-            <span class="value-total">{{ moneda }} {{ subtotal }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">IGV (18%)</span>
-            <span class="value-total">{{ moneda }} {{ igv }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">OP. DESCUENTO</span>
-            <span class="value-total">{{ moneda }} {{ descuento }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">OP. INAFECTA</span>
-            <span class="value-total">{{ moneda }} {{ op_inafecta }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">OP. EXONERADA</span>
-            <span class="value-total">{{ moneda }} {{ op_exonerada }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">TOTAL OP. GRATUITA</span>
-            <span class="value-total">{{ moneda }} {{ op_gratuita }}</span>
-        </div>
-        <div class="linea total">
-            <span class="label-total">TOTAL VENTA</span>
-            <span class="value-total">{{ moneda }} {{ total }}</span>
-        </div>
-        <div class="total-letras">
-            <strong>SON:</strong> {{ total_letras }}
-        </div>
-    </div>
-
-    {% if observaciones %}
-    <div class="observaciones">
-        <strong>Observaciones:</strong> {{ observaciones }}
-    </div>
-    {% endif %}
-
-    <div class="qr-container">
-        <img src="{{ qr_base64 }}" alt="QR">
-        <div class="qr-text">Representación impresa del {{ tipo }}</div>
-    </div>
-
-    <div class="footer">
-        <div>Pag. 1 de 1</div>
-        <div>Powered by KCF CORPORACION</div>
-    </div>
-</body>
-</html>"""
-
-    def _reemplazar_variables_template_comprobante(self, template, datos):
-        try:
-            return Template(template).render(**datos)
-        except Exception as e:
-            print(f"❌ Error renderizando template Jinja2 de comprobante: {e}")
-            html = template
-            
-            variables = {
-                'logo_src': datos.get('logo_src', ''),
-                'empresa_ruc': '20602095704',
-                'empresa_nombre': 'KCF CORPORACION E.I.R.L',
-                'empresa_telefono': '999 932 051',
-                'empresa_email': 'ventas@kcfcorporacion.com',
-                'empresa_web': 'https://kcfcorporacion.com/',
-                'tipo': datos.get('tipo', 'FACTURA ELECTRÓNICA'),
-                'serie': datos.get('serie', 'F001'),
-                'numero': datos.get('numero', ''),
-                'fecha_emision': datos.get('fecha_emision', ''),
-                'cliente_nombre': datos.get('cliente_nombre', ''),
-                'cliente_ruc': datos.get('cliente_ruc', ''),
-                'cliente_direccion': datos.get('cliente_direccion', ''),
-                'cliente_email': datos.get('cliente_email', ''),
-                'cliente_telefono': datos.get('cliente_telefono', ''),
-                'moneda': 'S/',
-                'subtotal': datos.get('subtotal', '0.00'),
-                'igv': datos.get('igv', '0.00'),
-                'total': datos.get('total', '0.00'),
-                'total_letras': datos.get('total_letras', ''),
-                'descuento': datos.get('descuento', '0.00'),
-                'op_inafecta': datos.get('op_inafecta', '0.00'),
-                'op_exonerada': datos.get('op_exonerada', '0.00'),
-                'op_gratuita': datos.get('op_gratuita', '0.00'),
-                'condicion_pago': datos.get('condicion_pago', 'Contado'),
-                'estado': datos.get('estado', 'Borrador'),
-                'observaciones': datos.get('observaciones', ''),
-                'orden_compra_cliente': datos.get('orden_compra_cliente', '—'),
-                'factura': datos.get('factura', '—'),
-                'nro_cotizacion': datos.get('nro_cotizacion', '—'),
-                'qr_base64': datos.get('qr_base64', ''),
-            }
-            
-            for key, value in variables.items():
-                html = html.replace(f"{{{{ {key} }}}}", str(value))
-            
-            items_html = ""
-            for item in datos.get('items', []):
-                items_html += f"""
-                <tr>
-                    <td>{item.get('item', '')}</td>
-                    <td>{item.get('codigo', '')}</td>
-                    <td class="descripcion">{item.get('descripcion', '')}</td>
-                    <td>{item.get('modelo', '')}</td>
-                    <td>{item.get('marca', '')}</td>
-                    <td>{item.get('cantidad', 0)}</td>
-                    <td>{item.get('unidad', 'NIU')}</td>
-                    <td>{item.get('precio_unitario', 0):.2f}</td>
-                    <td>{item.get('total_item', 0):.2f}</td>
-                </tr>
-                """
-            html = html.replace("{% for item in items %}", items_html)
-            html = html.replace("{% endfor %}", "")
-            
-            html = re.sub(r'{%.*?%}', '', html, flags=re.DOTALL)
-            html = re.sub(r'{{.*?}}', '', html, flags=re.DOTALL)
-            
-            return html
-
-    def _generar_qr_comprobante(self, datos_comprobante):
-        try:
-            import qrcode
-            from io import BytesIO
-            
-            qr_data = {
-                'tipo': datos_comprobante.get('tipo', 'FACTURA'),
-                'serie': datos_comprobante.get('serie', 'F001'),
-                'numero': datos_comprobante.get('numero', ''),
-                'ruc_emisor': '20602095704',
-                'ruc_cliente': datos_comprobante.get('ruc', ''),
-                'fecha_emision': self._formatear_fecha(datos_comprobante.get('fecha_emision')),
-                'total': str(datos_comprobante.get('total', 0))
-            }
-            
-            qr = qrcode.QRCode(version=2, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=4, border=2)
-            qr.add_data(json.dumps(qr_data))
-            qr.make(fit=True)
-            img = qr.make_image(fill_color="black", back_color="white")
-            buffered = BytesIO()
-            img.save(buffered, format="PNG")
-            img_base64 = base64.b64encode(buffered.getvalue()).decode()
-            return f"data:image/png;base64,{img_base64}"
-        except:
-            return ""
+        return motivos.get(codigo, codigo or 'Venta')
 
     # ============================================================
     # GENERAR COTIZACIÓN - CON COLORES CORPORATIVOS
@@ -1550,8 +1558,7 @@ class PDFGenerator:
         }
         
         .color-rojo { color: #CC0000; }
-        .color-rojo-oscuro { color: #990000; }
-        .border-rojo { border-color: #CC0000; }
+        .color-gris { color: #555555; }
         
         .header-superior {
             display: flex;
@@ -1559,7 +1566,7 @@ class PDFGenerator:
             align-items: stretch;
             margin-bottom: 10px;
             gap: 20px;
-            border-bottom: 2px solid #CC0000;
+            border-bottom: 2px solid #999999;
             padding-bottom: 8px;
         }
         .empresa-izquierda {
@@ -1590,7 +1597,7 @@ class PDFGenerator:
             font-size: 13px;
             font-weight: bold;
             text-transform: uppercase;
-            color: #990000;
+            color: #333333;
             letter-spacing: 0.5px;
             margin-bottom: 2px;
         }
@@ -1612,7 +1619,7 @@ class PDFGenerator:
         }
         .recuadro-derecha {
             flex-shrink: 0;
-            border: 2px solid #CC0000;
+            border: 2px solid #999999;
             border-radius: 12px;
             padding: 10px 20px;
             text-align: center;
@@ -1631,7 +1638,7 @@ class PDFGenerator:
             font-weight: bold;
             letter-spacing: 1px;
             margin: 2px 0;
-            color: #990000;
+            color: #CC0000;
         }
         .recuadro-derecha .numero {
             font-size: 15px;
@@ -1647,12 +1654,12 @@ class PDFGenerator:
             font-size: 9.5px;
             margin-bottom: 3px;
             text-transform: uppercase;
-            border-bottom: 2px solid #CC0000;
+            border-bottom: 2px solid #999999;
             padding-bottom: 2px;
-            color: #990000;
+            color: #333333;
         }
         .info-cliente {
-            border: 1px solid #d5d5d5;
+            border: 1px solid #cccccc;
             border-radius: 8px;
             padding: 6px 12px;
             margin-bottom: 6px;
@@ -1682,14 +1689,15 @@ class PDFGenerator:
             font-size: 8.5px;
         }
         .products-table th {
-            color: #990000;
+            color: #333333;
             padding: 4px 5px;
             text-align: center;
-            border: 1px solid #CC0000;
+            border: 1px solid #cccccc;
+            background: #f5f5f5;
         }
         .products-table td {
             padding: 3px 5px;
-            border: 1px solid #d5d5d5;
+            border: 1px solid #cccccc;
             text-align: center;
             color: #333333;
         }
@@ -1701,7 +1709,7 @@ class PDFGenerator:
         }
         
         .totales-box {
-            border: 2px solid #CC0000;
+            border: 2px solid #999999;
             border-radius: 8px;
             padding: 8px 12px;
             margin-top: 6px;
@@ -1719,18 +1727,18 @@ class PDFGenerator:
         .totales-box .linea.total {
             font-weight: bold;
             font-size: 12px;
-            border-top: 2px solid #CC0000;
+            border-top: 2px solid #999999;
             padding-top: 4px;
             margin-top: 4px;
-            color: #990000;
+            color: #333333;
         }
         .totales-box .linea.total .value-total {
-            color: #CC0000;
+            color: #333333;
             font-size: 14px;
         }
         
         .referencias {
-            border: 1px solid #d5d5d5;
+            border: 1px solid #cccccc;
             border-radius: 8px;
             padding: 6px 12px;
             margin-bottom: 6px;
@@ -1762,7 +1770,7 @@ class PDFGenerator:
             text-align: center;
             margin: 8px 0 5px 0;
             padding: 6px;
-            border: 2px solid #CC0000;
+            border: 2px solid #999999;
             border-radius: 8px;
         }
         .qr-container img {
@@ -1779,14 +1787,13 @@ class PDFGenerator:
             text-align: center;
             font-size: 7.5px;
             color: #888888;
-            border-top: 2px solid #CC0000;
             padding-top: 6px;
         }
         .footer .condicion-pago {
             margin: 4px 0;
             font-size: 8.5px;
             font-weight: bold;
-            color: #990000;
+            color: #333333;
         }
         .observaciones {
             margin-top: 6px;
