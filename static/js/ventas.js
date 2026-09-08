@@ -12340,7 +12340,6 @@ function renderRevision() {
         const estado = r.estado || 'Por validar';
         let badgeEstado = badgeStatus(estado);
         
-        // Mostrar estado especial para rechazadas/aceptadas
         if (estado === 'Rechazada') {
             badgeEstado = `<span class="badge b-canceled">❌ ${estado}</span>`;
             if (r.motivo_rechazo) {
@@ -12352,42 +12351,40 @@ function renderRevision() {
             badgeEstado = `<span class="badge b-pending">⭐ ${estado}</span>`;
         }
         
-        // 🔽 CORRECCIÓN AQUÍ: Incluir "Por validar" como estado revisable
         const esRevisable = estado === 'Por validar' || estado === 'Validado por Hellen' || estado === 'Validado';
         
         let accionesHtml = '';
         
         if (puedeActuar && esRevisable) {
+            // 🔽 BOTONES EN UNA SOLA LÍNEA HORIZONTAL
             accionesHtml = `
-                <div style="display:flex;flex-direction:column;gap:3px;align-items:center;">
-                    <div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;">
-                        <button onclick="openCotizacionModal(${r.id})" 
-                                style="height:24px;padding:0 10px;font-size:9px;border-radius:4px;background:#2563EB;color:#fff;border:0;font-weight:800;cursor:pointer;"
-                                onmouseover="this.style.background='#1D4ED8'"
-                                onmouseout="this.style.background='#2563EB'">
-                            👁️ Ver/Editar
-                        </button>
-                        <button onclick="aceptarRevision(${r.id})" 
-                                style="height:24px;padding:0 10px;font-size:9px;border-radius:4px;background:#16A34A;color:#fff;border:0;font-weight:800;cursor:pointer;"
-                                onmouseover="this.style.background='#15803D'"
-                                onmouseout="this.style.background='#16A34A'">
-                            ✅ Aceptar
-                        </button>
-                        <button onclick="rechazarRevision(${r.id})" 
-                                style="height:24px;padding:0 10px;font-size:9px;border-radius:4px;background:#DC2626;color:#fff;border:0;font-weight:800;cursor:pointer;"
-                                onmouseover="this.style.background='#B91C1C'"
-                                onmouseout="this.style.background='#DC2626'">
-                            ❌ Rechazar
-                        </button>
-                    </div>
+                <div style="display:flex;flex-direction:row;gap:4px;flex-wrap:nowrap;align-items:center;justify-content:center;">
+                    <button onclick="openCotizacionModal(${r.id})" 
+                            style="height:24px;padding:0 10px;font-size:8px;border-radius:4px;background:#2563EB;color:#fff;border:0;font-weight:800;cursor:pointer;white-space:nowrap;"
+                            onmouseover="this.style.background='#1D4ED8'"
+                            onmouseout="this.style.background='#2563EB'">
+                        👁️ Ver
+                    </button>
+                    <button onclick="aceptarRevision(${r.id})" 
+                            style="height:24px;padding:0 10px;font-size:8px;border-radius:4px;background:#16A34A;color:#fff;border:0;font-weight:800;cursor:pointer;white-space:nowrap;"
+                            onmouseover="this.style.background='#15803D'"
+                            onmouseout="this.style.background='#16A34A'">
+                        ✅ Aceptar
+                    </button>
+                    <button onclick="rechazarRevision(${r.id})" 
+                            style="height:24px;padding:0 10px;font-size:8px;border-radius:4px;background:#DC2626;color:#fff;border:0;font-weight:800;cursor:pointer;white-space:nowrap;"
+                            onmouseover="this.style.background='#B91C1C'"
+                            onmouseout="this.style.background='#DC2626'">
+                        ❌ Rechazar
+                    </button>
                 </div>
             `;
         } else if (estado === 'Aceptada por Cliente' || estado === 'Aceptada') {
             accionesHtml = `
-                <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
-                    <span class="badge b-ok">✅ Aceptada</span>
+                <div style="display:flex;flex-direction:row;gap:4px;align-items:center;justify-content:center;">
+                    <span class="badge b-ok" style="font-size:8px;padding:2px 8px;">✅ Aceptada</span>
                     <button onclick="openCotizacionModal(${r.id})" 
-                            style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;"
+                            style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;white-space:nowrap;"
                             onmouseover="this.style.background='#E2E8F0'"
                             onmouseout="this.style.background='#F8FAFC'">
                         👁️ Ver
@@ -12396,10 +12393,10 @@ function renderRevision() {
             `;
         } else if (estado === 'Rechazada') {
             accionesHtml = `
-                <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
-                    <span class="badge b-canceled">❌ Rechazada</span>
+                <div style="display:flex;flex-direction:row;gap:4px;align-items:center;justify-content:center;">
+                    <span class="badge b-canceled" style="font-size:8px;padding:2px 8px;">❌ Rechazada</span>
                     <button onclick="openCotizacionModal(${r.id})" 
-                            style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;"
+                            style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;white-space:nowrap;"
                             onmouseover="this.style.background='#E2E8F0'"
                             onmouseout="this.style.background='#F8FAFC'">
                         👁️ Ver
@@ -12409,7 +12406,7 @@ function renderRevision() {
         } else {
             accionesHtml = `
                 <button onclick="openCotizacionModal(${r.id})" 
-                        style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;"
+                        style="height:22px;padding:0 10px;font-size:8px;border-radius:4px;background:#F8FAFC;border:1px solid #E5E7EB;font-weight:800;cursor:pointer;white-space:nowrap;"
                         onmouseover="this.style.background='#E2E8F0'"
                         onmouseout="this.style.background='#F8FAFC'">
                     👁️ Ver
@@ -12431,10 +12428,8 @@ function renderRevision() {
             <td style="font-size:10px;">${sd(r.vendedor || '--')}</td>
             <td style="font-weight:900;color:#EF233C;font-size:12px;">${money(r.total || r.monto || 0)}</td>
             <td style="font-size:9px;font-weight:800;color:#2563EB;">${sd(validador)}</td>
-            <td>
-                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-                    ${accionesHtml}
-                </div>
+            <td style="min-width:180px;">
+                ${accionesHtml}
             </td>
         </tr>
         `;
