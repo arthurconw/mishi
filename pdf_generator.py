@@ -1,4 +1,4 @@
-# pdf_generator.py - VERSIÓN CON COLORES CORPORATIVOS ROJOS
+# pdf_generator.py - VERSIÓN SIN FONDOS DE COLOR
 
 import os
 from jinja2 import Template
@@ -175,7 +175,7 @@ class PDFGenerator:
             return str(numero)
 
     # ============================================================
-    # GENERAR GUÍA DE REMISIÓN - CON COLORES CORPORATIVOS
+    # GENERAR GUÍA DE REMISIÓN - CON COLORES CORPORATIVOS (SIN FONDOS)
     # ============================================================
     def _generar_guia_remision(self, datos_guia):
         try:
@@ -221,7 +221,6 @@ class PDFGenerator:
         /* ===== COLORES CORPORATIVOS ===== */
         .color-rojo { color: #CC0000; }
         .color-rojo-oscuro { color: #990000; }
-        .bg-rojo-claro { background: #FFF5F5; }
         .border-rojo { border-color: #CC0000; }
         
         .header-superior { 
@@ -289,7 +288,6 @@ class PDFGenerator:
             padding: 8px 18px; 
             text-align: center; 
             min-width: 180px; 
-            background: #FFF5F5;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -327,7 +325,6 @@ class PDFGenerator:
             font-weight: bold;
             font-size: 8.5px;
             text-transform: uppercase;
-            background: #FFF0F0;
             color: #990000;
             padding: 3px 10px;
             margin: 0;
@@ -369,7 +366,6 @@ class PDFGenerator:
             font-size: 8px; 
         }
         .products-table th { 
-            background: #FFF0F0;
             color: #990000;
             padding: 3px 5px; 
             text-align: center; 
@@ -386,7 +382,7 @@ class PDFGenerator:
             text-align: left; 
         }
         .products-table tr:nth-child(even) td {
-            background: #f8f8f8;
+            background: #f9f9f9;
         }
         .qr-container { 
             text-align: center; 
@@ -394,7 +390,6 @@ class PDFGenerator:
             padding: 6px; 
             border: 2px solid #CC0000;
             border-radius: 6px; 
-            background: #FFF5F5;
         }
         .qr-container img { 
             width: 80px; 
@@ -699,7 +694,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return template
         
     # ============================================================
-    # GENERAR FACTURA / BOLETA - CON COLORES CORPORATIVOS
+    # GENERAR FACTURA / BOLETA - CON COLORES CORPORATIVOS (SIN FONDOS)
     # ============================================================
     def _generar_comprobante(self, datos_comprobante):
         try:
@@ -893,7 +888,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         /* ===== COLORES CORPORATIVOS ===== */
         .color-rojo { color: #CC0000; }
         .color-rojo-oscuro { color: #990000; }
-        .bg-rojo-claro { background: #FFF5F5; }
         .border-rojo { border-color: #CC0000; }
         
         .header-superior { 
@@ -960,7 +954,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             padding: 10px 20px; 
             text-align: center; 
             min-width: 200px; 
-            background: #FFF5F5;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -1000,7 +993,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             border-radius: 8px; 
             padding: 6px 12px; 
             margin-bottom: 6px; 
-            background: #f9f9f9;
         }
         .fila { 
             display: flex; 
@@ -1036,7 +1028,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             font-size: 8.5px; 
         }
         .products-table th { 
-            background: #FFF0F0;
             color: #990000;
             padding: 4px 5px; 
             text-align: center; 
@@ -1053,15 +1044,14 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             text-align: left; 
         }
         .products-table tr:nth-child(even) td {
-            background: #f8f8f8;
+            background: #f9f9f9;
         }
         
-        /* ===== CUADRO DE RESUMEN CON COLOR ROJO ===== */
+        /* ===== CUADRO DE RESUMEN CON BORDE ROJO ===== */
         .totales-box { 
             border: 2px solid #CC0000;
             border-radius: 6px; 
             padding: 6px 12px; 
-            background: #FFF5F5;
             margin-top: 6px; 
             display: flex; 
             flex-direction: column; 
@@ -1128,7 +1118,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             border-radius: 8px; 
             padding: 4px 12px; 
             margin-bottom: 6px; 
-            background: #f9f9f9;
         }
         .referencias-grid { 
             display: grid; 
@@ -1158,7 +1147,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             padding: 4px; 
             border: 2px solid #CC0000;
             border-radius: 8px; 
-            background: #FFF5F5;
         }
         .qr-container img { 
             width: 80px; 
@@ -1182,7 +1170,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             padding: 4px 10px; 
             border: 1px solid #e5e7eb; 
             border-radius: 6px; 
-            background: #fafafa; 
             font-size: 8px; 
             color: #555555;
         }
@@ -1191,7 +1178,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             border-radius: 8px;
             padding: 6px 12px;
             margin-bottom: 6px;
-            background: #f9f9f9;
         }
         .seccion-con-borde .seccion-titulo {
             font-weight: bold;
@@ -1467,7 +1453,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             return ""
 
     # ============================================================
-    # GENERAR COTIZACIÓN - CON COLORES CORPORATIVOS
+    # GENERAR COTIZACIÓN - CON COLORES CORPORATIVOS (SIN FONDOS)
     # ============================================================
     def _generar_cotizacion(self, datos):
         try:
@@ -1603,7 +1589,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
         /* ===== COLORES CORPORATIVOS ===== */
         .color-rojo { color: #CC0000; }
         .color-rojo-oscuro { color: #990000; }
-        .bg-rojo-claro { background: #FFF5F5; }
         .border-rojo { border-color: #CC0000; }
         
         .header-superior {
@@ -1670,7 +1655,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             padding: 10px 20px;
             text-align: center;
             min-width: 200px;
-            background: #FFF5F5;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -1710,7 +1694,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             border-radius: 8px;
             padding: 6px 12px;
             margin-bottom: 6px;
-            background: #f9f9f9;
         }
         .fila {
             display: flex;
@@ -1737,7 +1720,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             font-size: 8.5px;
         }
         .products-table th {
-            background: #FFF0F0;
             color: #990000;
             padding: 4px 5px;
             text-align: center;
@@ -1753,14 +1735,13 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             text-align: left;
         }
         .products-table tr:nth-child(even) td {
-            background: #f8f8f8;
+            background: #f9f9f9;
         }
         
         .totales-box {
             border: 2px solid #CC0000;
             border-radius: 8px;
             padding: 8px 12px;
-            background: #FFF5F5;
             margin-top: 6px;
             display: flex;
             flex-direction: column;
@@ -1791,7 +1772,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             border-radius: 8px;
             padding: 6px 12px;
             margin-bottom: 6px;
-            background: #f9f9f9;
         }
         .referencias-grid {
             display: grid;
@@ -1822,7 +1802,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             padding: 6px;
             border: 2px solid #CC0000;
             border-radius: 8px;
-            background: #FFF5F5;
         }
         .qr-container img {
             width: 90px;
@@ -1852,7 +1831,6 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
             padding: 6px 10px;
             border: 1px solid #e5e7eb;
             border-radius: 6px;
-            background: #fafafa;
             font-size: 8.5px;
             color: #555555;
         }
@@ -1974,7 +1952,7 @@ Autorizado mediante resolución N° 214-005-0001193/SUNAT</div>
 
     <div class="seccion">
         <div class="seccion-titulo">CONDICIONES COMERCIALES</div>
-        <div class="info-cliente" style="background:#f9f9f9; padding:4px 12px;">
+        <div class="info-cliente" style="padding:4px 12px;">
             <div class="condiciones">
                 <div class="cond-item">
                     <span class="cond-label">Condición de Pago:</span>
