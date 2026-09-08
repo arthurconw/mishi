@@ -10887,7 +10887,7 @@ function closeDevolucionModal() {
 
 
 // ============================================================
-// FUNCIÓN VALIDADO POR HELLEN
+// FUNCIÓN VALIDADO POR HELLEN - CORREGIDA
 // ============================================================
 
 function validateByHellen() {
@@ -10906,20 +10906,21 @@ function validateByHellen() {
     
     showConfirmModal(
         '✅ ¿Validar cotización por Hellen?',
-        'Estás a punto de marcar esta cotización como <b>"Validada "</b>.',
+        'Estás a punto de marcar esta cotización como <b>"Validado por Hellen"</b>.',
         '⚠️ Esta acción confirma que Hellen ha revisado y validado la cotización.',
         async function() {
             // Mostrar loading en el botón
             const btn = document.querySelector('#cotizacionModal .btn-blue');
-            const originalText = btn?.textContent || '✅ Validado ';
+            const originalText = btn?.textContent || '✅ Validado por Hellen';
             if (btn) {
                 btn.textContent = '⏳ Validando...';
                 btn.disabled = true;
             }
             
             try {
-                await guardarCotizacion('Validado ');
-                showToast('✅ Cotización validada ', 'success');
+                // 🔽 IMPORTANTE: Usar 'Validado por Hellen' (sin espacio al final)
+                await guardarCotizacion('Validado por Hellen');
+                showToast('✅ Cotización validada por Hellen', 'success');
                 closeModal('cotizacionModal');
                 await loadCotizaciones();
             } catch (error) {
@@ -10935,7 +10936,6 @@ function validateByHellen() {
         '✅ Sí, validar'
     );
 }
-
 
 
 
