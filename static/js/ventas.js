@@ -12507,7 +12507,7 @@ async function rechazarRevision(id) {
     showDeleteConfirmModal(
         '❌ ¿Rechazar cotización?',
         `Estás a punto de <b>RECHAZAR</b> la cotización <b>${cotizacion.numero || 'COT-XXXX'}</b> del cliente <b>${cotizacion.cliente || 'Cliente'}</b>.`,
-        '⚠️ La cotización pasará a estado "Rechazada". El vendedor deberá corregirla y volver a enviarla a revisión.',
+        '⚠️ La cotización volverá a estado "Borrador". El vendedor deberá corregirla y volver a enviarla a revisión.',
         async function(motivo) {
             if (!motivo || motivo.trim() === '') {
                 showToast('⚠️ Debes ingresar un motivo de rechazo', 'warning');

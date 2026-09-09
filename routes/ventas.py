@@ -7178,7 +7178,7 @@ def api_cotizaciones_rechazar(id):
         # Verificar que la cotización existe y está en estado correcto
         query_check = """
             SELECT id, estado FROM cotizaciones 
-            WHERE id = %s AND estado IN ('Validado por Hellen', 'Validado')
+            WHERE id = %s AND estado IN ('Validado por Hellen', 'Validado', 'Por validar')
         """
         check = db_query(query_check, (id,))
         
@@ -7188,11 +7188,11 @@ def api_cotizaciones_rechazar(id):
                 'error': 'Cotización no encontrada o no está en estado "Validado por Hellen"'
             }), 404
         
-        # Actualizar estado a "Rechazada"
+        # Actualizar estado a "Borrador" para que el vendedor la corrija y reenvíe
         query_update = """
             UPDATE cotizaciones 
             SET 
-                estado = 'Rechazada',
+                estado = 'Borrador',
                 motivo_rechazo = %s,
                 fecha_rechazo = NOW(),
                 usuario_rechazo_id = %s,
@@ -7207,7 +7207,7 @@ def api_cotizaciones_rechazar(id):
         if result:
             return jsonify({
                 'success': True, 
-                'message': 'Cotización rechazada correctamente',
+                'message': 'Cotización rechazada y devuelta a Borrador',
                 'data': result[0]
             })
         
