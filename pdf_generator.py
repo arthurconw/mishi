@@ -706,7 +706,7 @@ class PDFGenerator:
             <div class="fila"><span class="label">FECHA VENCIMIENTO:</span><span class="value">{{ fecha_vencimiento or '—' }}</span></div>
             <div class="fila"><span class="label">FORMA DE PAGO:</span><span class="value">{{ condicion_pago }}</span></div>
             <div class="fila"><span class="label">MONEDA:</span><span class="value">{{ moneda }}</span></div>
-            <div class="fila"><span class="label">VENDEDOR:</span><span class="value">Helen Blas Príncipe</span></div>
+            <div class="fila"><span class="label">VENDEDOR:</span><span class="value">Hellen Blas Príncipe</span></div>
             <div class="fila"><span class="label">TELÉFONO:</span><span class="value">999932051</span></div>
         </div>
     </div>

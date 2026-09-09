@@ -7089,10 +7089,12 @@ def api_cotizaciones_validar(id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+# routes/ventas.py - Reemplazar la función api_cotizaciones_aceptar
+
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/aceptar', methods=['POST'])
 @login_required
 def api_cotizaciones_aceptar(id):
-    """Acepta una cotización en revisión y la pasa a estado 'Aceptada'"""
+    """Acepta una cotización en revisión y la pasa a estado 'Generada'"""
     try:
         # Verificar que el usuario tenga permisos
         rol = session.get('rol', '').lower()
@@ -7104,10 +7106,10 @@ def api_cotizaciones_aceptar(id):
                 'error': 'No tienes permisos para aceptar cotizaciones'
             }), 403
         
-        # Verificar que la cotización existe y está en estado correcto
+        # Verificar que la cotización existe y está en estado "Validado por Hellen"
         query_check = """
             SELECT id, estado FROM cotizaciones 
-            WHERE id = %s AND estado IN ('Validado por Hellen', 'Validado')
+            WHERE id = %s AND estado IN ('Validado por Hellen', 'Validado', 'Por validar')
         """
         check = db_query(query_check, (id,))
         
@@ -7117,11 +7119,11 @@ def api_cotizaciones_aceptar(id):
                 'error': 'Cotización no encontrada o no está en estado "Validado por Hellen"'
             }), 404
         
-        # Actualizar estado a "Aceptada"
+        # 🔽 CAMBIAR A "Generada" (NO "Aceptada por Cliente")
         query_update = """
             UPDATE cotizaciones 
             SET 
-                estado = 'Aceptada',
+                estado = 'Generada',
                 fecha_aceptacion = NOW(),
                 usuario_aceptacion_id = %s,
                 updated_at = NOW()
@@ -7135,15 +7137,18 @@ def api_cotizaciones_aceptar(id):
         if result:
             return jsonify({
                 'success': True, 
-                'message': 'Cotización aceptada correctamente',
+                'message': '✅ Cotización generada correctamente',
                 'data': result[0]
             })
         
-        return jsonify({'success': False, 'error': 'No se pudo aceptar la cotización'}), 400
+        return jsonify({'success': False, 'error': 'No se pudo generar la cotización'}), 400
         
     except Exception as e:
         print(f"❌ Error en api_cotizaciones_aceptar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
 
 
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/rechazar', methods=['POST'])

@@ -12439,6 +12439,8 @@ function renderRevision() {
     }
 }
 
+// ventas.js - Reemplazar la función aceptarRevision
+
 async function aceptarRevision(id) {
     const cotizacion = revisionData.find(c => c.id === id);
     if (!cotizacion) {
@@ -12452,37 +12454,38 @@ async function aceptarRevision(id) {
     }
     
     showConfirmModal(
-        '✅ ¿Aceptar cotización?',
-        `Estás a punto de <b>ACEPTAR</b> la cotización <b>${cotizacion.numero || 'COT-XXXX'}</b> del cliente <b>${cotizacion.cliente || 'Cliente'}</b>.`,
-        '⚠️ Al aceptar, la cotización pasará a estado "Aceptada por Cliente" y podrá ser generada por el vendedor.',
+        '✅ ¿Generar cotización?',
+        `Estás a punto de <b>GENERAR</b> la cotización <b>${cotizacion.numero || 'COT-XXXX'}</b> del cliente <b>${cotizacion.cliente || 'Cliente'}</b>.`,
+        '⚠️ Al generar, la cotización pasará a estado "Generada" y quedará oficializada.',
         async function() {
             try {
                 showToast('⏳ Procesando...', 'info');
                 
-                // 🔽 Cambiar a "Aceptada por Cliente"
-                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/toggle`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ estado: 'Aceptada por Cliente' })
+                // 🔽 CAMBIAR A "Generada"
+                const response = await apiFetch(`/ventas/api/cotizaciones/${id}/aceptar`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
                 });
                 
                 if (response.success) {
-                    showToast('✅ Cotización aceptada correctamente', 'success');
+                    showToast('✅ Cotización generada correctamente', 'success');
                     await loadRevision();
                     await loadCotizaciones();
                     if (currentModule === 'revision') {
                         renderRevision();
                     }
                 } else {
-                    showToast('❌ Error: ' + (response.error || 'No se pudo aceptar'), 'error');
+                    showToast('❌ Error: ' + (response.error || 'No se pudo generar'), 'error');
                 }
             } catch (error) {
                 console.error('❌ Error:', error);
-                showToast('❌ Error al aceptar: ' + error.message, 'error');
+                showToast('❌ Error al generar: ' + error.message, 'error');
             }
         },
-        '✅ Sí, aceptar'
+        '✅ Sí, generar'
     );
 }
+
 
 /**
  * Rechaza una cotización en revisión con motivo
