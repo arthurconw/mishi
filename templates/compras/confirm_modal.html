@@ -12,7 +12,7 @@
                     <div id="confirmMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
                         ¿Estás seguro de realizar esta acción?
                     </div>
-                    <div id="confirmDetails" style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px;font-size:12px;color:#475569;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                    <div id="confirmDetails" style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px;font-size:12px;color:#475569;font-weight:700;line-height:1.5;margin-bottom:16px;white-space:pre-line;">
                         Detalles de la acción...
                     </div>
                     <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px;font-size:11px;color:#92400E;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
@@ -26,11 +26,9 @@
             <button class="btn btn-secondary" onclick="closeConfirmModal()" style="height:40px;padding:0 20px;font-size:13px;">
                 Cancelar
             </button>
-            <div style="display:flex;gap:8px;">
-                <button class="btn btn-danger" id="confirmModalBtn" onclick="executeConfirmAction()" style="height:40px;padding:0 20px;font-size:13px;">
-                    ✅ Sí, confirmar
-                </button>
-            </div>
+            <button class="btn btn-primary" id="confirmModalBtn" onclick="executeConfirmAction()" style="height:40px;padding:0 20px;font-size:13px;">
+                ✅ Sí, confirmar
+            </button>
         </div>
     </div>
 </div>
@@ -49,7 +47,7 @@
                     <div id="deleteMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
                         ¿Estás seguro de eliminar este registro?
                     </div>
-                    <div id="deleteDetails" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px;font-size:12px;color:#991B1B;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                    <div id="deleteDetails" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px;font-size:12px;color:#991B1B;font-weight:700;line-height:1.5;margin-bottom:16px;white-space:pre-line;">
                         Detalles del registro...
                     </div>
                     <div style="background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:10px;font-size:11px;color:#991B1B;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
@@ -63,7 +61,7 @@
             <button class="btn btn-secondary" onclick="closeDeleteModal()" style="height:40px;padding:0 20px;font-size:13px;">
                 Cancelar
             </button>
-            <button class="btn btn-danger" id="deleteModalBtn" onclick="executeDeleteAction()" style="height:40px;padding:0 20px;font-size:13px;">
+            <button class="btn btn-danger" id="deleteModalBtn" onclick="executeDeleteAction()" style="height:40px;padding:0 20px;font-size:13px;background:#DC2626;color:#fff;border:1px solid #DC2626;">
                 🗑️ Sí, eliminar
             </button>
         </div>
@@ -84,7 +82,7 @@
                     <div id="approveMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
                         ¿Estás seguro de aprobar este registro?
                     </div>
-                    <div id="approveDetails" style="background:#D1FAE5;border:1px solid #A7F3D0;border-radius:8px;padding:10px;font-size:12px;color:#065F46;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                    <div id="approveDetails" style="background:#D1FAE5;border:1px solid #A7F3D0;border-radius:8px;padding:10px;font-size:12px;color:#065F46;font-weight:700;line-height:1.5;margin-bottom:16px;white-space:pre-line;">
                         Detalles del registro...
                     </div>
                     <div style="background:#DCFCE7;border:1px solid #BBF7D0;border-radius:8px;padding:10px;font-size:11px;color:#166534;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
@@ -98,7 +96,7 @@
             <button class="btn btn-secondary" onclick="closeApproveModal()" style="height:40px;padding:0 20px;font-size:13px;">
                 Cancelar
             </button>
-            <button class="btn btn-green" id="approveModalBtn" onclick="executeApproveAction()" style="height:40px;padding:0 20px;font-size:13px;">
+            <button class="btn btn-green" id="approveModalBtn" onclick="executeApproveAction()" style="height:40px;padding:0 20px;font-size:13px;background:#059669;color:#fff;border:1px solid #059669;">
                 ✅ Sí, aprobar
             </button>
         </div>
@@ -119,7 +117,7 @@
                     <div id="sendMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
                         ¿Estás seguro de enviar este documento?
                     </div>
-                    <div id="sendDetails" style="background:#EDE9FE;border:1px solid #C4B5FD;border-radius:8px;padding:10px;font-size:12px;color:#5B21B6;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                    <div id="sendDetails" style="background:#EDE9FE;border:1px solid #C4B5FD;border-radius:8px;padding:10px;font-size:12px;color:#5B21B6;font-weight:700;line-height:1.5;margin-bottom:16px;white-space:pre-line;">
                         Detalles del documento...
                     </div>
                     <div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px;font-size:11px;color:#6D28D9;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
@@ -133,7 +131,7 @@
             <button class="btn btn-secondary" onclick="closeSendModal()" style="height:40px;padding:0 20px;font-size:13px;">
                 Cancelar
             </button>
-            <button class="btn btn-blue" id="sendModalBtn" onclick="executeSendAction()" style="height:40px;padding:0 20px;font-size:13px;">
+            <button class="btn btn-blue" id="sendModalBtn" onclick="executeSendAction()" style="height:40px;padding:0 20px;font-size:13px;background:#2563EB;color:#fff;border:1px solid #2563EB;">
                 📤 Sí, enviar
             </button>
         </div>
@@ -154,7 +152,7 @@
                     <div id="receiveMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
                         ¿Estás seguro de confirmar la recepción?
                     </div>
-                    <div id="receiveDetails" style="background:#DBEAFE;border:1px solid #93C5FD;border-radius:8px;padding:10px;font-size:12px;color:#1E40AF;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                    <div id="receiveDetails" style="background:#DBEAFE;border:1px solid #93C5FD;border-radius:8px;padding:10px;font-size:12px;color:#1E40AF;font-weight:700;line-height:1.5;margin-bottom:16px;white-space:pre-line;">
                         Detalles de la recepción...
                     </div>
                     <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px;font-size:11px;color:#1D4ED8;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
@@ -168,7 +166,7 @@
             <button class="btn btn-secondary" onclick="closeReceiveModal()" style="height:40px;padding:0 20px;font-size:13px;">
                 Cancelar
             </button>
-            <button class="btn btn-blue" id="receiveModalBtn" onclick="executeReceiveAction()" style="height:40px;padding:0 20px;font-size:13px;">
+            <button class="btn btn-blue" id="receiveModalBtn" onclick="executeReceiveAction()" style="height:40px;padding:0 20px;font-size:13px;background:#2563EB;color:#fff;border:1px solid #2563EB;">
                 📦 Sí, confirmar recepción
             </button>
         </div>
