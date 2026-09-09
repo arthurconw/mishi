@@ -74,6 +74,7 @@ def obtener_solicitud_por_id_db(solicitud_id):
         print(f"❌ Error en obtener_solicitud_por_id_db: {e}")
         return None
 
+
 def guardar_solicitud_db(data):
     """Guarda una nueva solicitud de compra"""
     try:
@@ -581,6 +582,7 @@ def api_solicitudes_listar():
         print(f"❌ Error en api_solicitudes_listar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @compras_bp.route('/compras/api/solicitudes/guardar', methods=['POST'])
 @login_required
 def api_solicitudes_guardar():
@@ -597,12 +599,51 @@ def api_solicitudes_guardar():
         
         # Si tiene ID, actualizar
         if data.get('id'):
-            result = actualizar_solicitud_db(data['id'], data)
+            print(f"✏️ Actualizando solicitud ID: {data['id']}")
+            
+            # Verificar que la solicitud existe
+            existing = obtener_solicitud_por_id_db(data['id'])
+            if not existing:
+                return jsonify({'success': False, 'error': 'Solicitud no encontrada'}), 404
+            
+            # Actualizar solicitud
+            query = """
+                UPDATE solicitudes_compra SET
+                    producto = %s,
+                    cantidad = %s,
+                    unidad = %s,
+                    area = %s,
+                    solicitante = %s,
+                    urgencia = %s,
+                    justificacion = %s,
+                    estado = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+                RETURNING id, numero_solicitud
+            """
+            params = (
+                data.get('producto'),
+                float(data.get('cantidad', 1)),
+                data.get('unidad', 'UND'),
+                data.get('area'),
+                data.get('solicitante'),
+                data.get('urgencia', 'Media'),
+                data.get('justificacion', ''),
+                data.get('estado', 'Borrador'),
+                data['id']
+            )
+            result = db_query(query, params)
+            
             if result:
-                return jsonify({'success': True, 'message': 'Solicitud actualizada', 'data': result})
+                return jsonify({
+                    'success': True, 
+                    'message': 'Solicitud actualizada', 
+                    'data': result[0]
+                })
             return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
         
         # Si no tiene ID, crear nueva
+        print(f"🆕 Creando nueva solicitud")
         result = guardar_solicitud_db(data)
         if result:
             return jsonify({'success': True, 'message': 'Solicitud creada', 'data': result})
@@ -613,6 +654,7 @@ def api_solicitudes_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @compras_bp.route('/compras/api/solicitudes/<int:id>/toggle', methods=['PUT'])
 @login_required

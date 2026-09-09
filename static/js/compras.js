@@ -955,6 +955,7 @@ async function saveSolicitud(estado) {
     const editId = document.querySelector('#solicitudModal .btn-primary')?.dataset?.editId;
     
     const data = {
+        id: editId ? parseInt(editId) : null,  // Enviar ID si existe
         numero_solicitud: document.getElementById('solNumero').value,
         fecha: document.getElementById('solFecha').value,
         estado: estado,
