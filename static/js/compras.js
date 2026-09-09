@@ -19,6 +19,185 @@ let comprobantesProveedorData = window.comprobantesProveedorData;
 let recepcionesData = window.recepcionesData;
 
 // ============================================================
+// VARIABLES GLOBALES PARA CONFIRMACIONES
+// ============================================================
+
+let confirmActionCallback = null;
+let deleteActionCallback = null;
+let approveActionCallback = null;
+let sendActionCallback = null;
+let receiveActionCallback = null;
+let editActionCallback = null;
+let storeActionCallback = null;
+
+// ============================================================
+// FUNCIONES PARA MODALES DE CONFIRMACIÓN
+// ============================================================
+
+function showConfirmModal(options) {
+    const modal = document.getElementById('confirmModal');
+    if (!modal) {
+        console.warn('⚠️ confirmModal no encontrado');
+        return;
+    }
+    
+    document.getElementById('confirmModalTitle').textContent = options.title || '⚠️ Confirmación';
+    document.getElementById('confirmMessage').textContent = options.message || '¿Estás seguro de realizar esta acción?';
+    document.getElementById('confirmDetails').textContent = options.details || '';
+    document.getElementById('confirmIcon').textContent = options.icon || '⚠️';
+    
+    const btn = document.getElementById('confirmModalBtn');
+    if (btn) {
+        btn.textContent = options.confirmText || '✅ Sí, confirmar';
+        btn.className = `btn ${options.btnClass || 'btn-primary'}`;
+    }
+    
+    confirmActionCallback = options.onConfirm;
+    modal.classList.add('show');
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirmModal');
+    if (modal) modal.classList.remove('show');
+    confirmActionCallback = null;
+}
+
+function executeConfirmAction() {
+    if (confirmActionCallback) {
+        confirmActionCallback();
+    }
+    closeConfirmModal();
+}
+
+// ============================================================
+// MODAL DE ELIMINACIÓN
+// ============================================================
+
+function showDeleteModal(options) {
+    const modal = document.getElementById('deleteModal');
+    if (!modal) {
+        console.warn('⚠️ deleteModal no encontrado');
+        return;
+    }
+    
+    document.getElementById('deleteModalTitle').textContent = options.title || '🗑️ Confirmar eliminación';
+    document.getElementById('deleteMessage').textContent = options.message || '¿Estás seguro de eliminar este registro?';
+    document.getElementById('deleteDetails').textContent = options.details || '';
+    
+    deleteActionCallback = options.onConfirm;
+    modal.classList.add('show');
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.classList.remove('show');
+    deleteActionCallback = null;
+}
+
+function executeDeleteAction() {
+    if (deleteActionCallback) {
+        deleteActionCallback();
+    }
+    closeDeleteModal();
+}
+
+// ============================================================
+// MODAL DE APROBACIÓN
+// ============================================================
+
+function showApproveModal(options) {
+    const modal = document.getElementById('approveModal');
+    if (!modal) {
+        console.warn('⚠️ approveModal no encontrado');
+        return;
+    }
+    
+    document.getElementById('approveModalTitle').textContent = options.title || '✅ Confirmar aprobación';
+    document.getElementById('approveMessage').textContent = options.message || '¿Estás seguro de aprobar este registro?';
+    document.getElementById('approveDetails').textContent = options.details || '';
+    
+    approveActionCallback = options.onConfirm;
+    modal.classList.add('show');
+}
+
+function closeApproveModal() {
+    const modal = document.getElementById('approveModal');
+    if (modal) modal.classList.remove('show');
+    approveActionCallback = null;
+}
+
+function executeApproveAction() {
+    if (approveActionCallback) {
+        approveActionCallback();
+    }
+    closeApproveModal();
+}
+
+// ============================================================
+// MODAL DE ENVÍO
+// ============================================================
+
+function showSendModal(options) {
+    const modal = document.getElementById('sendModal');
+    if (!modal) {
+        console.warn('⚠️ sendModal no encontrado');
+        return;
+    }
+    
+    document.getElementById('sendModalTitle').textContent = options.title || '📤 Confirmar envío';
+    document.getElementById('sendMessage').textContent = options.message || '¿Estás seguro de enviar este documento?';
+    document.getElementById('sendDetails').textContent = options.details || '';
+    
+    sendActionCallback = options.onConfirm;
+    modal.classList.add('show');
+}
+
+function closeSendModal() {
+    const modal = document.getElementById('sendModal');
+    if (modal) modal.classList.remove('show');
+    sendActionCallback = null;
+}
+
+function executeSendAction() {
+    if (sendActionCallback) {
+        sendActionCallback();
+    }
+    closeSendModal();
+}
+
+// ============================================================
+// MODAL DE RECEPCIÓN
+// ============================================================
+
+function showReceiveModal(options) {
+    const modal = document.getElementById('receiveModal');
+    if (!modal) {
+        console.warn('⚠️ receiveModal no encontrado');
+        return;
+    }
+    
+    document.getElementById('receiveModalTitle').textContent = options.title || '📦 Confirmar recepción';
+    document.getElementById('receiveMessage').textContent = options.message || '¿Estás seguro de confirmar la recepción?';
+    document.getElementById('receiveDetails').textContent = options.details || '';
+    
+    receiveActionCallback = options.onConfirm;
+    modal.classList.add('show');
+}
+
+function closeReceiveModal() {
+    const modal = document.getElementById('receiveModal');
+    if (modal) modal.classList.remove('show');
+    receiveActionCallback = null;
+}
+
+function executeReceiveAction() {
+    if (receiveActionCallback) {
+        receiveActionCallback();
+    }
+    closeReceiveModal();
+}
+
+// ============================================================
 // FUNCIONES DE RENDERIZADO
 // ============================================================
 
@@ -654,264 +833,455 @@ function editRecepcion(id) {
 }
 
 // ============================================================
-// FUNCIONES DE ACCIONES (CON API)
+// FUNCIONES DE ACCIONES (CON MODALES DE CONFIRMACIÓN)
 // ============================================================
 
 async function approveSolicitud(id) {
-    try {
-        const response = await fetch(`/compras/api/solicitudes/${id}/toggle`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estado: 'Aprobada' })
-        });
-        const result = await response.json();
-        if (result.success) {
-            showToast('✅ Solicitud aprobada', 'success');
-            await cargarDatosCompras();
-            renderSolicitudes();
-        } else {
-            showToast(`❌ Error: ${result.error}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error aprobando solicitud:', error);
-        showToast('❌ Error al aprobar', 'error');
+    const solicitud = solicitudesData.find(s => s.id === id);
+    if (!solicitud) {
+        showToast('❌ Solicitud no encontrada', 'error');
+        return;
     }
+    
+    showApproveModal({
+        title: '✅ Aprobar solicitud de compra',
+        message: '¿Estás seguro de aprobar esta solicitud de compra?',
+        details: `📋 Solicitud: ${solicitud.numero}\n📦 Producto: ${solicitud.producto}\n👤 Solicitante: ${solicitud.solicitante}\n📅 Fecha: ${formatearFecha(solicitud.fecha)}`,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/solicitudes/${id}/toggle`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'Aprobada' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Solicitud aprobada correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderSolicitudes();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error aprobando solicitud:', error);
+                showToast('❌ Error al aprobar', 'error');
+            }
+        }
+    });
 }
 
 async function deleteSolicitud(id) {
-    if (confirm('¿Eliminar esta solicitud?')) {
-        try {
-            const response = await fetch(`/compras/api/solicitudes/${id}`, {
-                method: 'DELETE'
-            });
-            const result = await response.json();
-            if (result.success) {
-                showToast('🗑 Solicitud eliminada', 'success');
-                await cargarDatosCompras();
-                renderSolicitudes();
-            } else {
-                showToast(`❌ Error: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            console.error('Error eliminando solicitud:', error);
-            showToast('❌ Error al eliminar', 'error');
-        }
+    const solicitud = solicitudesData.find(s => s.id === id);
+    if (!solicitud) {
+        showToast('❌ Solicitud no encontrada', 'error');
+        return;
     }
+    
+    showDeleteModal({
+        title: '🗑️ Eliminar solicitud de compra',
+        message: '¿Estás seguro de eliminar esta solicitud de compra?',
+        details: `📋 Solicitud: ${solicitud.numero}\n📦 Producto: ${solicitud.producto}\n👤 Solicitante: ${solicitud.solicitante}\n📅 Fecha: ${formatearFecha(solicitud.fecha)}`,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/solicitudes/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Solicitud eliminada correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderSolicitudes();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error eliminando solicitud:', error);
+                showToast('❌ Error al eliminar', 'error');
+            }
+        }
+    });
 }
 
 async function deleteComparativo(id) {
-    if (confirm('¿Eliminar este comparativo?')) {
-        try {
-            const response = await fetch(`/compras/api/comparativos/${id}`, {
-                method: 'DELETE'
-            });
-            const result = await response.json();
-            if (result.success) {
-                showToast('🗑 Comparativo eliminado', 'success');
-                await cargarDatosCompras();
-                renderComparativos();
-            } else {
-                showToast(`❌ Error: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            console.error('Error eliminando comparativo:', error);
-            showToast('❌ Error al eliminar', 'error');
-        }
+    const comparativo = comparativosData.find(c => c.id === id);
+    if (!comparativo) {
+        showToast('❌ Comparativo no encontrado', 'error');
+        return;
     }
+    
+    showDeleteModal({
+        title: '🗑️ Eliminar comparativo',
+        message: '¿Estás seguro de eliminar este comparativo?',
+        details: `📊 Comparativo: ${comparativo.numero}\n📦 Producto: ${comparativo.producto}\n📅 Fecha: ${formatearFecha(comparativo.fecha)}`,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/comparativos/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Comparativo eliminado correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderComparativos();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error eliminando comparativo:', error);
+                showToast('❌ Error al eliminar', 'error');
+            }
+        }
+    });
 }
 
 async function deleteOrden(id) {
-    if (confirm('¿Eliminar esta orden de compra?')) {
-        try {
-            const response = await fetch(`/compras/api/ordenes/${id}`, {
-                method: 'DELETE'
-            });
-            const result = await response.json();
-            if (result.success) {
-                showToast('🗑 Orden eliminada', 'success');
-                await cargarDatosCompras();
-                renderOrdenes();
-            } else {
-                showToast(`❌ Error: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            console.error('Error eliminando orden:', error);
-            showToast('❌ Error al eliminar', 'error');
-        }
+    const orden = ordenesData.find(o => o.id === id);
+    if (!orden) {
+        showToast('❌ Orden no encontrada', 'error');
+        return;
     }
+    
+    showDeleteModal({
+        title: '🗑️ Eliminar orden de compra',
+        message: '¿Estás seguro de eliminar esta orden de compra?',
+        details: `📄 Orden: ${orden.numero}\n🏢 Proveedor: ${orden.proveedor}\n💰 Total: ${orden.moneda || 'S/'} ${orden.total.toFixed(2)}`,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/ordenes/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Orden eliminada correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderOrdenes();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error eliminando orden:', error);
+                showToast('❌ Error al eliminar', 'error');
+            }
+        }
+    });
 }
 
 async function sendOrden(id) {
-    try {
-        const response = await fetch(`/compras/api/ordenes/${id}/toggle`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estado: 'Enviada' })
-        });
-        const result = await response.json();
-        if (result.success) {
-            showToast('📤 Orden enviada al proveedor', 'success');
-            await cargarDatosCompras();
-            renderOrdenes();
-        } else {
-            showToast(`❌ Error: ${result.error}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error enviando orden:', error);
-        showToast('❌ Error al enviar', 'error');
+    const orden = ordenesData.find(o => o.id === id);
+    if (!orden) {
+        showToast('❌ Orden no encontrada', 'error');
+        return;
     }
+    
+    showSendModal({
+        title: '📤 Enviar orden de compra',
+        message: '¿Estás seguro de enviar esta orden de compra al proveedor?',
+        details: `📄 Orden: ${orden.numero}\n🏢 Proveedor: ${orden.proveedor}\n💰 Total: ${orden.moneda || 'S/'} ${orden.total.toFixed(2)}`,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/ordenes/${id}/toggle`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'Enviada' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('📤 Orden enviada al proveedor correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderOrdenes();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error enviando orden:', error);
+                showToast('❌ Error al enviar', 'error');
+            }
+        }
+    });
 }
 
 async function deleteComprobanteProveedor(id) {
-    if (confirm('¿Eliminar este comprobante?')) {
-        try {
-            const response = await fetch(`/compras/api/comprobantes-proveedor/${id}`, {
-                method: 'DELETE'
-            });
-            const result = await response.json();
-            if (result.success) {
-                showToast('🗑 Comprobante eliminado', 'success');
-                await cargarDatosCompras();
-                renderComprobantesProveedor();
-            } else {
-                showToast(`❌ Error: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            console.error('Error eliminando comprobante:', error);
-            showToast('❌ Error al eliminar', 'error');
-        }
+    const comprobante = comprobantesProveedorData.find(c => c.id === id);
+    if (!comprobante) {
+        showToast('❌ Comprobante no encontrado', 'error');
+        return;
     }
+    
+    showDeleteModal({
+        title: '🗑️ Eliminar comprobante',
+        message: '¿Estás seguro de eliminar este comprobante?',
+        details: `🧾 Tipo: ${comprobante.tipo}\n📋 N°: ${comprobante.numero}\n🏢 Proveedor: ${comprobante.proveedor}\n💰 Monto: S/ ${comprobante.monto.toFixed(2)}`,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/comprobantes-proveedor/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Comprobante eliminado correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderComprobantesProveedor();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error eliminando comprobante:', error);
+                showToast('❌ Error al eliminar', 'error');
+            }
+        }
+    });
 }
 
 async function deleteRecepcion(id) {
-    if (confirm('¿Eliminar esta recepción?')) {
-        try {
-            const response = await fetch(`/compras/api/recepciones/${id}`, {
-                method: 'DELETE'
-            });
-            const result = await response.json();
-            if (result.success) {
-                showToast('🗑 Recepción eliminada', 'success');
-                await cargarDatosCompras();
-                renderRecepciones();
-            } else {
-                showToast(`❌ Error: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            console.error('Error eliminando recepción:', error);
-            showToast('❌ Error al eliminar', 'error');
-        }
+    const recepcion = recepcionesData.find(r => r.id === id);
+    if (!recepcion) {
+        showToast('❌ Recepción no encontrada', 'error');
+        return;
     }
+    
+    showDeleteModal({
+        title: '🗑️ Eliminar recepción',
+        message: '¿Estás seguro de eliminar esta recepción?',
+        details: `📦 Recepción: ${recepcion.numero}\n📄 Orden: ${recepcion.orden}\n🏢 Proveedor: ${recepcion.proveedor}\n📦 Producto: ${recepcion.producto}`,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/recepciones/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Recepción eliminada correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderRecepciones();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error eliminando recepción:', error);
+                showToast('❌ Error al eliminar', 'error');
+            }
+        }
+    });
 }
 
 async function approveRecepcion(id) {
-    try {
-        const response = await fetch(`/compras/api/recepciones/${id}/toggle`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estado: 'Aprobada' })
-        });
-        const result = await response.json();
-        if (result.success) {
-            showToast('✅ Recepción aprobada', 'success');
-            await cargarDatosCompras();
-            renderRecepciones();
-        } else {
-            showToast(`❌ Error: ${result.error}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error aprobando recepción:', error);
-        showToast('❌ Error al aprobar', 'error');
+    const recepcion = recepcionesData.find(r => r.id === id);
+    if (!recepcion) {
+        showToast('❌ Recepción no encontrada', 'error');
+        return;
     }
+    
+    showApproveModal({
+        title: '✅ Aprobar recepción de mercadería',
+        message: '¿Estás seguro de aprobar esta recepción?',
+        details: `📦 Recepción: ${recepcion.numero}\n📦 Producto: ${recepcion.producto}\n💰 Cantidad: ${recepcion.cantidad} ${recepcion.unidad}\n🏢 Proveedor: ${recepcion.proveedor}`,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/recepciones/${id}/toggle`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'Aprobada' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Recepción aprobada correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderRecepciones();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error aprobando recepción:', error);
+                showToast('❌ Error al aprobar', 'error');
+            }
+        }
+    });
 }
 
 async function payComprobanteProveedor(id) {
-    try {
-        const response = await fetch(`/compras/api/comprobantes-proveedor/${id}/toggle`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estado: 'Pagado' })
-        });
-        const result = await response.json();
-        if (result.success) {
-            showToast('💰 Comprobante marcado como pagado', 'success');
-            await cargarDatosCompras();
-            renderComprobantesProveedor();
-        } else {
-            showToast(`❌ Error: ${result.error}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error pagando comprobante:', error);
-        showToast('❌ Error al pagar', 'error');
+    const comprobante = comprobantesProveedorData.find(c => c.id === id);
+    if (!comprobante) {
+        showToast('❌ Comprobante no encontrado', 'error');
+        return;
     }
+    
+    showConfirmModal({
+        title: '💰 Confirmar pago',
+        message: '¿Estás seguro de marcar este comprobante como pagado?',
+        details: `🧾 Comprobante: ${comprobante.numero}\n🏢 Proveedor: ${comprobante.proveedor}\n💰 Monto: S/ ${comprobante.monto.toFixed(2)}`,
+        icon: '💰',
+        btnClass: 'btn-green',
+        confirmText: '💰 Sí, marcar pagado',
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/comprobantes-proveedor/${id}/toggle`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'Pagado' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('💰 Comprobante marcado como pagado', 'success');
+                    await cargarDatosCompras();
+                    renderComprobantesProveedor();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error pagando comprobante:', error);
+                showToast('❌ Error al pagar', 'error');
+            }
+        }
+    });
 }
 
 async function selectProveedor(id) {
-    try {
-        const response = await fetch(`/compras/api/comparativos/${id}/toggle`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estado: 'Seleccionado' })
-        });
-        const result = await response.json();
-        if (result.success) {
-            showToast('✅ Proveedor seleccionado', 'success');
-            await cargarDatosCompras();
-            renderComparativos();
-        } else {
-            showToast(`❌ Error: ${result.error}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error seleccionando proveedor:', error);
-        showToast('❌ Error al seleccionar', 'error');
+    const comparativo = comparativosData.find(c => c.id === id);
+    if (!comparativo) {
+        showToast('❌ Comparativo no encontrado', 'error');
+        return;
     }
+    
+    const proveedorSeleccionado = (comparativo.proveedores || []).reduce((min, p) => {
+        if (!min || min.precio === undefined) return p;
+        return (p.precio || 0) < (min.precio || 0) ? p : min;
+    }, null);
+    
+    showConfirmModal({
+        title: '✅ Seleccionar proveedor',
+        message: '¿Estás seguro de seleccionar este proveedor para la compra?',
+        details: `📊 Comparativo: ${comparativo.numero}\n📦 Producto: ${comparativo.producto}\n🏢 Proveedor: ${proveedorSeleccionado?.nombre || 'No disponible'}\n💰 Precio: S/ ${proveedorSeleccionado?.precio?.toFixed(2) || '0.00'}`,
+        icon: '✅',
+        btnClass: 'btn-green',
+        confirmText: '✅ Sí, seleccionar',
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/comparativos/${id}/toggle`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'Seleccionado' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Proveedor seleccionado correctamente', 'success');
+                    await cargarDatosCompras();
+                    renderComparativos();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error seleccionando proveedor:', error);
+                showToast('❌ Error al seleccionar', 'error');
+            }
+        }
+    });
 }
 
 function createOrdenFromSolicitud(id) {
     const solicitud = solicitudesData.find(s => s.id === id);
-    if (solicitud) {
-        const nuevaOrden = {
-            id: ordenesData.length + 1,
-            numero: `OC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(ordenesData.length + 1).padStart(4,'0')}`,
-            fecha: new Date().toISOString().slice(0,10),
-            estado: 'Borrador',
-            proveedor: 'Por definir',
-            ruc: 'Por definir',
-            condPago: 'Contado',
-            moneda: 'Soles (S/)',
-            items: [{ producto: solicitud.producto, cantidad: solicitud.cantidad, precioUnitario: 0, total: 0 }],
-            subtotal: 0,
-            igv: 0,
-            total: 0
-        };
-        ordenesData.push(nuevaOrden);
-        renderOrdenes();
-        showToast(`📄 Orden de compra creada desde solicitud ${solicitud.numero}`, 'success');
-        switchTab('orden_compra');
+    if (!solicitud) {
+        showToast('❌ Solicitud no encontrada', 'error');
+        return;
     }
+    
+    showConfirmModal({
+        title: '📄 Crear orden de compra',
+        message: '¿Estás seguro de crear una orden de compra desde esta solicitud?',
+        details: `📋 Solicitud: ${solicitud.numero}\n📦 Producto: ${solicitud.producto}\n💰 Cantidad: ${solicitud.cantidad} ${solicitud.unidad}`,
+        icon: '📄',
+        btnClass: 'btn-blue',
+        confirmText: '📄 Sí, crear orden',
+        onConfirm: () => {
+            const nuevaOrden = {
+                id: ordenesData.length + 1,
+                numero: `OC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(ordenesData.length + 1).padStart(4,'0')}`,
+                fecha: new Date().toISOString().slice(0,10),
+                estado: 'Borrador',
+                proveedor: 'Por definir',
+                ruc: 'Por definir',
+                condPago: 'Contado',
+                moneda: 'Soles (S/)',
+                items: [{ producto: solicitud.producto, cantidad: solicitud.cantidad, precioUnitario: 0, total: 0 }],
+                subtotal: 0,
+                igv: 0,
+                total: 0
+            };
+            ordenesData.push(nuevaOrden);
+            renderOrdenes();
+            showToast(`📄 Orden de compra creada desde solicitud ${solicitud.numero}`, 'success');
+            switchTab('orden_compra');
+        }
+    });
 }
 
 function createRecepcionFromOrden(id) {
     const orden = ordenesData.find(o => o.id === id);
-    if (orden) {
-        const nuevaRecepcion = {
-            id: recepcionesData.length + 1,
-            numero: `REC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(recepcionesData.length + 1).padStart(4,'0')}`,
-            fecha: new Date().toISOString().slice(0,10),
-            estado: 'Pendiente',
-            orden: orden.numero,
-            proveedor: orden.proveedor,
-            producto: orden.items.map(i => i.producto).join(', '),
-            cantidad: orden.items.reduce((sum, i) => sum + i.cantidad, 0),
-            unidad: 'UND',
-            estadoMercaderia: 'Buen estado',
-            obs: ''
-        };
-        recepcionesData.push(nuevaRecepcion);
-        renderRecepciones();
-        showToast(`📦 Recepción creada desde orden ${orden.numero}`, 'success');
-        switchTab('recepcion');
+    if (!orden) {
+        showToast('❌ Orden no encontrada', 'error');
+        return;
     }
+    
+    showReceiveModal({
+        title: '📦 Confirmar recepción',
+        message: '¿Estás seguro de crear una recepción desde esta orden de compra?',
+        details: `📄 Orden: ${orden.numero}\n🏢 Proveedor: ${orden.proveedor}\n💰 Total: ${orden.moneda || 'S/'} ${orden.total.toFixed(2)}`,
+        onConfirm: () => {
+            const nuevaRecepcion = {
+                id: recepcionesData.length + 1,
+                numero: `REC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(recepcionesData.length + 1).padStart(4,'0')}`,
+                fecha: new Date().toISOString().slice(0,10),
+                estado: 'Pendiente',
+                orden: orden.numero,
+                proveedor: orden.proveedor,
+                producto: (orden.items || []).map(i => i.producto).join(', '),
+                cantidad: (orden.items || []).reduce((sum, i) => sum + i.cantidad, 0),
+                unidad: 'UND',
+                estadoMercaderia: 'Buen estado',
+                obs: ''
+            };
+            recepcionesData.push(nuevaRecepcion);
+            renderRecepciones();
+            showToast(`📦 Recepción creada desde orden ${orden.numero}`, 'success');
+            switchTab('recepcion');
+        }
+    });
+}
+
+async function storeRecepcion(id) {
+    const recepcion = recepcionesData.find(r => r.id === id);
+    if (!recepcion) {
+        showToast('❌ Recepción no encontrada', 'error');
+        return;
+    }
+    
+    showConfirmModal({
+        title: '📦 Almacenar mercadería',
+        message: '¿Estás seguro de almacenar esta mercadería en el inventario?',
+        details: `📦 Recepción: ${recepcion.numero}\n📦 Producto: ${recepcion.producto}\n💰 Cantidad: ${recepcion.cantidad} ${recepcion.unidad}\n🏢 Proveedor: ${recepcion.proveedor}`,
+        icon: '📦',
+        btnClass: 'btn-green',
+        confirmText: '📦 Sí, almacenar',
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/compras/api/recepciones/${id}/toggle`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'Almacenada' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('📦 Mercadería almacenada en inventario', 'success');
+                    await cargarDatosCompras();
+                    renderRecepciones();
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error almacenando recepción:', error);
+                showToast('❌ Error al almacenar', 'error');
+            }
+        }
+    });
 }
 
 // ============================================================
@@ -955,7 +1325,7 @@ async function saveSolicitud(estado) {
     const editId = document.querySelector('#solicitudModal .btn-primary')?.dataset?.editId;
     
     const data = {
-        id: editId ? parseInt(editId) : null,  // Enviar ID si existe
+        id: editId ? parseInt(editId) : null,
         numero_solicitud: document.getElementById('solNumero').value,
         fecha: document.getElementById('solFecha').value,
         estado: estado,
@@ -1449,5 +1819,23 @@ window.payComprobanteProveedor = payComprobanteProveedor;
 window.selectProveedor = selectProveedor;
 window.createOrdenFromSolicitud = createOrdenFromSolicitud;
 window.createRecepcionFromOrden = createRecepcionFromOrden;
+window.storeRecepcion = storeRecepcion;
+
+// Funciones de modales de confirmación
+window.showConfirmModal = showConfirmModal;
+window.closeConfirmModal = closeConfirmModal;
+window.executeConfirmAction = executeConfirmAction;
+window.showDeleteModal = showDeleteModal;
+window.closeDeleteModal = closeDeleteModal;
+window.executeDeleteAction = executeDeleteAction;
+window.showApproveModal = showApproveModal;
+window.closeApproveModal = closeApproveModal;
+window.executeApproveAction = executeApproveAction;
+window.showSendModal = showSendModal;
+window.closeSendModal = closeSendModal;
+window.executeSendAction = executeSendAction;
+window.showReceiveModal = showReceiveModal;
+window.closeReceiveModal = closeReceiveModal;
+window.executeReceiveAction = executeReceiveAction;
 
 console.log('✅ Módulo de Compras cargado correctamente');

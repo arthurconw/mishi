@@ -1,0 +1,176 @@
+<!-- MODAL DE CONFIRMACIÓN GENÉRICO -->
+<div class="modal-bg" id="confirmModal">
+    <div class="modal-box" style="width:min(480px,90vw); max-height:70vh;">
+        <div class="modal-head" style="background:#EF233C;">
+            <div class="modal-title" id="confirmModalTitle">⚠️ Confirmación</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeConfirmModal()">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div style="display:flex;align-items:flex-start;gap:16px;">
+                <div id="confirmIcon" style="font-size:40px;line-height:1;">⚠️</div>
+                <div style="flex:1;">
+                    <div id="confirmMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
+                        ¿Estás seguro de realizar esta acción?
+                    </div>
+                    <div id="confirmDetails" style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px;font-size:12px;color:#475569;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                        Detalles de la acción...
+                    </div>
+                    <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px;font-size:11px;color:#92400E;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:18px;">⚠️</span>
+                        <span>Esta acción no se puede deshacer</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <button class="btn btn-secondary" onclick="closeConfirmModal()" style="height:40px;padding:0 20px;font-size:13px;">
+                Cancelar
+            </button>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-danger" id="confirmModalBtn" onclick="executeConfirmAction()" style="height:40px;padding:0 20px;font-size:13px;">
+                    ✅ Sí, confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CONFIRMACIÓN PARA ELIMINAR -->
+<div class="modal-bg" id="deleteModal">
+    <div class="modal-box" style="width:min(480px,90vw); max-height:70vh;">
+        <div class="modal-head" style="background:#DC2626;">
+            <div class="modal-title" id="deleteModalTitle">🗑️ Confirmar eliminación</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeDeleteModal()">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div style="display:flex;align-items:flex-start;gap:16px;">
+                <div style="font-size:40px;line-height:1;">🗑️</div>
+                <div style="flex:1;">
+                    <div id="deleteMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
+                        ¿Estás seguro de eliminar este registro?
+                    </div>
+                    <div id="deleteDetails" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px;font-size:12px;color:#991B1B;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                        Detalles del registro...
+                    </div>
+                    <div style="background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:10px;font-size:11px;color:#991B1B;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:18px;">⚠️</span>
+                        <span>Al eliminar este registro se perderán todos los datos asociados</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()" style="height:40px;padding:0 20px;font-size:13px;">
+                Cancelar
+            </button>
+            <button class="btn btn-danger" id="deleteModalBtn" onclick="executeDeleteAction()" style="height:40px;padding:0 20px;font-size:13px;">
+                🗑️ Sí, eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CONFIRMACIÓN PARA APROBACIÓN -->
+<div class="modal-bg" id="approveModal">
+    <div class="modal-box" style="width:min(500px,90vw); max-height:70vh;">
+        <div class="modal-head" style="background:#059669;">
+            <div class="modal-title" id="approveModalTitle">✅ Confirmar aprobación</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeApproveModal()">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div style="display:flex;align-items:flex-start;gap:16px;">
+                <div style="font-size:40px;line-height:1;">✅</div>
+                <div style="flex:1;">
+                    <div id="approveMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
+                        ¿Estás seguro de aprobar este registro?
+                    </div>
+                    <div id="approveDetails" style="background:#D1FAE5;border:1px solid #A7F3D0;border-radius:8px;padding:10px;font-size:12px;color:#065F46;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                        Detalles del registro...
+                    </div>
+                    <div style="background:#DCFCE7;border:1px solid #BBF7D0;border-radius:8px;padding:10px;font-size:11px;color:#166534;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:18px;">ℹ️</span>
+                        <span>Una vez aprobado, no podrás editar los datos fácilmente</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <button class="btn btn-secondary" onclick="closeApproveModal()" style="height:40px;padding:0 20px;font-size:13px;">
+                Cancelar
+            </button>
+            <button class="btn btn-green" id="approveModalBtn" onclick="executeApproveAction()" style="height:40px;padding:0 20px;font-size:13px;">
+                ✅ Sí, aprobar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CONFIRMACIÓN PARA ENVÍO -->
+<div class="modal-bg" id="sendModal">
+    <div class="modal-box" style="width:min(500px,90vw); max-height:70vh;">
+        <div class="modal-head" style="background:#7C3AED;">
+            <div class="modal-title" id="sendModalTitle">📤 Confirmar envío</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeSendModal()">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div style="display:flex;align-items:flex-start;gap:16px;">
+                <div style="font-size:40px;line-height:1;">📤</div>
+                <div style="flex:1;">
+                    <div id="sendMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
+                        ¿Estás seguro de enviar este documento?
+                    </div>
+                    <div id="sendDetails" style="background:#EDE9FE;border:1px solid #C4B5FD;border-radius:8px;padding:10px;font-size:12px;color:#5B21B6;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                        Detalles del documento...
+                    </div>
+                    <div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px;font-size:11px;color:#6D28D9;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:18px;">ℹ️</span>
+                        <span>Una vez enviado, el documento será visible para el proveedor</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <button class="btn btn-secondary" onclick="closeSendModal()" style="height:40px;padding:0 20px;font-size:13px;">
+                Cancelar
+            </button>
+            <button class="btn btn-blue" id="sendModalBtn" onclick="executeSendAction()" style="height:40px;padding:0 20px;font-size:13px;">
+                📤 Sí, enviar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CONFIRMACIÓN PARA RECEPCIÓN -->
+<div class="modal-bg" id="receiveModal">
+    <div class="modal-box" style="width:min(500px,90vw); max-height:70vh;">
+        <div class="modal-head" style="background:#2563EB;">
+            <div class="modal-title" id="receiveModalTitle">📦 Confirmar recepción</div>
+            <button class="btn btn-secondary" style="background:transparent;color:#fff;border-color:#fff;padding:6px 14px;min-height:34px;border-radius:14px" onclick="closeReceiveModal()">✕ Cerrar</button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div style="display:flex;align-items:flex-start;gap:16px;">
+                <div style="font-size:40px;line-height:1;">📦</div>
+                <div style="flex:1;">
+                    <div id="receiveMessage" style="font-size:14px;font-weight:800;color:#0F172A;line-height:1.6;margin-bottom:12px;">
+                        ¿Estás seguro de confirmar la recepción?
+                    </div>
+                    <div id="receiveDetails" style="background:#DBEAFE;border:1px solid #93C5FD;border-radius:8px;padding:10px;font-size:12px;color:#1E40AF;font-weight:700;line-height:1.5;margin-bottom:16px;">
+                        Detalles de la recepción...
+                    </div>
+                    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px;font-size:11px;color:#1D4ED8;font-weight:800;line-height:1.5;display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:18px;">ℹ️</span>
+                        <span>Al confirmar, se actualizará el inventario automáticamente</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-foot" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <button class="btn btn-secondary" onclick="closeReceiveModal()" style="height:40px;padding:0 20px;font-size:13px;">
+                Cancelar
+            </button>
+            <button class="btn btn-blue" id="receiveModalBtn" onclick="executeReceiveAction()" style="height:40px;padding:0 20px;font-size:13px;">
+                📦 Sí, confirmar recepción
+            </button>
+        </div>
+    </div>
+</div>
