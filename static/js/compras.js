@@ -3,17 +3,15 @@
 // ============================================================
 
 // ============================================================
-// DATOS - SINCronizados con window
+// DATOS - Sincronizados con window
 // ============================================================
 
-// Si window.ordenesData ya existe, usarlo, si no, crearlo
 if (typeof window.solicitudesData === 'undefined') window.solicitudesData = [];
 if (typeof window.comparativosData === 'undefined') window.comparativosData = [];
 if (typeof window.ordenesData === 'undefined') window.ordenesData = [];
 if (typeof window.comprobantesProveedorData === 'undefined') window.comprobantesProveedorData = [];
 if (typeof window.recepcionesData === 'undefined') window.recepcionesData = [];
 
-// Crear referencias locales que apunten a window
 let solicitudesData = window.solicitudesData;
 let comparativosData = window.comparativosData;
 let ordenesData = window.ordenesData;
@@ -24,11 +22,6 @@ let recepcionesData = window.recepcionesData;
 // FUNCIONES DE RENDERIZADO
 // ============================================================
 
-// ... el resto de tu código
-
-// ============================================================
-// FUNCIONES DE RENDERIZADO
-// ============================================================
 function renderSolicitudes() {
     const tbody = document.getElementById('solicitudRows');
     if (!tbody) return;
@@ -37,18 +30,12 @@ function renderSolicitudes() {
     const statusFilter = document.getElementById('solicitudStatus')?.value || '';
     
     let filtered = (solicitudesData || []).filter(s => {
-        // Filtro de búsqueda
         const matchSearch = (s.numero || '').toLowerCase().includes(search) ||
                            (s.producto || '').toLowerCase().includes(search) ||
                            (s.solicitante || '').toLowerCase().includes(search) ||
                            (s.area || '').toLowerCase().includes(search);
-        
-        // Filtro de estado
         const matchStatus = statusFilter === '' || s.estado === statusFilter;
-        
-        // Filtro de fechas
         const matchFecha = filtrarPorFecha(s, 'solicitudFechaInicio', 'solicitudFechaFin');
-        
         return matchSearch && matchStatus && matchFecha;
     });
     
@@ -86,53 +73,6 @@ function renderSolicitudes() {
     `).join('');
 }
 
-
-// ============================================================
-// FUNCIÓN PARA FORMATEAR FECHAS
-// ============================================================
-
-function formatearFecha(fecha) {
-    if (!fecha) return '-';
-    
-    try {
-        // Si es string ISO, convertir a Date
-        const date = new Date(fecha);
-        
-        // Verificar si es una fecha válida
-        if (isNaN(date.getTime())) return fecha;
-        
-        // Formatear: DD/MM/YYYY HH:MM
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-    } catch (e) {
-        return fecha;
-    }
-}
-
-// Versión solo fecha (sin hora)
-function formatearFechaCorta(fecha) {
-    if (!fecha) return '-';
-    
-    try {
-        const date = new Date(fecha);
-        if (isNaN(date.getTime())) return fecha;
-        
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        
-        return `${day}/${month}/${year}`;
-    } catch (e) {
-        return fecha;
-    }
-}
-
-
 function renderComparativos() {
     const tbody = document.getElementById('comparativoRows');
     if (!tbody) return;
@@ -141,17 +81,11 @@ function renderComparativos() {
     const statusFilter = document.getElementById('comparativoStatus')?.value || '';
     
     let filtered = (comparativosData || []).filter(c => {
-        // Filtro de búsqueda
         const matchSearch = (c.numero || '').toLowerCase().includes(search) ||
                            (c.producto || '').toLowerCase().includes(search) ||
                            (c.proveedores || []).some(p => (p.nombre || '').toLowerCase().includes(search));
-        
-        // Filtro de estado
         const matchStatus = statusFilter === '' || c.estado === statusFilter;
-        
-        // Filtro de fechas
         const matchFecha = filtrarPorFecha(c, 'comparativoFechaInicio', 'comparativoFechaFin');
-        
         return matchSearch && matchStatus && matchFecha;
     });
     
@@ -223,17 +157,11 @@ function renderOrdenes() {
     const statusFilter = document.getElementById('ordenStatus')?.value || '';
     
     let filtered = (ordenesData || []).filter(o => {
-        // Filtro de búsqueda
         const matchSearch = (o.numero || '').toLowerCase().includes(search) ||
                            (o.proveedor || '').toLowerCase().includes(search) ||
                            (o.ruc || '').includes(search);
-        
-        // Filtro de estado
         const matchStatus = statusFilter === '' || o.estado === statusFilter;
-        
-        // Filtro de fechas
         const matchFecha = filtrarPorFecha(o, 'ordenFechaInicio', 'ordenFechaFin');
-        
         return matchSearch && matchStatus && matchFecha;
     });
     
@@ -280,17 +208,11 @@ function renderComprobantesProveedor() {
     const statusFilter = document.getElementById('compProvStatus')?.value || '';
     
     let filtered = (comprobantesProveedorData || []).filter(c => {
-        // Filtro de búsqueda
         const matchSearch = (c.numero || '').toLowerCase().includes(search) ||
                            (c.proveedor || '').toLowerCase().includes(search) ||
                            (c.ruc || '').includes(search);
-        
-        // Filtro de estado
         const matchStatus = statusFilter === '' || c.estado === statusFilter;
-        
-        // Filtro de fechas
         const matchFecha = filtrarPorFecha(c, 'compProvFechaInicio', 'compProvFechaFin');
-        
         return matchSearch && matchStatus && matchFecha;
     });
     
@@ -333,18 +255,12 @@ function renderRecepciones() {
     const statusFilter = document.getElementById('recepcionStatus')?.value || '';
     
     let filtered = (recepcionesData || []).filter(r => {
-        // Filtro de búsqueda
         const matchSearch = (r.numero || '').toLowerCase().includes(search) ||
                            (r.proveedor || '').toLowerCase().includes(search) ||
                            (r.producto || '').toLowerCase().includes(search) ||
                            (r.orden || '').toLowerCase().includes(search);
-        
-        // Filtro de estado
         const matchStatus = statusFilter === '' || r.estado === statusFilter;
-        
-        // Filtro de fechas
         const matchFecha = filtrarPorFecha(r, 'recepcionFechaInicio', 'recepcionFechaFin');
-        
         return matchSearch && matchStatus && matchFecha;
     });
     
@@ -380,212 +296,6 @@ function renderRecepciones() {
     `).join('');
 }
 
-// ============================================================
-// FUNCIONES DE EDICIÓN - SOLICITUDES
-// ============================================================
-
-function editSolicitud(id) {
-    const solicitud = solicitudesData.find(s => s.id === id);
-    if (!solicitud) {
-        showToast('❌ Solicitud no encontrada', 'error');
-        return;
-    }
-    
-    // Abrir el modal
-    document.getElementById('solicitudModal').classList.add('show');
-    
-    // Llenar los campos con los datos de la solicitud
-    document.getElementById('solNumero').value = solicitud.numero || '';
-    document.getElementById('solFecha').value = solicitud.fecha ? solicitud.fecha.split('T')[0] : '';
-    document.getElementById('solProducto').value = solicitud.producto || '';
-    document.getElementById('solCantidad').value = solicitud.cantidad || 1;
-    document.getElementById('solUnidad').value = solicitud.unidad || 'UND';
-    document.getElementById('solArea').value = solicitud.area || '';
-    document.getElementById('solSolicitante').value = solicitud.solicitante || '';
-    document.getElementById('solUrgencia').value = solicitud.urgencia || 'Media';
-    document.getElementById('solJustificacion').value = solicitud.justificacion || '';
-    
-    // Guardar el ID en un campo oculto para saber que estamos editando
-    // Usamos un data attribute en el botón guardar
-    const saveBtn = document.querySelector('#solicitudModal .btn-primary');
-    if (saveBtn) {
-        saveBtn.dataset.editId = id;
-        saveBtn.textContent = '💾 Actualizar solicitud';
-    }
-    
-    // Cambiar el título del modal
-    document.getElementById('solicitudModalTitle').textContent = `✏️ Editar solicitud: ${solicitud.numero}`;
-    
-    showToast(`📝 Editando solicitud: ${solicitud.numero}`, 'info');
-}
-
-// ============================================================
-// FUNCIONES DE EDICIÓN - COMPARATIVOS
-// ============================================================
-
-function editComparativo(id) {
-    const comparativo = comparativosData.find(c => c.id === id);
-    if (!comparativo) {
-        showToast('❌ Comparativo no encontrado', 'error');
-        return;
-    }
-    
-    document.getElementById('comparativoModal').classList.add('show');
-    
-    document.getElementById('compNumero').value = comparativo.numero || '';
-    document.getElementById('compFecha').value = comparativo.fecha ? comparativo.fecha.split('T')[0] : '';
-    document.getElementById('compProducto').value = comparativo.producto || '';
-    
-    // Cargar proveedores en la tabla
-    const tbody = document.getElementById('comparativoItemsBody');
-    tbody.innerHTML = '';
-    
-    if (comparativo.proveedores && comparativo.proveedores.length > 0) {
-        comparativo.proveedores.forEach((p, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.nombre || ''}" placeholder="Nombre proveedor"></td>
-                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.ruc || ''}" placeholder="RUC"></td>
-                <td><input type="number" step="0.01" style="width:100%;border:none;background:transparent;padding:4px;text-align:right;" value="${p.precio || 0}" placeholder="0.00"></td>
-                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.plazo || ''}" placeholder="días"></td>
-                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.condPago || 'Contado'}" placeholder="Contado/Crédito"></td>
-                <td><button onclick="this.closest('tr').remove();" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:16px;">✕</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } else {
-        // Agregar una fila vacía
-        addComparativoRow();
-    }
-    
-    const saveBtn = document.querySelector('#comparativoModal .btn-primary');
-    if (saveBtn) {
-        saveBtn.dataset.editId = id;
-        saveBtn.textContent = '💾 Actualizar comparativo';
-    }
-    
-    document.getElementById('comparativoModalTitle').textContent = `✏️ Editar comparativo: ${comparativo.numero}`;
-    showToast(`📝 Editando comparativo: ${comparativo.numero}`, 'info');
-}
-
-// ============================================================
-// FUNCIONES DE EDICIÓN - ÓRDENES DE COMPRA
-// ============================================================
-
-function editOrden(id) {
-    const orden = ordenesData.find(o => o.id === id);
-    if (!orden) {
-        showToast('❌ Orden no encontrada', 'error');
-        return;
-    }
-    
-    document.getElementById('ordenCompraModal').classList.add('show');
-    
-    document.getElementById('ordNumero').value = orden.numero || '';
-    document.getElementById('ordFecha').value = orden.fecha ? orden.fecha.split('T')[0] : '';
-    document.getElementById('ordProveedor').value = orden.proveedor || '';
-    document.getElementById('ordRuc').value = orden.ruc || '';
-    document.getElementById('ordCondPago').value = orden.condicion_pago || 'Contado';
-    document.getElementById('ordMoneda').value = orden.moneda || 'Soles (S/)';
-    
-    // Cargar items
-    const tbody = document.getElementById('ordenItemsBody');
-    tbody.innerHTML = '';
-    
-    if (orden.items && orden.items.length > 0) {
-        orden.items.forEach((item, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${item.producto || ''}" placeholder="Descripción del producto"></td>
-                <td><input type="number" style="width:70px;border:none;background:transparent;padding:4px;text-align:center;" value="${item.cantidad || 1}" onchange="calcularTotalOrden(this)"></td>
-                <td><input type="number" step="0.01" style="width:100px;border:none;background:transparent;padding:4px;text-align:right;" value="${item.precioUnitario || 0}" onchange="calcularTotalOrden(this)"></td>
-                <td style="font-weight:900;">S/ ${((item.cantidad || 0) * (item.precioUnitario || 0)).toFixed(2)}</td>
-                <td><button onclick="this.closest('tr').remove();calcularTotalOrdenGeneral();" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:16px;">✕</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } else {
-        addOrdenItemRow();
-    }
-    
-    calcularTotalOrdenGeneral();
-    
-    const saveBtn = document.querySelector('#ordenCompraModal .btn-primary');
-    if (saveBtn) {
-        saveBtn.dataset.editId = id;
-        saveBtn.textContent = '💾 Actualizar orden';
-    }
-    
-    document.getElementById('ordenCompraModalTitle').textContent = `✏️ Editar orden: ${orden.numero}`;
-    showToast(`📝 Editando orden: ${orden.numero}`, 'info');
-}
-
-// ============================================================
-// FUNCIONES DE EDICIÓN - COMPROBANTES PROVEEDOR
-// ============================================================
-
-function editComprobanteProveedor(id) {
-    const comprobante = comprobantesProveedorData.find(c => c.id === id);
-    if (!comprobante) {
-        showToast('❌ Comprobante no encontrado', 'error');
-        return;
-    }
-    
-    document.getElementById('comprobanteProveedorModal').classList.add('show');
-    
-    document.getElementById('cpTipo').value = comprobante.tipo || 'Factura';
-    document.getElementById('cpNumero').value = comprobante.numero || '';
-    document.getElementById('cpFecha').value = comprobante.fecha ? comprobante.fecha.split('T')[0] : '';
-    document.getElementById('cpMonto').value = comprobante.monto || 0;
-    document.getElementById('cpRuc').value = comprobante.ruc || '';
-    document.getElementById('cpProveedor').value = comprobante.proveedor || '';
-    document.getElementById('cpOrden').value = comprobante.orden || '';
-    document.getElementById('cpObs').value = comprobante.obs || '';
-    
-    const saveBtn = document.querySelector('#comprobanteProveedorModal .btn-primary');
-    if (saveBtn) {
-        saveBtn.dataset.editId = id;
-        saveBtn.textContent = '💾 Actualizar comprobante';
-    }
-    
-    document.getElementById('compProvModalTitle').textContent = `✏️ Editar comprobante: ${comprobante.numero}`;
-    showToast(`📝 Editando comprobante: ${comprobante.numero}`, 'info');
-}
-
-// ============================================================
-// FUNCIONES DE EDICIÓN - RECEPCIONES
-// ============================================================
-
-function editRecepcion(id) {
-    const recepcion = recepcionesData.find(r => r.id === id);
-    if (!recepcion) {
-        showToast('❌ Recepción no encontrada', 'error');
-        return;
-    }
-    
-    document.getElementById('recepcionModal').classList.add('show');
-    
-    document.getElementById('recNumero').value = recepcion.numero || '';
-    document.getElementById('recFecha').value = recepcion.fecha ? recepcion.fecha.split('T')[0] : '';
-    document.getElementById('recOrden').value = recepcion.orden || '';
-    document.getElementById('recProveedor').value = recepcion.proveedor || '';
-    document.getElementById('recProducto').value = recepcion.producto || '';
-    document.getElementById('recCantidad').value = recepcion.cantidad || 1;
-    document.getElementById('recUnidad').value = recepcion.unidad || 'UND';
-    document.getElementById('recEstadoMercaderia').value = recepcion.estadoMercaderia || 'Buen estado';
-    document.getElementById('recObs').value = recepcion.obs || '';
-    
-    const saveBtn = document.querySelector('#recepcionModal .btn-primary');
-    if (saveBtn) {
-        saveBtn.dataset.editId = id;
-        saveBtn.textContent = '💾 Actualizar recepción';
-    }
-    
-    document.getElementById('recepcionModalTitle').textContent = `✏️ Editar recepción: ${recepcion.numero}`;
-    showToast(`📝 Editando recepción: ${recepcion.numero}`, 'info');
-}
 // ============================================================
 // FUNCIONES DE KPI
 // ============================================================
@@ -728,169 +438,19 @@ document.addEventListener('click', function() {
     document.querySelectorAll('.menu-pop').forEach(el => el.style.display = 'none');
 });
 
-// ============================================================
-// FUNCIONES DE ACCIONES
-// ============================================================
-
-function approveSolicitud(id) {
-    const solicitud = solicitudesData.find(s => s.id === id);
-    if (solicitud) {
-        solicitud.estado = 'Aprobada';
-        renderSolicitudes();
-        showToast(`✅ Solicitud ${solicitud.numero} aprobada`, 'success');
+function formatearFecha(fecha) {
+    if (!fecha) return '-';
+    try {
+        const date = new Date(fecha);
+        if (isNaN(date.getTime())) return fecha;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return fecha;
     }
 }
-
-function deleteSolicitud(id) {
-    if (confirm('¿Eliminar esta solicitud?')) {
-        solicitudesData = solicitudesData.filter(s => s.id !== id);
-        renderSolicitudes();
-        showToast('🗑 Solicitud eliminada', 'info');
-    }
-}
-
-function createOrdenFromSolicitud(id) {
-    const solicitud = solicitudesData.find(s => s.id === id);
-    if (solicitud) {
-        const nuevaOrden = {
-            id: ordenesData.length + 1,
-            numero: `OC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(ordenesData.length + 1).padStart(4,'0')}`,
-            fecha: new Date().toISOString().slice(0,10),
-            estado: 'Borrador',
-            proveedor: 'Por definir',
-            ruc: 'Por definir',
-            condPago: 'Contado',
-            moneda: 'Soles (S/)',
-            items: [{ producto: solicitud.producto, cantidad: solicitud.cantidad, precioUnitario: 0, total: 0 }],
-            subtotal: 0,
-            igv: 0,
-            total: 0
-        };
-        ordenesData.push(nuevaOrden);
-        renderOrdenes();
-        showToast(`📄 Orden de compra creada desde solicitud ${solicitud.numero}`, 'success');
-        // Cambiar a tab de órdenes
-        switchTab('orden_compra');
-    }
-}
-
-function deleteOrden(id) {
-    if (confirm('¿Eliminar esta orden de compra?')) {
-        ordenesData = ordenesData.filter(o => o.id !== id);
-        renderOrdenes();
-        showToast('🗑 Orden eliminada', 'info');
-    }
-}
-
-function sendOrden(id) {
-    const orden = ordenesData.find(o => o.id === id);
-    if (orden) {
-        orden.estado = 'Enviada';
-        renderOrdenes();
-        showToast(`📤 Orden ${orden.numero} enviada al proveedor`, 'success');
-    }
-}
-
-function createRecepcionFromOrden(id) {
-    const orden = ordenesData.find(o => o.id === id);
-    if (orden) {
-        const nuevaRecepcion = {
-            id: recepcionesData.length + 1,
-            numero: `REC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(recepcionesData.length + 1).padStart(4,'0')}`,
-            fecha: new Date().toISOString().slice(0,10),
-            estado: 'Pendiente',
-            orden: orden.numero,
-            proveedor: orden.proveedor,
-            producto: orden.items.map(i => i.producto).join(', '),
-            cantidad: orden.items.reduce((sum, i) => sum + i.cantidad, 0),
-            unidad: 'UND',
-            estadoMercaderia: 'Buen estado',
-            obs: ''
-        };
-        recepcionesData.push(nuevaRecepcion);
-        renderRecepciones();
-        showToast(`📦 Recepción creada desde orden ${orden.numero}`, 'success');
-        // Cambiar a tab de recepciones
-        switchTab('recepcion');
-    }
-}
-
-function approveRecepcion(id) {
-    const recepcion = recepcionesData.find(r => r.id === id);
-    if (recepcion) {
-        recepcion.estado = 'Aprobada';
-        renderRecepciones();
-        showToast(`✅ Recepción ${recepcion.numero} aprobada`, 'success');
-    }
-}
-
-function deleteRecepcion(id) {
-    if (confirm('¿Eliminar esta recepción?')) {
-        recepcionesData = recepcionesData.filter(r => r.id !== id);
-        renderRecepciones();
-        showToast('🗑 Recepción eliminada', 'info');
-    }
-}
-
-// ============================================================
-// FUNCIONES DE MODALES
-// ============================================================
-
-function openSolicitudModal() {
-    document.getElementById('solicitudModal').classList.add('show');
-    document.getElementById('solFecha').value = new Date().toISOString().slice(0,10);
-    document.getElementById('solNumero').value = `SOL-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(solicitudesData.length + 1).padStart(4,'0')}`;
-}
-
-
-function saveSolicitud(estado) {
-    const editId = document.querySelector('#solicitudModal .btn-primary')?.dataset?.editId;
-    
-    const data = {
-        numero: document.getElementById('solNumero').value,
-        fecha: document.getElementById('solFecha').value,
-        estado: estado,
-        producto: document.getElementById('solProducto').value,
-        cantidad: parseInt(document.getElementById('solCantidad').value) || 1,
-        unidad: document.getElementById('solUnidad').value,
-        area: document.getElementById('solArea').value,
-        solicitante: document.getElementById('solSolicitante').value,
-        urgencia: document.getElementById('solUrgencia').value,
-        justificacion: document.getElementById('solJustificacion').value
-    };
-    
-    if (editId) {
-        // Editar existente
-        const index = solicitudesData.findIndex(s => s.id === parseInt(editId));
-        if (index !== -1) {
-            solicitudesData[index] = { ...solicitudesData[index], ...data };
-            showToast(`✅ Solicitud ${data.numero} actualizada`, 'success');
-        }
-    } else {
-        // Crear nueva
-        data.id = solicitudesData.length + 1;
-        solicitudesData.push(data);
-        showToast(`✅ Solicitud ${data.numero} guardada como "${estado}"`, 'success');
-    }
-    
-    // Limpiar el data attribute
-    const saveBtn = document.querySelector('#solicitudModal .btn-primary');
-    if (saveBtn) {
-        delete saveBtn.dataset.editId;
-        saveBtn.textContent = '📤 Enviar a aprobación';
-    }
-    
-    // Restaurar título
-    document.getElementById('solicitudModalTitle').textContent = '📋 Nueva solicitud de compra';
-    
-    closeModal('solicitudModal');
-    renderSolicitudes();
-}
-
-
-// ============================================================
-// FUNCIONES PARA FILTRAR POR FECHA
-// ============================================================
 
 function filtrarPorFecha(item, fechaInicioId, fechaFinId) {
     const fechaInicio = document.getElementById(fechaInicioId)?.value;
@@ -917,38 +477,688 @@ function filtrarPorFecha(item, fechaInicioId, fechaFinId) {
 }
 
 // ============================================================
-// LIMPIAR FILTROS DE FECHA
+// FUNCIONES DE EDICIÓN
 // ============================================================
 
-function clearSolicitudDateFilter() {
-    document.getElementById('solicitudFechaInicio').value = '';
-    document.getElementById('solicitudFechaFin').value = '';
-    renderSolicitudes();
+function editSolicitud(id) {
+    const solicitud = solicitudesData.find(s => s.id === id);
+    if (!solicitud) {
+        showToast('❌ Solicitud no encontrada', 'error');
+        return;
+    }
+    
+    document.getElementById('solicitudModal').classList.add('show');
+    document.getElementById('solNumero').value = solicitud.numero || '';
+    document.getElementById('solFecha').value = solicitud.fecha ? solicitud.fecha.split('T')[0] : '';
+    document.getElementById('solProducto').value = solicitud.producto || '';
+    document.getElementById('solCantidad').value = solicitud.cantidad || 1;
+    document.getElementById('solUnidad').value = solicitud.unidad || 'UND';
+    document.getElementById('solArea').value = solicitud.area || '';
+    document.getElementById('solSolicitante').value = solicitud.solicitante || '';
+    document.getElementById('solUrgencia').value = solicitud.urgencia || 'Media';
+    document.getElementById('solJustificacion').value = solicitud.justificacion || '';
+    
+    const saveBtn = document.querySelector('#solicitudModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar solicitud';
+    }
+    
+    document.getElementById('solicitudModalTitle').textContent = `✏️ Editar solicitud: ${solicitud.numero}`;
+    showToast(`📝 Editando solicitud: ${solicitud.numero}`, 'info');
 }
 
-function clearComparativoDateFilter() {
-    document.getElementById('comparativoFechaInicio').value = '';
-    document.getElementById('comparativoFechaFin').value = '';
-    renderComparativos();
+function editComparativo(id) {
+    const comparativo = comparativosData.find(c => c.id === id);
+    if (!comparativo) {
+        showToast('❌ Comparativo no encontrado', 'error');
+        return;
+    }
+    
+    document.getElementById('comparativoModal').classList.add('show');
+    document.getElementById('compNumero').value = comparativo.numero || '';
+    document.getElementById('compFecha').value = comparativo.fecha ? comparativo.fecha.split('T')[0] : '';
+    document.getElementById('compProducto').value = comparativo.producto || '';
+    
+    const tbody = document.getElementById('comparativoItemsBody');
+    tbody.innerHTML = '';
+    
+    if (comparativo.proveedores && comparativo.proveedores.length > 0) {
+        comparativo.proveedores.forEach((p, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.nombre || ''}" placeholder="Nombre proveedor"></td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.ruc || ''}" placeholder="RUC"></td>
+                <td><input type="number" step="0.01" style="width:100%;border:none;background:transparent;padding:4px;text-align:right;" value="${p.precio || 0}" placeholder="0.00"></td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.plazo || ''}" placeholder="días"></td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${p.condPago || 'Contado'}" placeholder="Contado/Crédito"></td>
+                <td><button onclick="this.closest('tr').remove();" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:16px;">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } else {
+        addComparativoRow();
+    }
+    
+    const saveBtn = document.querySelector('#comparativoModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar comparativo';
+    }
+    
+    document.getElementById('comparativoModalTitle').textContent = `✏️ Editar comparativo: ${comparativo.numero}`;
+    showToast(`📝 Editando comparativo: ${comparativo.numero}`, 'info');
 }
 
-function clearOrdenDateFilter() {
-    document.getElementById('ordenFechaInicio').value = '';
-    document.getElementById('ordenFechaFin').value = '';
-    renderOrdenes();
+function editOrden(id) {
+    const orden = ordenesData.find(o => o.id === id);
+    if (!orden) {
+        showToast('❌ Orden no encontrada', 'error');
+        return;
+    }
+    
+    document.getElementById('ordenCompraModal').classList.add('show');
+    document.getElementById('ordNumero').value = orden.numero || '';
+    document.getElementById('ordFecha').value = orden.fecha ? orden.fecha.split('T')[0] : '';
+    document.getElementById('ordProveedor').value = orden.proveedor || '';
+    document.getElementById('ordRuc').value = orden.ruc || '';
+    document.getElementById('ordCondPago').value = orden.condicion_pago || 'Contado';
+    document.getElementById('ordMoneda').value = orden.moneda || 'Soles (S/)';
+    
+    const tbody = document.getElementById('ordenItemsBody');
+    tbody.innerHTML = '';
+    
+    if (orden.items && orden.items.length > 0) {
+        orden.items.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><input style="width:100%;border:none;background:transparent;padding:4px;" value="${item.producto || ''}" placeholder="Descripción del producto"></td>
+                <td><input type="number" style="width:70px;border:none;background:transparent;padding:4px;text-align:center;" value="${item.cantidad || 1}" onchange="calcularTotalOrden(this)"></td>
+                <td><input type="number" step="0.01" style="width:100px;border:none;background:transparent;padding:4px;text-align:right;" value="${item.precioUnitario || 0}" onchange="calcularTotalOrden(this)"></td>
+                <td style="font-weight:900;">S/ ${((item.cantidad || 0) * (item.precioUnitario || 0)).toFixed(2)}</td>
+                <td><button onclick="this.closest('tr').remove();calcularTotalOrdenGeneral();" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:16px;">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } else {
+        addOrdenItemRow();
+    }
+    
+    calcularTotalOrdenGeneral();
+    
+    const saveBtn = document.querySelector('#ordenCompraModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar orden';
+    }
+    
+    document.getElementById('ordenCompraModalTitle').textContent = `✏️ Editar orden: ${orden.numero}`;
+    showToast(`📝 Editando orden: ${orden.numero}`, 'info');
 }
 
-function clearCompProvDateFilter() {
-    document.getElementById('compProvFechaInicio').value = '';
-    document.getElementById('compProvFechaFin').value = '';
-    renderComprobantesProveedor();
+function editComprobanteProveedor(id) {
+    const comprobante = comprobantesProveedorData.find(c => c.id === id);
+    if (!comprobante) {
+        showToast('❌ Comprobante no encontrado', 'error');
+        return;
+    }
+    
+    document.getElementById('comprobanteProveedorModal').classList.add('show');
+    document.getElementById('cpTipo').value = comprobante.tipo || 'Factura';
+    document.getElementById('cpNumero').value = comprobante.numero || '';
+    document.getElementById('cpFecha').value = comprobante.fecha ? comprobante.fecha.split('T')[0] : '';
+    document.getElementById('cpMonto').value = comprobante.monto || 0;
+    document.getElementById('cpRuc').value = comprobante.ruc || '';
+    document.getElementById('cpProveedor').value = comprobante.proveedor || '';
+    document.getElementById('cpOrden').value = comprobante.orden || '';
+    document.getElementById('cpObs').value = comprobante.obs || '';
+    
+    const saveBtn = document.querySelector('#comprobanteProveedorModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar comprobante';
+    }
+    
+    document.getElementById('compProvModalTitle').textContent = `✏️ Editar comprobante: ${comprobante.numero}`;
+    showToast(`📝 Editando comprobante: ${comprobante.numero}`, 'info');
 }
 
-function clearRecepcionDateFilter() {
-    document.getElementById('recepcionFechaInicio').value = '';
-    document.getElementById('recepcionFechaFin').value = '';
-    renderRecepciones();
+function editRecepcion(id) {
+    const recepcion = recepcionesData.find(r => r.id === id);
+    if (!recepcion) {
+        showToast('❌ Recepción no encontrada', 'error');
+        return;
+    }
+    
+    document.getElementById('recepcionModal').classList.add('show');
+    document.getElementById('recNumero').value = recepcion.numero || '';
+    document.getElementById('recFecha').value = recepcion.fecha ? recepcion.fecha.split('T')[0] : '';
+    document.getElementById('recOrden').value = recepcion.orden || '';
+    document.getElementById('recProveedor').value = recepcion.proveedor || '';
+    document.getElementById('recProducto').value = recepcion.producto || '';
+    document.getElementById('recCantidad').value = recepcion.cantidad || 1;
+    document.getElementById('recUnidad').value = recepcion.unidad || 'UND';
+    document.getElementById('recEstadoMercaderia').value = recepcion.estadoMercaderia || 'Buen estado';
+    document.getElementById('recObs').value = recepcion.obs || '';
+    
+    const saveBtn = document.querySelector('#recepcionModal .btn-primary');
+    if (saveBtn) {
+        saveBtn.dataset.editId = id;
+        saveBtn.textContent = '💾 Actualizar recepción';
+    }
+    
+    document.getElementById('recepcionModalTitle').textContent = `✏️ Editar recepción: ${recepcion.numero}`;
+    showToast(`📝 Editando recepción: ${recepcion.numero}`, 'info');
 }
+
+// ============================================================
+// FUNCIONES DE ACCIONES (CON API)
+// ============================================================
+
+async function approveSolicitud(id) {
+    try {
+        const response = await fetch(`/compras/api/solicitudes/${id}/toggle`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: 'Aprobada' })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('✅ Solicitud aprobada', 'success');
+            await cargarDatosCompras();
+            renderSolicitudes();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error aprobando solicitud:', error);
+        showToast('❌ Error al aprobar', 'error');
+    }
+}
+
+async function deleteSolicitud(id) {
+    if (confirm('¿Eliminar esta solicitud?')) {
+        try {
+            const response = await fetch(`/compras/api/solicitudes/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast('🗑 Solicitud eliminada', 'success');
+                await cargarDatosCompras();
+                renderSolicitudes();
+            } else {
+                showToast(`❌ Error: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error eliminando solicitud:', error);
+            showToast('❌ Error al eliminar', 'error');
+        }
+    }
+}
+
+async function deleteComparativo(id) {
+    if (confirm('¿Eliminar este comparativo?')) {
+        try {
+            const response = await fetch(`/compras/api/comparativos/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast('🗑 Comparativo eliminado', 'success');
+                await cargarDatosCompras();
+                renderComparativos();
+            } else {
+                showToast(`❌ Error: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error eliminando comparativo:', error);
+            showToast('❌ Error al eliminar', 'error');
+        }
+    }
+}
+
+async function deleteOrden(id) {
+    if (confirm('¿Eliminar esta orden de compra?')) {
+        try {
+            const response = await fetch(`/compras/api/ordenes/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast('🗑 Orden eliminada', 'success');
+                await cargarDatosCompras();
+                renderOrdenes();
+            } else {
+                showToast(`❌ Error: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error eliminando orden:', error);
+            showToast('❌ Error al eliminar', 'error');
+        }
+    }
+}
+
+async function sendOrden(id) {
+    try {
+        const response = await fetch(`/compras/api/ordenes/${id}/toggle`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: 'Enviada' })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('📤 Orden enviada al proveedor', 'success');
+            await cargarDatosCompras();
+            renderOrdenes();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error enviando orden:', error);
+        showToast('❌ Error al enviar', 'error');
+    }
+}
+
+async function deleteComprobanteProveedor(id) {
+    if (confirm('¿Eliminar este comprobante?')) {
+        try {
+            const response = await fetch(`/compras/api/comprobantes-proveedor/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast('🗑 Comprobante eliminado', 'success');
+                await cargarDatosCompras();
+                renderComprobantesProveedor();
+            } else {
+                showToast(`❌ Error: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error eliminando comprobante:', error);
+            showToast('❌ Error al eliminar', 'error');
+        }
+    }
+}
+
+async function deleteRecepcion(id) {
+    if (confirm('¿Eliminar esta recepción?')) {
+        try {
+            const response = await fetch(`/compras/api/recepciones/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast('🗑 Recepción eliminada', 'success');
+                await cargarDatosCompras();
+                renderRecepciones();
+            } else {
+                showToast(`❌ Error: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error eliminando recepción:', error);
+            showToast('❌ Error al eliminar', 'error');
+        }
+    }
+}
+
+async function approveRecepcion(id) {
+    try {
+        const response = await fetch(`/compras/api/recepciones/${id}/toggle`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: 'Aprobada' })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('✅ Recepción aprobada', 'success');
+            await cargarDatosCompras();
+            renderRecepciones();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error aprobando recepción:', error);
+        showToast('❌ Error al aprobar', 'error');
+    }
+}
+
+async function payComprobanteProveedor(id) {
+    try {
+        const response = await fetch(`/compras/api/comprobantes-proveedor/${id}/toggle`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: 'Pagado' })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('💰 Comprobante marcado como pagado', 'success');
+            await cargarDatosCompras();
+            renderComprobantesProveedor();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error pagando comprobante:', error);
+        showToast('❌ Error al pagar', 'error');
+    }
+}
+
+async function selectProveedor(id) {
+    try {
+        const response = await fetch(`/compras/api/comparativos/${id}/toggle`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: 'Seleccionado' })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('✅ Proveedor seleccionado', 'success');
+            await cargarDatosCompras();
+            renderComparativos();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error seleccionando proveedor:', error);
+        showToast('❌ Error al seleccionar', 'error');
+    }
+}
+
+function createOrdenFromSolicitud(id) {
+    const solicitud = solicitudesData.find(s => s.id === id);
+    if (solicitud) {
+        const nuevaOrden = {
+            id: ordenesData.length + 1,
+            numero: `OC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(ordenesData.length + 1).padStart(4,'0')}`,
+            fecha: new Date().toISOString().slice(0,10),
+            estado: 'Borrador',
+            proveedor: 'Por definir',
+            ruc: 'Por definir',
+            condPago: 'Contado',
+            moneda: 'Soles (S/)',
+            items: [{ producto: solicitud.producto, cantidad: solicitud.cantidad, precioUnitario: 0, total: 0 }],
+            subtotal: 0,
+            igv: 0,
+            total: 0
+        };
+        ordenesData.push(nuevaOrden);
+        renderOrdenes();
+        showToast(`📄 Orden de compra creada desde solicitud ${solicitud.numero}`, 'success');
+        switchTab('orden_compra');
+    }
+}
+
+function createRecepcionFromOrden(id) {
+    const orden = ordenesData.find(o => o.id === id);
+    if (orden) {
+        const nuevaRecepcion = {
+            id: recepcionesData.length + 1,
+            numero: `REC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(recepcionesData.length + 1).padStart(4,'0')}`,
+            fecha: new Date().toISOString().slice(0,10),
+            estado: 'Pendiente',
+            orden: orden.numero,
+            proveedor: orden.proveedor,
+            producto: orden.items.map(i => i.producto).join(', '),
+            cantidad: orden.items.reduce((sum, i) => sum + i.cantidad, 0),
+            unidad: 'UND',
+            estadoMercaderia: 'Buen estado',
+            obs: ''
+        };
+        recepcionesData.push(nuevaRecepcion);
+        renderRecepciones();
+        showToast(`📦 Recepción creada desde orden ${orden.numero}`, 'success');
+        switchTab('recepcion');
+    }
+}
+
+// ============================================================
+// FUNCIONES DE MODALES
+// ============================================================
+
+function openSolicitudModal() {
+    document.getElementById('solicitudModal').classList.add('show');
+    document.getElementById('solFecha').value = new Date().toISOString().slice(0,10);
+    document.getElementById('solNumero').value = `SOL-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(solicitudesData.length + 1).padStart(4,'0')}`;
+}
+
+function openComparativoModal() {
+    document.getElementById('comparativoModal').classList.add('show');
+    document.getElementById('compFecha').value = new Date().toISOString().slice(0,10);
+    document.getElementById('compNumero').value = `CMP-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(comparativosData.length + 1).padStart(4,'0')}`;
+}
+
+function openOrdenCompraModal() {
+    document.getElementById('ordenCompraModal').classList.add('show');
+    document.getElementById('ordFecha').value = new Date().toISOString().slice(0,10);
+    document.getElementById('ordNumero').value = `OC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(ordenesData.length + 1).padStart(4,'0')}`;
+}
+
+function openComprobanteProveedorModal() {
+    document.getElementById('comprobanteProveedorModal').classList.add('show');
+    document.getElementById('cpFecha').value = new Date().toISOString().slice(0,10);
+}
+
+function openRecepcionModal() {
+    document.getElementById('recepcionModal').classList.add('show');
+    document.getElementById('recFecha').value = new Date().toISOString().slice(0,10);
+    document.getElementById('recNumero').value = `REC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(recepcionesData.length + 1).padStart(4,'0')}`;
+}
+
+// ============================================================
+// FUNCIONES DE GUARDADO (CON API)
+// ============================================================
+
+async function saveSolicitud(estado) {
+    const editId = document.querySelector('#solicitudModal .btn-primary')?.dataset?.editId;
+    
+    const data = {
+        numero_solicitud: document.getElementById('solNumero').value,
+        fecha: document.getElementById('solFecha').value,
+        estado: estado,
+        producto: document.getElementById('solProducto').value,
+        cantidad: parseInt(document.getElementById('solCantidad').value) || 1,
+        unidad: document.getElementById('solUnidad').value,
+        area: document.getElementById('solArea').value,
+        solicitante: document.getElementById('solSolicitante').value,
+        urgencia: document.getElementById('solUrgencia').value,
+        justificacion: document.getElementById('solJustificacion').value
+    };
+    
+    try {
+        const response = await fetch('/compras/api/solicitudes/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(`✅ Solicitud ${data.numero_solicitud} guardada correctamente`, 'success');
+            await cargarDatosCompras();
+            renderSolicitudes();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error guardando solicitud:', error);
+        showToast('❌ Error al guardar en la base de datos', 'error');
+    }
+    
+    const saveBtn = document.querySelector('#solicitudModal .btn-primary');
+    if (saveBtn) {
+        delete saveBtn.dataset.editId;
+        saveBtn.textContent = '📤 Enviar a aprobación';
+    }
+    document.getElementById('solicitudModalTitle').textContent = '📋 Nueva solicitud de compra';
+    closeModal('solicitudModal');
+}
+
+async function saveComparativo(estado) {
+    const proveedores = [];
+    document.querySelectorAll('#comparativoItemsBody tr').forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        if (inputs.length >= 4) {
+            proveedores.push({
+                nombre: inputs[0].value || 'Sin nombre',
+                ruc: inputs[1].value || 'Sin RUC',
+                precio: parseFloat(inputs[2].value) || 0,
+                plazo: inputs[3].value || 'N/A',
+                condPago: inputs[4]?.value || 'Contado'
+            });
+        }
+    });
+    
+    const data = {
+        numero_comparativo: document.getElementById('compNumero').value,
+        fecha: document.getElementById('compFecha').value,
+        estado: estado,
+        producto: document.getElementById('compProducto').value,
+        proveedores: proveedores
+    };
+    
+    try {
+        const response = await fetch('/compras/api/comparativos/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(`✅ Comparativo ${data.numero_comparativo} guardado`, 'success');
+            await cargarDatosCompras();
+            renderComparativos();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error guardando comparativo:', error);
+        showToast('❌ Error al guardar', 'error');
+    }
+    closeModal('comparativoModal');
+}
+
+async function saveOrdenCompra(estado) {
+    const items = [];
+    document.querySelectorAll('#ordenItemsBody tr').forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        if (inputs.length >= 2) {
+            const producto = inputs[0].value || 'Sin producto';
+            const cantidad = parseFloat(inputs[1].value) || 0;
+            const precioUnitario = parseFloat(inputs[2].value) || 0;
+            items.push({ producto, cantidad, precioUnitario, total: cantidad * precioUnitario });
+        }
+    });
+    
+    const subtotal = items.reduce((sum, i) => sum + i.total, 0);
+    const igv = subtotal * 0.18;
+    const total = subtotal + igv;
+    
+    const data = {
+        numero_orden: document.getElementById('ordNumero').value,
+        fecha_creacion: document.getElementById('ordFecha').value,
+        estado: estado,
+        proveedor: document.getElementById('ordProveedor').value,
+        ruc: document.getElementById('ordRuc').value,
+        condicion_pago: document.getElementById('ordCondPago').value,
+        moneda: document.getElementById('ordMoneda').value,
+        items: items,
+        subtotal: subtotal,
+        igv: igv,
+        total: total
+    };
+    
+    try {
+        const response = await fetch('/compras/api/ordenes/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(`✅ Orden ${data.numero_orden} guardada`, 'success');
+            await cargarDatosCompras();
+            renderOrdenes();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error guardando orden:', error);
+        showToast('❌ Error al guardar', 'error');
+    }
+    closeModal('ordenCompraModal');
+}
+
+async function saveComprobanteProveedor(estado) {
+    const data = {
+        tipo: document.getElementById('cpTipo').value,
+        numero: document.getElementById('cpNumero').value,
+        fecha: document.getElementById('cpFecha').value,
+        monto: parseFloat(document.getElementById('cpMonto').value) || 0,
+        ruc: document.getElementById('cpRuc').value,
+        proveedor: document.getElementById('cpProveedor').value,
+        orden_compra: document.getElementById('cpOrden').value,
+        estado: estado,
+        observaciones: document.getElementById('cpObs').value
+    };
+    
+    try {
+        const response = await fetch('/compras/api/comprobantes-proveedor/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(`✅ Comprobante ${data.numero} guardado`, 'success');
+            await cargarDatosCompras();
+            renderComprobantesProveedor();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error guardando comprobante:', error);
+        showToast('❌ Error al guardar', 'error');
+    }
+    closeModal('comprobanteProveedorModal');
+}
+
+async function saveRecepcion(estado) {
+    const data = {
+        numero_recepcion: document.getElementById('recNumero').value,
+        fecha: document.getElementById('recFecha').value,
+        estado: estado,
+        orden_compra: document.getElementById('recOrden').value,
+        proveedor: document.getElementById('recProveedor').value,
+        producto: document.getElementById('recProducto').value,
+        cantidad: parseInt(document.getElementById('recCantidad').value) || 1,
+        unidad: document.getElementById('recUnidad').value,
+        estado_mercaderia: document.getElementById('recEstadoMercaderia').value,
+        observaciones: document.getElementById('recObs').value
+    };
+    
+    try {
+        const response = await fetch('/compras/api/recepciones/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(`✅ Recepción ${data.numero_recepcion} guardada`, 'success');
+            await cargarDatosCompras();
+            renderRecepciones();
+        } else {
+            showToast(`❌ Error: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error guardando recepción:', error);
+        showToast('❌ Error al guardar', 'error');
+    }
+    closeModal('recepcionModal');
+}
+
 // ============================================================
 // FUNCIONES DE EXPORTACIÓN
 // ============================================================
@@ -989,14 +1199,8 @@ function exportData(tipo) {
 }
 
 // ============================================================
-// FUNCIONES DE MODALES DE COMPARATIVO
+// FUNCIONES PARA AGREGAR FILAS EN MODALES
 // ============================================================
-
-function openComparativoModal() {
-    document.getElementById('comparativoModal').classList.add('show');
-    document.getElementById('compFecha').value = new Date().toISOString().slice(0,10);
-    document.getElementById('compNumero').value = `CMP-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(comparativosData.length + 1).padStart(4,'0')}`;
-}
 
 function addComparativoRow() {
     const tbody = document.getElementById('comparativoItemsBody');
@@ -1012,46 +1216,6 @@ function addComparativoRow() {
         <td><button onclick="this.closest('tr').remove();" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:16px;">✕</button></td>
     `;
     tbody.appendChild(tr);
-}
-
-function saveComparativo(estado) {
-    const proveedores = [];
-    document.querySelectorAll('#comparativoItemsBody tr').forEach(row => {
-        const inputs = row.querySelectorAll('input');
-        if (inputs.length >= 4) {
-            proveedores.push({
-                nombre: inputs[0].value || 'Sin nombre',
-                ruc: inputs[1].value || 'Sin RUC',
-                precio: parseFloat(inputs[2].value) || 0,
-                plazo: inputs[3].value || 'N/A',
-                condPago: inputs[4]?.value || 'Contado'
-            });
-        }
-    });
-    
-    const data = {
-        id: comparativosData.length + 1,
-        numero: document.getElementById('compNumero').value,
-        fecha: document.getElementById('compFecha').value,
-        estado: estado,
-        producto: document.getElementById('compProducto').value,
-        proveedores: proveedores
-    };
-    
-    comparativosData.push(data);
-    closeModal('comparativoModal');
-    renderComparativos();
-    showToast(`✅ Comparativo ${data.numero} guardado como "${estado}"`, 'success');
-}
-
-// ============================================================
-// FUNCIONES DE MODALES DE ORDEN DE COMPRA
-// ============================================================
-
-function openOrdenCompraModal() {
-    document.getElementById('ordenCompraModal').classList.add('show');
-    document.getElementById('ordFecha').value = new Date().toISOString().slice(0,10);
-    document.getElementById('ordNumero').value = `OC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(ordenesData.length + 1).padStart(4,'0')}`;
 }
 
 function addOrdenItemRow() {
@@ -1096,105 +1260,8 @@ function calcularTotalOrdenGeneral() {
     document.getElementById('ordTotal').textContent = total.toFixed(2);
 }
 
-function saveOrdenCompra(estado) {
-    const items = [];
-    document.querySelectorAll('#ordenItemsBody tr').forEach(row => {
-        const inputs = row.querySelectorAll('input');
-        if (inputs.length >= 2) {
-            const producto = inputs[0].value || 'Sin producto';
-            const cantidad = parseFloat(inputs[1].value) || 0;
-            const precioUnitario = parseFloat(inputs[2].value) || 0;
-            items.push({ producto, cantidad, precioUnitario, total: cantidad * precioUnitario });
-        }
-    });
-    
-    const subtotal = items.reduce((sum, i) => sum + i.total, 0);
-    const igv = subtotal * 0.18;
-    const total = subtotal + igv;
-    
-    const data = {
-        id: ordenesData.length + 1,
-        numero: document.getElementById('ordNumero').value,
-        fecha: document.getElementById('ordFecha').value,
-        estado: estado,
-        proveedor: document.getElementById('ordProveedor').value,
-        ruc: document.getElementById('ordRuc').value,
-        condPago: document.getElementById('ordCondPago').value,
-        moneda: document.getElementById('ordMoneda').value,
-        items: items,
-        subtotal: subtotal,
-        igv: igv,
-        total: total
-    };
-    
-    ordenesData.push(data);
-    closeModal('ordenCompraModal');
-    renderOrdenes();
-    showToast(`✅ Orden ${data.numero} guardada como "${estado}"`, 'success');
-}
-
 // ============================================================
-// FUNCIONES DE MODALES DE COMPROBANTE PROVEEDOR
-// ============================================================
-
-function openComprobanteProveedorModal() {
-    document.getElementById('comprobanteProveedorModal').classList.add('show');
-    document.getElementById('cpFecha').value = new Date().toISOString().slice(0,10);
-}
-
-function saveComprobanteProveedor(estado) {
-    const data = {
-        id: comprobantesProveedorData.length + 1,
-        tipo: document.getElementById('cpTipo').value,
-        numero: document.getElementById('cpNumero').value,
-        fecha: document.getElementById('cpFecha').value,
-        monto: parseFloat(document.getElementById('cpMonto').value) || 0,
-        ruc: document.getElementById('cpRuc').value,
-        proveedor: document.getElementById('cpProveedor').value,
-        orden: document.getElementById('cpOrden').value,
-        estado: estado,
-        obs: document.getElementById('cpObs').value
-    };
-    
-    comprobantesProveedorData.push(data);
-    closeModal('comprobanteProveedorModal');
-    renderComprobantesProveedor();
-    showToast(`✅ Comprobante ${data.numero} guardado como "${estado}"`, 'success');
-}
-
-// ============================================================
-// FUNCIONES DE MODALES DE RECEPCIÓN
-// ============================================================
-
-function openRecepcionModal() {
-    document.getElementById('recepcionModal').classList.add('show');
-    document.getElementById('recFecha').value = new Date().toISOString().slice(0,10);
-    document.getElementById('recNumero').value = `REC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(recepcionesData.length + 1).padStart(4,'0')}`;
-}
-
-function saveRecepcion(estado) {
-    const data = {
-        id: recepcionesData.length + 1,
-        numero: document.getElementById('recNumero').value,
-        fecha: document.getElementById('recFecha').value,
-        estado: estado,
-        orden: document.getElementById('recOrden').value,
-        proveedor: document.getElementById('recProveedor').value,
-        producto: document.getElementById('recProducto').value,
-        cantidad: parseInt(document.getElementById('recCantidad').value) || 1,
-        unidad: document.getElementById('recUnidad').value,
-        estadoMercaderia: document.getElementById('recEstadoMercaderia').value,
-        obs: document.getElementById('recObs').value
-    };
-    
-    recepcionesData.push(data);
-    closeModal('recepcionModal');
-    renderRecepciones();
-    showToast(`✅ Recepción ${data.numero} guardada como "${estado}"`, 'success');
-}
-
-// ============================================================
-// FUNCIONES DE INICIALIZACIÓN Y NAVEGACIÓN
+// FUNCIONES DE UTILIDAD
 // ============================================================
 
 function closeModal(modalId) {
@@ -1223,20 +1290,42 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+function switchTab(tabId) {
+    // Cambiar pestaña activa
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === tabId) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Mostrar la sección correspondiente
+    document.querySelectorAll('.section').forEach(sec => {
+        sec.classList.remove('active');
+    });
+    const section = document.getElementById(tabId);
+    if (section) {
+        section.classList.add('active');
+    }
+    
+    // Actualizar URL
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabId);
+    window.history.pushState({}, '', url);
+    
+    // Cargar datos
+    initCompras(tabId);
+}
+
 // ============================================================
 // FUNCIÓN DE INICIALIZACIÓN PRINCIPAL
-// ============================================================
-// ============================================================
-// FUNCIÓN DE INICIALIZACIÓN PRINCIPAL (CORREGIDA)
 // ============================================================
 
 async function initCompras(tabId) {
     console.log(`🔄 initCompras llamado con tab: ${tabId}`);
     
-    // ✅ CARGAR DATOS DESDE LA API
     await cargarDatosCompras();
     
-    // Renderizar según el tab activo
     switch(tabId) {
         case 'solicitud_compra':
             renderSolicitudes();
@@ -1266,7 +1355,6 @@ async function cargarDatosCompras() {
     console.log('📡 Cargando datos de compras desde la API...');
     
     try {
-        // 1. Cargar solicitudes
         const solicitudesResp = await fetch('/compras/api/solicitudes/listar');
         const solicitudesDataResp = await solicitudesResp.json();
         if (solicitudesDataResp.success) {
@@ -1275,7 +1363,6 @@ async function cargarDatosCompras() {
             console.log(`✅ Solicitudes cargadas: ${solicitudesData.length}`);
         }
         
-        // 2. Cargar comparativos
         const comparativosResp = await fetch('/compras/api/comparativos/listar');
         const comparativosDataResp = await comparativosResp.json();
         if (comparativosDataResp.success) {
@@ -1284,7 +1371,6 @@ async function cargarDatosCompras() {
             console.log(`✅ Comparativos cargados: ${comparativosData.length}`);
         }
         
-        // 3. Cargar órdenes
         const ordenesResp = await fetch('/compras/api/ordenes/listar');
         const ordenesDataResp = await ordenesResp.json();
         if (ordenesDataResp.success) {
@@ -1293,7 +1379,6 @@ async function cargarDatosCompras() {
             console.log(`✅ Órdenes cargadas: ${ordenesData.length}`);
         }
         
-        // 4. Cargar comprobantes de proveedor
         const compResp = await fetch('/compras/api/comprobantes-proveedor/listar');
         const compDataResp = await compResp.json();
         if (compDataResp.success) {
@@ -1302,7 +1387,6 @@ async function cargarDatosCompras() {
             console.log(`✅ Comprobantes cargados: ${comprobantesProveedorData.length}`);
         }
         
-        // 5. Cargar recepciones
         const recepcionesResp = await fetch('/compras/api/recepciones/listar');
         const recepcionesDataResp = await recepcionesResp.json();
         if (recepcionesDataResp.success) {
@@ -1319,8 +1403,10 @@ async function cargarDatosCompras() {
     }
 }
 
+// ============================================================
+// EXPONER FUNCIONES GLOBALMENTE
+// ============================================================
 
-// Exponer funciones globalmente
 window.initCompras = initCompras;
 window.renderSolicitudes = renderSolicitudes;
 window.renderComparativos = renderComparativos;
@@ -1350,14 +1436,17 @@ window.addOrdenItemRow = addOrdenItemRow;
 window.calcularTotalOrden = calcularTotalOrden;
 window.calcularTotalOrdenGeneral = calcularTotalOrdenGeneral;
 
-// Funciones de acciones
 window.approveSolicitud = approveSolicitud;
 window.deleteSolicitud = deleteSolicitud;
-window.createOrdenFromSolicitud = createOrdenFromSolicitud;
+window.deleteComparativo = deleteComparativo;
 window.deleteOrden = deleteOrden;
 window.sendOrden = sendOrden;
-window.createRecepcionFromOrden = createRecepcionFromOrden;
-window.approveRecepcion = approveRecepcion;
+window.deleteComprobanteProveedor = deleteComprobanteProveedor;
 window.deleteRecepcion = deleteRecepcion;
+window.approveRecepcion = approveRecepcion;
+window.payComprobanteProveedor = payComprobanteProveedor;
+window.selectProveedor = selectProveedor;
+window.createOrdenFromSolicitud = createOrdenFromSolicitud;
+window.createRecepcionFromOrden = createRecepcionFromOrden;
 
 console.log('✅ Módulo de Compras cargado correctamente');
