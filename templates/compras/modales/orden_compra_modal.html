@@ -101,12 +101,19 @@
 
             <!-- SECCIÓN 4: PRODUCTOS -->
             <div class="ficha-section">
-                <div class="ficha-section-title">
-                    📦 Productos
-                    <div style="display:flex; gap:6px;">
-                        <button type="button" class="btn btn-blue" onclick="addOrdenItemRow()" style="height:26px; padding:0 12px; font-size:10px; border-radius:7px; font-weight:900;">+ Agregar producto</button>
-                    </div>
-                </div>
+               <div class="ficha-section-title">
+    📦 Productos
+    <div style="display:flex; gap:6px;">
+        <button type="button" class="btn btn-green" 
+                onclick="openProductSelectorCompras(items => {
+                    items.forEach(it => addOrdenItemRowConDatos(it));
+                })"
+                style="height:26px; padding:0 12px; font-size:10px; border-radius:7px; font-weight:900; background:#16A34A; color:#fff; border:0; cursor:pointer;">
+            📋 Seleccionar productos
+        </button>
+        <button type="button" class="btn btn-blue" onclick="addOrdenItemRow()" style="height:26px; padding:0 12px; font-size:10px; border-radius:7px; font-weight:900;">+ Agregar fila</button>
+    </div>
+</div>
                 <div style="overflow-x:auto; padding:6px 10px 10px;">
                     <table class="master-table" style="font-size:11px; min-width:1000px; width:100%;">
                         <thead>
@@ -223,6 +230,7 @@ function ordBuscarProducto(input) {
     }
 }
 
+
 function ordBuscarProveedor(force = false) {
     const rucInput = document.getElementById('ordRuc');
     const ruc = (rucInput.value || '').replace(/\D/g, '').trim();
@@ -240,14 +248,57 @@ function ordBuscarProveedor(force = false) {
         .then(data => {
             if (data.success && data.data && data.data.length > 0) {
                 const p = data.data[0];
-                document.getElementById('ordProveedor').value = p.razon_social || '';
-                document.getElementById('ordDireccion').value = p.direccion || '';
-                document.getElementById('ordContacto').value = p.contacto || '';
-                document.getElementById('ordTelefono').value = p.telefono || '';
-                document.getElementById('ordEmail').value = p.email || '';
-                showToast(`✅ Proveedor: ${p.razon_social}`, 'success');
+
+                const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+
+                set('ordProveedor', p.razon_social || p.razon_comercial);
+                set('ordDireccion', p.direccion);
+                set('ordContacto',  p.contacto);
+                set('ordTelefono',  p.telefono);
+                set('ordEmail',     p.email);
+
+                // Condición de pago (select)
+                const condSel = document.getElementById('ordCondPago');
+                if (condSel && p.condicion_pago) {
+                    for (let opt of condSel.options) {
+                        if (opt.value.toLowerCase().includes((p.condicion_pago || '').toLowerCase())) {
+                            opt.selected = true; break;
+                        }
+                    }
+                }
+
+                // Moneda (select)
+                const monSel = document.getElementById('ordMoneda');
+                if (monSel && p.moneda) {
+                    for (let opt of monSel.options) {
+                        if (opt.value.toLowerCase().includes((p.moneda || '').toLowerCase())) {
+                            opt.selected = true; break;
+                        }
+                    }
+                }
+
+                // Tiempo de crédito -> tiempo de entrega (si aplica)
+                if (p.tiempo_credito) {
+                    const tiempoEl = document.getElementById('ordTiempoEntrega');
+                    if (tiempoEl) tiempoEl.value = p.tiempo_credito;
+                }
+
+                // Descuento
+                if (p.descuento) {
+                    const descEl = document.getElementById('ordDescuento');
+                    if (descEl) {
+                        const num = parseFloat(String(p.descuento).replace('%','')) || 0;
+                        descEl.value = num;
+                        const tipoEl = document.getElementById('ordDescuentoTipo');
+                        if (tipoEl) tipoEl.value = String(p.descuento).includes('%') ? 'porcentaje' : 'monto';
+                        ordRecalcular();
+                    }
+                }
+
+                showToast(`✅ Proveedor cargado: ${p.razon_social}`, 'success');
                 return;
             }
+
             return fetch(`/api/sunat/consulta?ruc=${ruc}`)
                 .then(r => r.json())
                 .then(sunat => {
@@ -256,13 +307,25 @@ function ordBuscarProveedor(force = false) {
                         document.getElementById('ordDireccion').value = sunat.direccion || '';
                         showToast('🌞 Datos cargados desde SUNAT', 'info');
                     } else {
-                        showToast('⚠️ No se encontró el RUC', 'warning');
+                        showToast('⚠️ RUC no encontrado', 'warning');
                     }
                 });
         })
         .catch(e => { console.error(e); showToast('❌ Error consultando proveedor', 'error'); });
 }
 
+function addOrdenItemRowConDatos(item) {
+    addOrdenItemRow(); // crea fila vacía
+    const tbody = document.getElementById('ordenItemsBody');
+    const lastRow = tbody.lastElementChild;
+    if (!lastRow) return;
+    lastRow.querySelector('.ord-item-codigo').value = item.codigo || '';
+    lastRow.querySelector('.ord-item-desc').value = item.producto || item.descripcion || '';
+    lastRow.querySelector('.ord-item-unidad').value = item.um || 'UND';
+    lastRow.querySelector('.ord-item-cant').value = item.cantidad || 1;
+    lastRow.querySelector('.ord-item-precio').value = item.precio_unitario || 0;
+    ordRecalcular();
+}
 function ordRecalcular() {
     let subtotal = 0;
     document.querySelectorAll('#ordenItemsBody tr').forEach(row => {

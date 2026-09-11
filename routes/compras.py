@@ -1222,40 +1222,229 @@ def api_exportar(tipo):
         print(f"❌ Error en api_exportar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 # ============================================================
-# API - CONSULTAR PROVEEDOR POR RUC
+# API - BUSCAR PROVEEDOR POR RUC / NOMBRE (VERSIÓN FINAL AJUSTADA)
 # ============================================================
 
 @compras_bp.route('/compras/api/proveedores/buscar', methods=['GET'])
 @login_required
 def api_proveedores_buscar():
-    """Busca un proveedor por RUC o nombre"""
+    """
+    Busca proveedores por RUC exacto, o por razón social/contacto.
+    Devuelve TODOS los campos útiles para autocompletar formularios.
+    """
     try:
-        q = request.args.get('q', '').strip()
-        
-        if not q or len(q) < 2:
-            return jsonify({'success': True, 'data': []})
-        
-        query = """
-            SELECT id, razon_social, numero_documento as ruc,
-                   direccion, telefono, email, contacto
-            FROM proveedores
-            WHERE numero_documento ILIKE %s
-               OR razon_social ILIKE %s
-               OR contacto ILIKE %s
-            ORDER BY razon_social
-            LIMIT 20
-        """
-        search_pattern = f'%{q}%'
-        results = db_query(query, (search_pattern, search_pattern, search_pattern))
-        
-        return jsonify({'success': True, 'data': results})
-        
-    except Exception as e:
-        print(f"❌ Error en api_proveedores_buscar: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        q = (request.args.get('q') or '').strip()
 
+        if not q or len(q) < 2:
+            return jsonify({'success': True, 'data': [], 'source': 'empty'})
+
+        es_ruc = q.isdigit() and len(q) == 11
+
+        # ------------------------------------------------------------
+        # Query base (usa las columnas REALES de tu tabla)
+        # ------------------------------------------------------------
+        select_str = """
+            id,
+            ruc,
+            razon_social,
+            razon_comercial,
+            codigo_proveedor,
+            direccion,
+            telefono,
+            contacto,
+            email,
+            condicion_pago,
+            tiempo_credito,
+            moneda,
+            descuento,
+            banco,
+            numero_cuenta,
+            cci,
+            tipo_cuenta,
+            lugar_recojo,
+            ambito,
+            estado,
+            activo
+        """
+
+        if es_ruc:
+            # Búsqueda exacta por RUC (más rápida y precisa)
+            query = f"""
+                SELECT {select_str}
+                FROM proveedores
+                WHERE ruc = %s
+                LIMIT 5
+            """
+            params = (q,)
+        else:
+            # Búsqueda amplia por razón social, comercial, contacto o RUC parcial
+            pattern = f"%{q}%"
+            query = f"""
+                SELECT {select_str}
+                FROM proveedores
+                WHERE ruc ILIKE %s
+                   OR razon_social ILIKE %s
+                   OR COALESCE(razon_comercial, '') ILIKE %s
+                   OR COALESCE(contacto, '') ILIKE %s
+                ORDER BY razon_social
+                LIMIT 20
+            """
+            params = (pattern, pattern, pattern, pattern)
+
+        # ------------------------------------------------------------
+        # Ejecutar y normalizar
+        # ------------------------------------------------------------
+        try:
+            rows = db_query(query, params) or []
+        except Exception as e:
+            print(f"⚠️ Error consultando proveedores: {e}")
+            return _fallback_sunat_compras(q)
+
+        # Si buscó por RUC exacto y no encontró, fallback SUNAT
+        if not rows and es_ruc:
+            return _fallback_sunat_compras(q)
+
+        data = []
+        for r in rows:
+            data.append({
+                'id': r.get('id'),
+                'ruc': r.get('ruc') or '',
+                'razon_social': r.get('razon_social') or '',
+                'razon_comercial': r.get('razon_comercial') or '',
+                'codigo_proveedor': r.get('codigo_proveedor') or '',
+                'direccion': r.get('direccion') or '',
+                'telefono': r.get('telefono') or '',
+                'contacto': r.get('contacto') or '',
+                'email': r.get('email') or '',
+                'condicion_pago': r.get('condicion_pago') or '',
+                'tiempo_credito': r.get('tiempo_credito') or '',
+                'moneda': r.get('moneda') or '',
+                'descuento': r.get('descuento') or '',
+                'banco': r.get('banco') or '',
+                'numero_cuenta': r.get('numero_cuenta') or '',
+                'cci': r.get('cci') or '',
+                'tipo_cuenta': r.get('tipo_cuenta') or '',
+                'lugar_recojo': r.get('lugar_recojo') or '',
+                'ambito': r.get('ambito') or '',
+                'estado': r.get('estado') or '',
+                'activo': bool(r.get('activo')) if r.get('activo') is not None else True
+            })
+
+        return jsonify({'success': True, 'data': data, 'source': 'bd'})
+
+    except Exception as e:
+        print(f"❌ Error CRÍTICO en api_proveedores_buscar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': True, 'data': [], 'source': 'error', 'warning': str(e)})
+
+
+def _fallback_sunat_compras(ruc):
+    """Fallback: consulta SUNAT y devuelve formato compatible."""
+    try:
+        if not ruc.isdigit() or len(ruc) != 11:
+            return jsonify({'success': True, 'data': [], 'source': 'invalid_ruc'})
+
+        import urllib.request, json as _json, ssl
+
+        url = f"https://api.apis.net.pe/v1/ruc?numero={ruc}"
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=8, context=ctx) as resp:
+            raw = resp.read().decode('utf-8')
+            data_sunat = _json.loads(raw)
+
+        razon = data_sunat.get('razonSocial') or data_sunat.get('nombre') or ''
+        direccion = data_sunat.get('direccion') or ''
+
+        if razon:
+            return jsonify({
+                'success': True,
+                'source': 'sunat',
+                'data': [{
+                    'id': None,
+                    'ruc': ruc,
+                    'razon_social': razon,
+                    'razon_comercial': '',
+                    'codigo_proveedor': '',
+                    'direccion': direccion,
+                    'telefono': '',
+                    'contacto': '',
+                    'email': '',
+                    'condicion_pago': '',
+                    'tiempo_credito': '',
+                    'moneda': 'Soles (S/)',
+                    'descuento': '',
+                    'banco': '',
+                    'numero_cuenta': '',
+                    'cci': '',
+                    'tipo_cuenta': '',
+                    'lugar_recojo': '',
+                    'ambito': '',
+                    'estado': 'Activo',
+                    'activo': True
+                }]
+            })
+
+        return jsonify({'success': True, 'data': [], 'source': 'sunat_empty'})
+
+    except Exception as e:
+        print(f"❌ Error en _fallback_sunat_compras: {e}")
+        return jsonify({'success': True, 'data': [], 'source': 'error'})
+
+def _fallback_sunat(ruc):
+    """Fallback: consulta SUNAT y devuelve formato compatible."""
+    try:
+        import urllib.request
+        import json as _json
+        import ssl
+
+        # Validar RUC
+        if not ruc.isdigit() or len(ruc) != 11:
+            return jsonify({'success': True, 'data': [], 'source': 'sunat_invalid'})
+
+        # Intentar consultar SUNAT vía API externa
+        # Opción 1: API interna si existe
+        try:
+            url = f"https://api.apis.net.pe/v1/ruc?numero={ruc}"
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=8, context=ctx) as resp:
+                raw = resp.read().decode('utf-8')
+                data_sunat = _json.loads(raw)
+
+            razon = data_sunat.get('razonSocial') or data_sunat.get('nombre') or ''
+            direccion = data_sunat.get('direccion') or ''
+
+            if razon:
+                return jsonify({
+                    'success': True,
+                    'source': 'sunat',
+                    'data': [{
+                        'id': None,
+                        'ruc': ruc,
+                        'razon_social': razon,
+                        'direccion': direccion,
+                        'telefono': '',
+                        'email': '',
+                        'contacto': ''
+                    }]
+                })
+        except Exception as e:
+            print(f"⚠️ Error consultando SUNAT externa: {e}")
+
+        return jsonify({'success': True, 'data': [], 'source': 'sunat_empty'})
+
+    except Exception as e:
+        print(f"❌ Error en _fallback_sunat: {e}")
+        return jsonify({'success': True, 'data': [], 'source': 'error'})
 
 # ============================================================
 # API - BUSCAR ÓRDENES DE COMPRA (autocomplete)

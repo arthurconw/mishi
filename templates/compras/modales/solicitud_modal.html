@@ -79,14 +79,20 @@
                     <span style="font-weight:400; font-size:10px; color:#64748B;">Busca por código o escribe libremente</span>
                 </div>
                 <div class="ficha-grid">
-                    <div class="form-field col-8">
-                        <label>Código / Producto</label>
-                        <div style="display:flex; gap:6px;">
-                            <input id="solCodigo" placeholder="Ej: PRD-001245" style="flex:1;" list="solProductList" oninput="solBuscarProducto(this.value)">
-                            <datalist id="solProductList"></datalist>
-                            <button type="button" onclick="solBuscarProductoBD()" style="height:30px; padding:0 12px; border-radius:9px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer; font-size:11px;">🔍</button>
-                        </div>
-                    </div>
+                   <div class="form-field col-8">
+    <label>Código / Producto</label>
+    <div style="display:flex; gap:6px;">
+        <input id="solCodigo" placeholder="Ej: PRD-001245" style="flex:1;">
+        <button type="button" class="btn btn-green" 
+                onclick="openProductSelectorCompras(items => { 
+                    if (items && items.length > 0) solCargarProductoSeleccionado(items[0]); 
+                })"
+                style="height:30px; padding:0 14px; border-radius:9px; font-weight:900; font-size:11px; background:#16A34A; color:#fff; border:0; cursor:pointer;">
+            📋 Seleccionar
+        </button>
+        <button type="button" onclick="solBuscarProductoBD()" style="height:30px; padding:0 12px; border-radius:9px; background:#2563EB; color:#fff; border:0; font-weight:900; cursor:pointer; font-size:11px;">🔍</button>
+    </div>
+</div>
                     <div class="form-field col-4">
                         <label>Unidad <span class="text-danger">*</span></label>
                         <select id="solUnidad">
@@ -298,40 +304,74 @@ function solCalcularTotal() {
     if (el) el.value = total.toFixed(2);
 }
 
-// Buscar proveedor por RUC (SUNAT o BD)
-let _solRucTimer = null;
+
+function solCargarProductoSeleccionado(prod) {
+    document.getElementById('solCodigo').value = prod.codigo || '';
+    document.getElementById('solProducto').value = prod.producto || prod.descripcion || '';
+    document.getElementById('solUnidad').value = prod.um || 'UND';
+    document.getElementById('solPrecioUnitario').value = prod.precio_unitario || 0;
+    document.getElementById('solCantidad').value = prod.cantidad || 1;
+    solCalcularTotal();
+}
+
 function solBuscarProveedorSUNAT(force = false) {
+    const rucInput = document.getElementById('solRucProveedor');
+    const ruc = (rucInput.value || '').replace(/\D/g, '').trim();
+
     if (!force) {
-        clearTimeout(_solRucTimer);
-        _solRucTimer = setTimeout(() => solBuscarProveedorSUNAT(true), 600);
+        clearTimeout(window._solRucTimer);
+        window._solRucTimer = setTimeout(() => { if (ruc.length === 11) solBuscarProveedorSUNAT(true); }, 700);
         return;
     }
-    const ruc = document.getElementById('solRucProveedor').value.replace(/\D/g, '').trim();
-    if (ruc.length !== 11) {
-        showToast('⚠️ El RUC debe tener 11 dígitos', 'warning');
-        return;
-    }
+
+    if (ruc.length !== 11) { showToast('⚠️ RUC de 11 dígitos requerido', 'warning'); return; }
+
     showToast('⏳ Consultando proveedor...', 'info');
 
-    // 1) Buscar en BD de proveedores
     fetch(`/compras/api/proveedores/buscar?q=${ruc}`)
         .then(r => r.json())
         .then(data => {
             if (data.success && data.data && data.data.length > 0) {
                 const p = data.data[0];
-                document.getElementById('solProveedorSugerido').value = p.razon_social || '';
-                showToast('✅ Proveedor encontrado en BD', 'success');
+
+                // Autocompletar TODO
+                document.getElementById('solProveedorSugerido').value = p.razon_social || p.razon_comercial || '';
+                document.getElementById('solRucProveedor').value = p.ruc || ruc;
+
+                // Si tu modal tiene estos campos, se llenan. Si no, se ignoran.
+                const setIfExists = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = val || '';
+                };
+
+                setIfExists('solCondicionPago', p.condicion_pago);
+                setIfExists('solTiempoCredito', p.tiempo_credito);
+                setIfExists('solContactoProveedor', p.contacto);
+                setIfExists('solTelefonoProveedor', p.telefono);
+                setIfExists('solEmailProveedor', p.email);
+                setIfExists('solDireccionProveedor', p.direccion);
+
+                // Seleccionar moneda si existe el select
+                const monSel = document.getElementById('solMoneda');
+                if (monSel && p.moneda) {
+                    for (let opt of monSel.options) {
+                        if (opt.value === p.moneda) { opt.selected = true; break; }
+                    }
+                }
+
+                showToast(`✅ Proveedor: ${p.razon_social}`, 'success');
                 return;
             }
-            // 2) Si no, consultar SUNAT
+
+            // Si no encontró, intentar SUNAT directo
             return fetch(`/api/sunat/consulta?ruc=${ruc}`)
                 .then(r => r.json())
                 .then(sunat => {
                     if (sunat.success) {
                         document.getElementById('solProveedorSugerido').value = sunat.razon_social || '';
-                        showToast('🌞 Datos cargados desde SUNAT', 'info');
+                        showToast('🌞 Datos cargados desde SUNAT (no está en tu BD)', 'info');
                     } else {
-                        showToast('⚠️ No se encontró el RUC. Ingresa el proveedor manualmente.', 'warning');
+                        showToast('⚠️ RUC no encontrado. Ingrésalo manualmente.', 'warning');
                     }
                 });
         })
@@ -340,6 +380,7 @@ function solBuscarProveedorSUNAT(force = false) {
             showToast('❌ Error consultando proveedor', 'error');
         });
 }
+
 
 // Inicializar eventos al abrir el modal
 document.addEventListener('DOMContentLoaded', function() {

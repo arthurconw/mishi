@@ -68,12 +68,24 @@
 
             <!-- SECCIÓN 2: PROVEEDORES -->
             <div class="ficha-section">
-                <div class="ficha-section-title">
-                    🏢 Proveedores participantes
-                    <div style="display:flex; gap:6px;">
-                        <button type="button" class="btn btn-blue" onclick="addComparativoRow()" style="height:26px; padding:0 12px; font-size:10px; border-radius:7px; font-weight:900;">+ Agregar proveedor</button>
-                    </div>
-                </div>
+               <div class="ficha-section-title">
+    🏢 Proveedores participantes
+    <div style="display:flex; gap:6px;">
+        <button type="button" class="btn btn-green" 
+                onclick="openProductSelectorCompras(items => {
+                    if (items.length > 0) {
+                        document.getElementById('compProducto').value = items[0].producto || items[0].descripcion;
+                        document.getElementById('compCantidad').value = items[0].cantidad || 1;
+                        document.getElementById('compUnidad').value = items[0].um || 'UND';
+                        compRecalcularTodo();
+                    }
+                })"
+                style="height:26px; padding:0 12px; font-size:10px; border-radius:7px; font-weight:900; background:#16A34A; color:#fff; border:0; cursor:pointer;">
+            📋 Seleccionar producto
+        </button>
+        <button type="button" class="btn btn-blue" onclick="addComparativoRow()" style="height:26px; padding:0 12px; font-size:10px; border-radius:7px; font-weight:900;">+ Proveedor</button>
+    </div>
+</div>
                 <div style="overflow-x:auto; padding:6px 10px 10px;">
                     <table class="master-table" style="font-size:11px; min-width:1000px; width:100%;">
                         <thead>
