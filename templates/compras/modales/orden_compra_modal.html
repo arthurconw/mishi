@@ -40,39 +40,68 @@
             </div>
 
             <!-- SECCIÓN 2: PROVEEDOR -->
-            <div class="ficha-section">
-                <div class="ficha-section-title">🏢 Datos del proveedor</div>
-                <div class="ficha-grid">
-                    <div class="form-field col-3">
-                        <label>RUC <span class="text-danger">*</span></label>
-                        <div style="display:flex; gap:6px;">
-                            <input id="ordRuc" placeholder="11 dígitos" maxlength="11" style="flex:1;" oninput="ordBuscarProveedor()">
-                            <button type="button" onclick="ordBuscarProveedor(true)" style="height:30px; padding:0 12px; border-radius:9px; background:#059669; color:#fff; border:0; font-weight:900; cursor:pointer; font-size:11px;">🌞 SUNAT</button>
-                        </div>
-                    </div>
-                    <div class="form-field col-9">
-                        <label>Razón social <span class="text-danger">*</span></label>
-                        <input id="ordProveedor" placeholder="Nombre o razón social del proveedor">
-                    </div>
-                    <div class="form-field col-6">
-                        <label>Dirección fiscal</label>
-                        <input id="ordDireccion" placeholder="Dirección del proveedor">
-                    </div>
-                    <div class="form-field col-3">
-                        <label>Contacto</label>
-                        <input id="ordContacto" placeholder="Nombre del contacto">
-                    </div>
-                    <div class="form-field col-3">
-                        <label>Teléfono</label>
-                        <input id="ordTelefono" placeholder="999 999 999">
-                    </div>
-                    <div class="form-field col-4">
-                        <label>Email</label>
-                        <input id="ordEmail" placeholder="proveedor@email.com" type="email">
-                    </div>
-                </div>
+<div class="ficha-section">
+    <div class="ficha-section-title">🏢 Datos del proveedor</div>
+    <div class="ficha-grid">
+        
+        <!-- Fila 1: RUC (con botón) + Razón social (ancho) -->
+        <div class="form-field col-4">
+            <label>RUC <span class="text-danger">*</span></label>
+            <div style="display:flex; gap:6px; align-items:stretch;">
+                <input id="ordRuc" 
+                       placeholder="11 dígitos" 
+                       maxlength="11" 
+                       style="flex:1; min-width:0;" 
+                       oninput="ordBuscarProveedor()">
+                <button type="button" 
+                        onclick="ordBuscarProveedor(true)" 
+                        title="Consultar SUNAT"
+                        style="height:30px; width:38px; min-width:38px; border-radius:9px; background:#059669; color:#fff; border:0; font-weight:900; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center;">
+                    🌞
+                </button>
             </div>
+        </div>
+        
+        <div class="form-field col-8">
+            <label>Razón social <span class="text-danger">*</span></label>
+            <input id="ordProveedor" 
+                   placeholder="Nombre o razón social del proveedor" 
+                   style="width:100%;">
+        </div>
 
+        <!-- Fila 2: Dirección (ancha) + Contacto + Teléfono -->
+        <div class="form-field col-6">
+            <label>Dirección fiscal</label>
+            <input id="ordDireccion" 
+                   placeholder="Dirección del proveedor" 
+                   style="width:100%;">
+        </div>
+        
+        <div class="form-field col-3">
+            <label>Contacto</label>
+            <input id="ordContacto" 
+                   placeholder="Nombre del contacto" 
+                   style="width:100%;">
+        </div>
+        
+        <div class="form-field col-3">
+            <label>Teléfono</label>
+            <input id="ordTelefono" 
+                   placeholder="999 999 999" 
+                   style="width:100%;">
+        </div>
+
+        <!-- Fila 3: Email (ancho completo o mitad) -->
+        <div class="form-field col-12">
+            <label>Email</label>
+            <input id="ordEmail" 
+                   placeholder="proveedor@email.com" 
+                   type="email" 
+                   style="width:100%;">
+        </div>
+        
+    </div>
+</div>
             <!-- SECCIÓN 3: CONDICIONES COMERCIALES -->
             <div class="ficha-section">
                 <div class="ficha-section-title">📋 Condiciones comerciales</div>
