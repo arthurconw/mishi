@@ -233,3 +233,150 @@
 
     console.log('✅ Selector genérico de productos de Compras cargado');
 })();
+
+// ============================================================
+// CONSULTA DE RUC CON MODALES VISUALES
+// ============================================================
+
+let _rucResultadoActual = null;       // Guardar resultado de la consulta
+let _rucCallbackUsarDatos = null;     // Callback a ejecutar al pulsar "Usar estos datos"
+
+/**
+ * Muestra el modal de carga
+ */
+function mostrarLoadingRuc(ruc) {
+    const modal = document.getElementById('loadingRucModal');
+    const numero = document.getElementById('loadingRucNumero');
+    if (numero) numero.textContent = ruc;
+    if (modal) {
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+    }
+}
+
+/**
+ * Oculta el modal de carga
+ */
+function ocultarLoadingRuc() {
+    const modal = document.getElementById('loadingRucModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Muestra el modal con los datos recibidos
+ */
+function mostrarResultadoRUC(datos, origen, callbackUsarDatos) {
+    if (!datos) return;
+
+    _rucResultadoActual = datos;
+    _rucCallbackUsarDatos = callbackUsarDatos || null;
+
+    // Rellenar campos
+    document.getElementById('rucResultRazon').textContent     = datos.razon_social || datos.razon_comercial || 'Sin razón social';
+    document.getElementById('rucResultRuc').textContent       = datos.ruc || '-';
+    document.getElementById('rucResultEstado').textContent    = (datos.estado || 'ACTIVO').toUpperCase();
+    document.getElementById('rucResultDireccion').textContent = datos.direccion || 'Sin dirección registrada';
+    document.getElementById('rucResultCondicion').textContent = datos.condicion || 'HABIDO';
+
+    // Ubicación formateada
+    const partesUbicacion = [];
+    if (datos.distrito)     partesUbicacion.push(datos.distrito);
+    if (datos.provincia)    partesUbicacion.push(datos.provincia);
+    if (datos.departamento) partesUbicacion.push(datos.departamento);
+    document.getElementById('rucResultUbicacion').textContent = partesUbicacion.length > 0 
+        ? partesUbicacion.join(' / ') 
+        : 'Sin ubicación registrada';
+
+    // Origen (BD o SUNAT)
+    document.getElementById('rucResultOrigen').textContent = 
+        origen === 'bd' ? '📁 Fuente: Base de datos local' : '🌞 Fuente: SUNAT (consulta en vivo)';
+
+    // Cambiar color según estado
+    const estadoEl = document.getElementById('rucResultEstado');
+    const estadoUpper = (datos.estado || '').toUpperCase();
+    if (estadoUpper.includes('BAJA') || estadoUpper.includes('SUSPEND')) {
+        estadoEl.style.color = '#DC2626';
+    } else if (estadoUpper.includes('ACTIVO')) {
+        estadoEl.style.color = '#16A34A';
+    } else {
+        estadoEl.style.color = '#0F172A';
+    }
+
+    // Mostrar modal
+    const modal = document.getElementById('rucResultModal');
+    if (modal) {
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+    }
+}
+
+/**
+ * Aplica los datos al formulario cuando el usuario hace clic en "Usar estos datos"
+ */
+function usarDatosRUC() {
+    if (typeof _rucCallbackUsarDatos === 'function' && _rucResultadoActual) {
+        _rucCallbackUsarDatos(_rucResultadoActual);
+    }
+    closeModal('rucResultModal');
+}
+
+/**
+ * FUNCIÓN PRINCIPAL: consulta un RUC con modales visuales
+ * @param {string} ruc
+ * @param {Function} onUsarDatos - callback al pulsar "Usar estos datos"
+ * @returns {Promise<Object|null>}
+ */
+async function consultarRUCConspinner(ruc, onUsarDatos) {
+    if (!ruc || ruc.length !== 11 || !/^\d+$/.test(ruc)) {
+        showToast('⚠️ El RUC debe tener 11 dígitos numéricos', 'warning');
+        return null;
+    }
+
+    // 1) Mostrar spinner
+    mostrarLoadingRuc(ruc);
+
+    try {
+        // 2) Consultar al backend
+        const resp = await fetch(`/compras/api/proveedores/buscar?q=${ruc}`);
+        const data = await resp.json();
+
+        // 3) Ocultar spinner
+        ocultarLoadingRuc();
+
+        // 4) Procesar respuesta
+        if (data.success && data.data && data.data.length > 0) {
+            const proveedor = data.data[0];
+            const origen = proveedor.origen || data.source || 'sunat';
+
+            // Pequeña pausa para que se vea la transición
+            await new Promise(r => setTimeout(r, 300));
+
+            // 5) Mostrar modal con los datos recibidos
+            mostrarResultadoRUC(proveedor, origen, onUsarDatos);
+
+            return proveedor;
+        } else {
+            // No encontrado
+            showToast(`❌ ${data.error || 'RUC no encontrado en SUNAT'}`, 'error');
+            return null;
+        }
+
+    } catch (error) {
+        ocultarLoadingRuc();
+        console.error('❌ Error consultando RUC:', error);
+        showToast('❌ Error de conexión. Intenta de nuevo.', 'error');
+        return null;
+    }
+}
+
+// Exponer al window
+window.mostrarLoadingRuc = mostrarLoadingRuc;
+window.ocultarLoadingRuc = ocultarLoadingRuc;
+window.mostrarResultadoRUC = mostrarResultadoRUC;
+window.usarDatosRUC = usarDatosRUC;
+window.consultarRUCConspinner = consultarRUCConspinner;
+
+console.log('✅ Sistema de consulta RUC con modales cargado');

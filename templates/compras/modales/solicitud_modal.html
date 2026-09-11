@@ -314,73 +314,50 @@ function solCargarProductoSeleccionado(prod) {
     solCalcularTotal();
 }
 
-function solBuscarProveedorSUNAT(force = false) {
+let _solRucTimer = null;
+
+async function solBuscarProveedorSUNAT(force = false) {
     const rucInput = document.getElementById('solRucProveedor');
     const ruc = (rucInput.value || '').replace(/\D/g, '').trim();
 
     if (!force) {
-        clearTimeout(window._solRucTimer);
-        window._solRucTimer = setTimeout(() => { if (ruc.length === 11) solBuscarProveedorSUNAT(true); }, 700);
+        clearTimeout(_solRucTimer);
+        _solRucTimer = setTimeout(() => {
+            if (ruc.length === 11) solBuscarProveedorSUNAT(true);
+        }, 900);
         return;
     }
 
-    if (ruc.length !== 11) { showToast('⚠️ RUC de 11 dígitos requerido', 'warning'); return; }
+    if (ruc.length !== 11) {
+        showToast('⚠️ El RUC debe tener 11 dígitos', 'warning');
+        return;
+    }
 
-    showToast('⏳ Consultando proveedor...', 'info');
+    // 🔽 Consultar con modales visuales
+    await consultarRUCConspinner(ruc, (proveedor) => {
+        // Se ejecuta al pulsar "Usar estos datos"
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
 
-    fetch(`/compras/api/proveedores/buscar?q=${ruc}`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.success && data.data && data.data.length > 0) {
-                const p = data.data[0];
+        set('solProveedorSugerido', proveedor.razon_social || proveedor.razon_comercial || '');
+        set('solRucProveedor', proveedor.ruc || ruc);
+        set('solContactoProveedor', proveedor.contacto || '');
+        set('solTelefonoProveedor', proveedor.telefono || '');
+        set('solEmailProveedor', proveedor.email || '');
+        set('solDireccionProveedor', proveedor.direccion || '');
 
-                // Autocompletar TODO
-                document.getElementById('solProveedorSugerido').value = p.razon_social || p.razon_comercial || '';
-                document.getElementById('solRucProveedor').value = p.ruc || ruc;
+        const condEl = document.getElementById('solCondicionPago');
+        if (condEl && proveedor.condicion_pago) condEl.value = proveedor.condicion_pago;
 
-                // Si tu modal tiene estos campos, se llenan. Si no, se ignoran.
-                const setIfExists = (id, val) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = val || '';
-                };
-
-                setIfExists('solCondicionPago', p.condicion_pago);
-                setIfExists('solTiempoCredito', p.tiempo_credito);
-                setIfExists('solContactoProveedor', p.contacto);
-                setIfExists('solTelefonoProveedor', p.telefono);
-                setIfExists('solEmailProveedor', p.email);
-                setIfExists('solDireccionProveedor', p.direccion);
-
-                // Seleccionar moneda si existe el select
-                const monSel = document.getElementById('solMoneda');
-                if (monSel && p.moneda) {
-                    for (let opt of monSel.options) {
-                        if (opt.value === p.moneda) { opt.selected = true; break; }
-                    }
-                }
-
-                showToast(`✅ Proveedor: ${p.razon_social}`, 'success');
-                return;
+        const monEl = document.getElementById('solMoneda');
+        if (monEl && proveedor.moneda) {
+            for (let opt of monEl.options) {
+                if (opt.value === proveedor.moneda) { opt.selected = true; break; }
             }
+        }
 
-            // Si no encontró, intentar SUNAT directo
-            return fetch(`/api/sunat/consulta?ruc=${ruc}`)
-                .then(r => r.json())
-                .then(sunat => {
-                    if (sunat.success) {
-                        document.getElementById('solProveedorSugerido').value = sunat.razon_social || '';
-                        showToast('🌞 Datos cargados desde SUNAT (no está en tu BD)', 'info');
-                    } else {
-                        showToast('⚠️ RUC no encontrado. Ingrésalo manualmente.', 'warning');
-                    }
-                });
-        })
-        .catch(e => {
-            console.error(e);
-            showToast('❌ Error consultando proveedor', 'error');
-        });
+        showToast(`✅ Datos aplicados: ${proveedor.razon_social}`, 'success');
+    });
 }
-
 
 // Inicializar eventos al abrir el modal
 document.addEventListener('DOMContentLoaded', function() {
