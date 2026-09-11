@@ -56,6 +56,7 @@ def obtener_solicitudes_db():
         print(f"❌ Error en obtener_solicitudes_db: {e}")
         return []
 
+
 def obtener_solicitud_por_id_db(solicitud_id):
     """Obtiene una solicitud de compra por su ID"""
     try:
@@ -107,6 +108,7 @@ def guardar_solicitud_db(data):
     except Exception as e:
         print(f"❌ Error en guardar_solicitud_db: {e}")
         raise
+
 
 def actualizar_solicitud_db(solicitud_id, data):
     """Actualiza una solicitud de compra existente"""
@@ -172,6 +174,7 @@ def obtener_comparativos_db():
         print(f"❌ Error en obtener_comparativos_db: {e}")
         return []
 
+
 def guardar_comparativo_db(data):
     """Guarda un nuevo comparativo de proveedores"""
     try:
@@ -204,14 +207,6 @@ def guardar_comparativo_db(data):
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA ÓRDENES DE COMPRA
-# ============================================================
-
-# ============================================================
-# FUNCIONES DE AYUDA PARA ÓRDENES DE COMPRA
-# ============================================================
-
-# ============================================================
-# FUNCIONES DE AYUDA PARA ÓRDENES DE COMPRA (CORREGIDO)
 # ============================================================
 
 def obtener_ordenes_db():
@@ -259,8 +254,6 @@ def obtener_ordenes_db():
 def guardar_orden_db(data):
     """Guarda una nueva orden de compra (usando tu estructura real)"""
     try:
-        from datetime import datetime
-        
         # Si es actualización, usar UPDATE
         if data.get('id'):
             query = """
@@ -422,9 +415,7 @@ def actualizar_orden_db(orden_id, data):
     except Exception as e:
         print(f"❌ Error en actualizar_orden_db: {e}")
         raise
-# ============================================================
-# FUNCIONES DE AYUDA PARA COMPROBANTES DE PROVEEDOR
-# ============================================================
+
 
 # ============================================================
 # FUNCIONES DE AYUDA PARA COMPROBANTES DE PROVEEDOR
@@ -483,6 +474,7 @@ def obtener_comprobantes_proveedor_db():
         traceback.print_exc()
         return []
 
+
 def guardar_comprobante_proveedor_db(data):
     """Guarda un nuevo comprobante de proveedor"""
     try:
@@ -505,7 +497,7 @@ def guardar_comprobante_proveedor_db(data):
             float(data.get('monto', 0)),
             data.get('ruc') or data.get('ruc_proveedor') or '',
             data.get('proveedor') or data.get('proveedor_nombre') or '',
-            data.get('orden_compra_id'),                  # int o None
+            data.get('orden_compra_id'),
             data.get('orden_compra') or data.get('orden_compra_numero') or '',
             data.get('estado', 'Pendiente'),
             data.get('observaciones', ''),
@@ -518,13 +510,8 @@ def guardar_comprobante_proveedor_db(data):
         import traceback
         traceback.print_exc()
         raise
-# ============================================================
-# FUNCIONES DE AYUDA PARA RECEPCIÓN DE MERCADERÍA
-# ============================================================
 
-# ============================================================
-# FUNCIONES DE AYUDA PARA RECEPCIÓN DE MERCADERÍA
-# ============================================================
+
 # ============================================================
 # FUNCIONES DE AYUDA PARA RECEPCIÓN DE MERCADERÍA
 # ============================================================
@@ -605,7 +592,7 @@ def guardar_recepcion_db(data):
             data.get('numero_recepcion'),
             data.get('fecha') or datetime.now().isoformat(),
             data.get('estado', 'Pendiente'),
-            data.get('orden_compra_id'),                  # int o None
+            data.get('orden_compra_id'),
             data.get('orden_compra') or data.get('orden_compra_numero') or '',
             data.get('proveedor') or data.get('proveedor_nombre') or '',
             data.get('producto'),
@@ -623,6 +610,8 @@ def guardar_recepcion_db(data):
         traceback.print_exc()
         raise
 
+
+# ============================================================
 # RUTAS PRINCIPALES
 # ============================================================
 
@@ -649,7 +638,6 @@ def api_solicitudes_listar():
     try:
         data = obtener_solicitudes_db()
         
-        # Formatear para el frontend
         formatted_data = []
         for row in data:
             formatted_data.append({
@@ -680,22 +668,17 @@ def api_solicitudes_guardar():
         data = request.get_json()
         print(f"📦 Guardando solicitud: {data}")
         
-        # Generar número si no tiene
         if not data.get('numero_solicitud'):
             count_data = db_query("SELECT COUNT(*) as total FROM solicitudes_compra")
             count = count_data[0]['total'] + 1 if count_data else 1
             data['numero_solicitud'] = f"SOL-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
         
-        # Si tiene ID, actualizar
         if data.get('id'):
             print(f"✏️ Actualizando solicitud ID: {data['id']}")
-            
-            # Verificar que la solicitud existe
             existing = obtener_solicitud_por_id_db(data['id'])
             if not existing:
                 return jsonify({'success': False, 'error': 'Solicitud no encontrada'}), 404
             
-            # Actualizar solicitud
             query = """
                 UPDATE solicitudes_compra SET
                     producto = %s,
@@ -724,14 +707,9 @@ def api_solicitudes_guardar():
             result = db_query(query, params)
             
             if result:
-                return jsonify({
-                    'success': True, 
-                    'message': 'Solicitud actualizada', 
-                    'data': result[0]
-                })
+                return jsonify({'success': True, 'message': 'Solicitud actualizada', 'data': result[0]})
             return jsonify({'success': False, 'error': 'No se pudo actualizar'}), 400
         
-        # Si no tiene ID, crear nueva
         print(f"🆕 Creando nueva solicitud")
         result = guardar_solicitud_db(data)
         if result:
@@ -781,6 +759,7 @@ def api_solicitudes_toggle(id):
         print(f"❌ Error en api_solicitudes_toggle: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @compras_bp.route('/compras/api/solicitudes/<int:id>', methods=['DELETE'])
 @login_required
 def api_solicitudes_eliminar(id):
@@ -812,7 +791,6 @@ def api_comparativos_listar():
         
         formatted_data = []
         for row in data:
-            # Obtener el mejor precio
             proveedores = row.get('proveedores', [])
             mejor = None
             if proveedores:
@@ -834,6 +812,7 @@ def api_comparativos_listar():
     except Exception as e:
         print(f"❌ Error en api_comparativos_listar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @compras_bp.route('/compras/api/comparativos/guardar', methods=['POST'])
 @login_required
@@ -858,6 +837,7 @@ def api_comparativos_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @compras_bp.route('/compras/api/comparativos/<int:id>/toggle', methods=['PUT'])
 @login_required
@@ -909,7 +889,6 @@ def api_ordenes_listar():
         
         formatted_data = []
         for row in data:
-            # Obtener nombre del proveedor si existe
             proveedor_nombre = None
             if row.get('proveedor_id'):
                 try:
@@ -958,7 +937,6 @@ def api_ordenes_guardar():
             count = count_data[0]['total'] + 1 if count_data else 1
             data['numero_orden'] = f"OC-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
         
-        # Calcular totales si no vienen
         items = data.get('items', [])
         if items and not data.get('subtotal'):
             subtotal = sum(float(i.get('total', float(i.get('cantidad', 0)) * float(i.get('precio_unitario', 0)))) for i in items)
@@ -976,6 +954,7 @@ def api_ordenes_guardar():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @compras_bp.route('/compras/api/ordenes/<int:id>/toggle', methods=['PUT'])
 @login_required
@@ -1013,12 +992,12 @@ def api_ordenes_toggle(id):
         print(f"❌ Error en api_ordenes_toggle: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @compras_bp.route('/compras/api/ordenes/<int:id>', methods=['DELETE'])
 @login_required
 def api_ordenes_eliminar(id):
     """Elimina una orden de compra (solo si está en Borrador o Anulada)"""
     try:
-        # Verificar estado
         check_query = "SELECT id, estado FROM ordenes_compra WHERE id = %s"
         check_result = db_query(check_query, (id,))
         
@@ -1048,6 +1027,7 @@ def api_ordenes_eliminar(id):
 # ============================================================
 # API - COMPROBANTES DE PROVEEDOR
 # ============================================================
+
 @compras_bp.route('/compras/api/comprobantes-proveedor/listar', methods=['GET'])
 @login_required
 def api_comprobantes_proveedor_listar():
@@ -1079,42 +1059,6 @@ def api_comprobantes_proveedor_listar():
         print(f"❌ Error en api_comprobantes_proveedor_listar: {e}")
         import traceback
         traceback.print_exc()
-        # Devolver 200 con lista vacía para no romper el frontend
-        return jsonify({'success': False, 'error': str(e), 'data': []}), 200
-
-
-@compras_bp.route('/compras/api/recepciones/listar', methods=['GET'])
-@login_required
-def api_recepciones_listar():
-    """Lista todas las recepciones de mercadería"""
-    try:
-        data = obtener_recepciones_db()
-
-        formatted_data = []
-        for row in data:
-            formatted_data.append({
-                'id': row.get('id'),
-                'numero': row.get('numero_recepcion') or '',
-                'numero_recepcion': row.get('numero_recepcion') or '',
-                'fecha': row.get('fecha'),
-                'estado': row.get('estado') or 'Pendiente',
-                'orden_compra': row.get('orden_compra_numero') or '',
-                'orden': row.get('orden_compra_numero') or '',
-                'proveedor': row.get('proveedor_nombre') or '',
-                'producto': row.get('producto') or '',
-                'cantidad': float(row.get('cantidad') or 0),
-                'unidad': row.get('unidad') or 'UND',
-                'estado_mercaderia': row.get('estado_mercaderia') or '',
-                'observaciones': row.get('observaciones') or ''
-            })
-
-        return jsonify({'success': True, 'data': formatted_data})
-
-    except Exception as e:
-        print(f"❌ Error en api_recepciones_listar: {e}")
-        import traceback
-        traceback.print_exc()
-        # Devolver 200 con lista vacía para no romper el frontend
         return jsonify({'success': False, 'error': str(e), 'data': []}), 200
 
 
@@ -1133,48 +1077,6 @@ def api_comprobantes_proveedor_guardar():
 
     except Exception as e:
         print(f"❌ Error en api_comprobantes_proveedor_guardar: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 200
-
-
-@compras_bp.route('/compras/api/recepciones/guardar', methods=['POST'])
-@login_required
-def api_recepciones_guardar():
-    """Guarda una recepción de mercadería"""
-    try:
-        data = request.get_json()
-        print(f"📦 Guardando recepción: {data}")
-
-        if not data.get('numero_recepcion'):
-            count_data = db_query("SELECT COUNT(*) as total FROM recepciones_mercaderia")
-            count = count_data[0]['total'] + 1 if count_data else 1
-            data['numero_recepcion'] = f"REC-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
-
-        result = guardar_recepcion_db(data)
-        if result:
-            # Si la recepción se aprueba o almacena, actualizar stock
-            if data.get('estado') in ('Aprobada', 'Almacenada'):
-                try:
-                    update_stock_query = """
-                        UPDATE productos 
-                        SET stock = stock + %s
-                        WHERE descripcion ILIKE %s OR codigo ILIKE %s
-                    """
-                    db_query(update_stock_query, (
-                        float(data.get('cantidad', 0)),
-                        f"%{data.get('producto', '')}%",
-                        f"%{data.get('producto', '')}%"
-                    ))
-                    print(f"✅ Stock actualizado para: {data.get('producto')}")
-                except Exception as e:
-                    print(f"⚠️ Error actualizando stock: {e}")
-
-            return jsonify({'success': True, 'message': 'Recepción guardada', 'data': result})
-        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 200
-
-    except Exception as e:
-        print(f"❌ Error en api_recepciones_guardar: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 200
@@ -1227,27 +1129,33 @@ def api_recepciones_listar():
     """Lista todas las recepciones de mercadería"""
     try:
         data = obtener_recepciones_db()
-        
+
         formatted_data = []
         for row in data:
             formatted_data.append({
                 'id': row.get('id'),
-                'numero': row.get('numero_recepcion'),
+                'numero': row.get('numero_recepcion') or '',
+                'numero_recepcion': row.get('numero_recepcion') or '',
                 'fecha': row.get('fecha'),
-                'estado': row.get('estado'),
-                'orden_compra': row.get('orden_compra'),
-                'proveedor': row.get('proveedor'),
-                'producto': row.get('producto'),
-                'cantidad': float(row.get('cantidad', 0)),
-                'unidad': row.get('unidad', 'UND'),
-                'estado_mercaderia': row.get('estado_mercaderia'),
-                'observaciones': row.get('observaciones', '')
+                'estado': row.get('estado') or 'Pendiente',
+                'orden_compra': row.get('orden_compra_numero') or '',
+                'orden': row.get('orden_compra_numero') or '',
+                'proveedor': row.get('proveedor_nombre') or '',
+                'producto': row.get('producto') or '',
+                'cantidad': float(row.get('cantidad') or 0),
+                'unidad': row.get('unidad') or 'UND',
+                'estado_mercaderia': row.get('estado_mercaderia') or '',
+                'observaciones': row.get('observaciones') or ''
             })
-        
+
         return jsonify({'success': True, 'data': formatted_data})
+
     except Exception as e:
         print(f"❌ Error en api_recepciones_listar: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e), 'data': []}), 200
+
 
 @compras_bp.route('/compras/api/recepciones/guardar', methods=['POST'])
 @login_required
@@ -1256,18 +1164,16 @@ def api_recepciones_guardar():
     try:
         data = request.get_json()
         print(f"📦 Guardando recepción: {data}")
-        
+
         if not data.get('numero_recepcion'):
             count_data = db_query("SELECT COUNT(*) as total FROM recepciones_mercaderia")
             count = count_data[0]['total'] + 1 if count_data else 1
             data['numero_recepcion'] = f"REC-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
-        
+
         result = guardar_recepcion_db(data)
         if result:
-            # Si la recepción fue aprobada, actualizar stock de productos
-            if data.get('estado') == 'Aprobada' or data.get('estado') == 'Almacenada':
+            if data.get('estado') in ('Aprobada', 'Almacenada'):
                 try:
-                    # Actualizar stock del producto
                     update_stock_query = """
                         UPDATE productos 
                         SET stock = stock + %s
@@ -1275,21 +1181,22 @@ def api_recepciones_guardar():
                     """
                     db_query(update_stock_query, (
                         float(data.get('cantidad', 0)),
-                        f'%{data.get("producto", "")}%',
-                        f'%{data.get("producto", "")}%'
+                        f"%{data.get('producto', '')}%",
+                        f"%{data.get('producto', '')}%"
                     ))
-                    print(f"✅ Stock actualizado para producto: {data.get('producto')}")
+                    print(f"✅ Stock actualizado para: {data.get('producto')}")
                 except Exception as e:
                     print(f"⚠️ Error actualizando stock: {e}")
-            
+
             return jsonify({'success': True, 'message': 'Recepción guardada', 'data': result})
-        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
-        
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 200
+
     except Exception as e:
         print(f"❌ Error en api_recepciones_guardar: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 200
+
 
 @compras_bp.route('/compras/api/recepciones/<int:id>/toggle', methods=['PUT'])
 @login_required
@@ -1315,10 +1222,8 @@ def api_recepciones_toggle(id):
         result = db_query(query, (nuevo_estado, id))
         
         if result:
-            # Si se aprueba, actualizar stock
             if nuevo_estado in ['Aprobada', 'Almacenada']:
                 try:
-                    # Obtener datos de la recepción
                     get_query = """
                         SELECT producto, cantidad 
                         FROM recepciones_mercaderia 
@@ -1378,7 +1283,6 @@ def api_exportar(tipo):
         else:
             return jsonify({'success': False, 'error': 'Tipo no válido'}), 400
         
-        # Crear respuesta JSON
         from flask import Response
         import json
         
@@ -1396,8 +1300,9 @@ def api_exportar(tipo):
         print(f"❌ Error en api_exportar: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 # ============================================================
-# API - BUSCAR PROVEEDOR POR RUC / NOMBRE (VERSIÓN FINAL AJUSTADA)
+# API - BUSCAR PROVEEDOR POR RUC / NOMBRE
 # ============================================================
 
 @compras_bp.route('/compras/api/proveedores/buscar', methods=['GET'])
@@ -1415,9 +1320,6 @@ def api_proveedores_buscar():
 
         es_ruc = q.isdigit() and len(q) == 11
 
-        # ------------------------------------------------------------
-        # Query base (usa las columnas REALES de tu tabla)
-        # ------------------------------------------------------------
         select_str = """
             id,
             ruc,
@@ -1443,7 +1345,6 @@ def api_proveedores_buscar():
         """
 
         if es_ruc:
-            # Búsqueda exacta por RUC (más rápida y precisa)
             query = f"""
                 SELECT {select_str}
                 FROM proveedores
@@ -1452,7 +1353,6 @@ def api_proveedores_buscar():
             """
             params = (q,)
         else:
-            # Búsqueda amplia por razón social, comercial, contacto o RUC parcial
             pattern = f"%{q}%"
             query = f"""
                 SELECT {select_str}
@@ -1466,16 +1366,12 @@ def api_proveedores_buscar():
             """
             params = (pattern, pattern, pattern, pattern)
 
-        # ------------------------------------------------------------
-        # Ejecutar y normalizar
-        # ------------------------------------------------------------
         try:
             rows = db_query(query, params) or []
         except Exception as e:
             print(f"⚠️ Error consultando proveedores: {e}")
             return _fallback_sunat_compras(q)
 
-        # Si buscó por RUC exacto y no encontró, fallback SUNAT
         if not rows and es_ruc:
             return _fallback_sunat_compras(q)
 
@@ -1570,55 +1466,6 @@ def _fallback_sunat_compras(ruc):
         print(f"❌ Error en _fallback_sunat_compras: {e}")
         return jsonify({'success': True, 'data': [], 'source': 'error'})
 
-def _fallback_sunat(ruc):
-    """Fallback: consulta SUNAT y devuelve formato compatible."""
-    try:
-        import urllib.request
-        import json as _json
-        import ssl
-
-        # Validar RUC
-        if not ruc.isdigit() or len(ruc) != 11:
-            return jsonify({'success': True, 'data': [], 'source': 'sunat_invalid'})
-
-        # Intentar consultar SUNAT vía API externa
-        # Opción 1: API interna si existe
-        try:
-            url = f"https://api.apis.net.pe/v1/ruc?numero={ruc}"
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req, timeout=8, context=ctx) as resp:
-                raw = resp.read().decode('utf-8')
-                data_sunat = _json.loads(raw)
-
-            razon = data_sunat.get('razonSocial') or data_sunat.get('nombre') or ''
-            direccion = data_sunat.get('direccion') or ''
-
-            if razon:
-                return jsonify({
-                    'success': True,
-                    'source': 'sunat',
-                    'data': [{
-                        'id': None,
-                        'ruc': ruc,
-                        'razon_social': razon,
-                        'direccion': direccion,
-                        'telefono': '',
-                        'email': '',
-                        'contacto': ''
-                    }]
-                })
-        except Exception as e:
-            print(f"⚠️ Error consultando SUNAT externa: {e}")
-
-        return jsonify({'success': True, 'data': [], 'source': 'sunat_empty'})
-
-    except Exception as e:
-        print(f"❌ Error en _fallback_sunat: {e}")
-        return jsonify({'success': True, 'data': [], 'source': 'error'})
 
 # ============================================================
 # API - BUSCAR ÓRDENES DE COMPRA (autocomplete)
@@ -1635,16 +1482,16 @@ def api_ordenes_buscar():
             return jsonify({'success': True, 'data': []})
         
         query = """
-            SELECT id, numero_orden, proveedor, ruc, total, estado
+            SELECT id, numero_orden, contacto_proveedor as proveedor, 
+                   email_proveedor as ruc, total, estado
             FROM ordenes_compra
             WHERE numero_orden ILIKE %s
-               OR proveedor ILIKE %s
-               OR ruc ILIKE %s
-            ORDER BY fecha DESC
+               OR contacto_proveedor ILIKE %s
+            ORDER BY id DESC
             LIMIT 20
         """
         search_pattern = f'%{q}%'
-        results = db_query(query, (search_pattern, search_pattern, search_pattern))
+        results = db_query(query, (search_pattern, search_pattern))
         
         return jsonify({'success': True, 'data': results})
         
@@ -1664,10 +1511,11 @@ def orden_preview(id):
     try:
         query = """
             SELECT 
-                id, numero_orden, fecha, estado,
-                proveedor, ruc, condicion_pago, moneda,
+                id, numero_orden, fecha_creacion, estado,
+                proveedor_id, condicion_pago,
                 subtotal, igv, total,
-                items_json, observaciones,
+                contacto_proveedor, telefono_proveedor, email_proveedor,
+                nota_compra, notas,
                 created_at, updated_at
             FROM ordenes_compra
             WHERE id = %s
@@ -1679,13 +1527,15 @@ def orden_preview(id):
         
         orden = result[0]
         
-        # Parsear items
-        if orden.get('items_json'):
-            try:
-                orden['items'] = json.loads(orden['items_json'])
-            except:
-                orden['items'] = []
-        else:
+        # Cargar items
+        try:
+            items_query = """
+                SELECT producto, cantidad, precio_unitario, total
+                FROM ordenes_compra_items
+                WHERE orden_compra_id = %s
+            """
+            orden['items'] = db_query(items_query, (id,)) or []
+        except:
             orden['items'] = []
         
         return render_template('compras/orden_preview.html', orden=orden)
