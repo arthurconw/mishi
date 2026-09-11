@@ -13032,115 +13032,115 @@ function renderCotizacionFormContent(isEdit) {
     </div>
 
     <!-- ============================================================ -->
-    <!-- 2. CONDICIONES COMERCIALES - COMPACTO -->
-    <!-- ============================================================ -->
-    <div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;">
-        <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;">
-            <span style="color:#EF233C;font-weight:1000;">2.</span> 
-            <span style="color:#EF233C;font-weight:1000;">Condiciones Comerciales</span>
-            <span style="font-size:8px;color:#DC2626;font-weight:700;margin-left:auto;">* Campos obligatorios</span>
-        </h3>
-        <div class="body" style="padding:6px 8px;">
-            <!-- Asesor | Email | Teléfono -->
-            <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:4px;margin-bottom:2px;">
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Asesor</label>
-                    <input id="fVendedor" value="${CONFIG.asesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
-                </div>
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email Asesor</label>
-                    <input id="fEmailAsesor" value="${CONFIG.emailAsesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
-                </div>
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono Asesor</label>
-                    <input id="fTelefonoAsesor" value="${CONFIG.telefonoAsesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
-                </div>
+<!-- 2. CONDICIONES COMERCIALES - COMPACTO -->
+<!-- ============================================================ -->
+<div class="create-panel" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;">
+    <h3 style="padding:4px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;font-weight:1000;color:#0F172A;background:#FAFBFC;display:flex;align-items:center;gap:5px;margin:0;">
+        <span style="color:#EF233C;font-weight:1000;">2.</span> 
+        <span style="color:#EF233C;font-weight:1000;">Condiciones Comerciales</span>
+        <span style="font-size:8px;color:#DC2626;font-weight:700;margin-left:auto;">* Campos obligatorios</span>
+    </h3>
+    <div class="body" style="padding:6px 8px;">
+        <!-- Asesor | Email | Teléfono -->
+        <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:4px;margin-bottom:2px;">
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Asesor</label>
+                <input id="fVendedor" value="${CONFIG.asesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
             </div>
-            <!-- Moneda | Condición Pago | Tiempo Entrega -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:2px;">
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
-                    <select id="fMoneda" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-                        <option value="Soles (S/.)" selected>Soles (S/.)</option>
-                        <option value="Dólares ($)">Dólares ($)</option>
-                    </select>
-                </div>
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago <span style="color:#DC2626;font-weight:900;">*</span></label>
-                    <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
-                        <option value="Contado">Contado</option>
-                        <option value="Credito 7 Dias">Credito 7 Dias</option>
-                        <option value="Credito 15 Dias">Credito 15 Dias</option>
-                        <option value="Credito 30 Dias">Credito 30 Dias</option>
-                        <option value="Credito 45 Dias">Credito 45 Dias</option>
-                        <option value="Credito 60 Dias">Credito 60 Dias</option>
-                        <option value="Credito 90 Dias">Credito 90 Dias</option>
-                        <option value="Credito 120 Dias">Credito 120 Dias</option>
-                        <option value="Personalizado" selected>✏️ Personalizado...</option>
-                    </select>
-                    <input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:block;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;" value="Personalizado">
-                </div>
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega <span style="color:#DC2626;font-weight:900;">*</span></label>
-                    <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
-                        <option value="Inmediata">Inmediata</option>
-                        <option value="1 día hábil">1 día hábil</option>
-                        <option value="2 días hábiles">2 días hábiles</option>
-                        <option value="3 días hábiles">3 días hábiles</option>
-                        <option value="5 días hábiles" >5 días hábiles</option>
-                        <option value="7 días hábiles">7 días hábiles</option>
-                        <option value="10 días hábiles">10 días hábiles</option>
-                        <option value="15 días hábiles">15 días hábiles</option>
-                        <option value="Personalizado"selected>✏️ Personalizado...</option>
-                    </select>
-                    <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
-                </div>
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Email Asesor</label>
+                <input id="fEmailAsesor" value="${CONFIG.emailAsesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
             </div>
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono Asesor</label>
+                <input id="fTelefonoAsesor" value="${CONFIG.telefonoAsesorDefault}" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+            </div>
+        </div>
+        <!-- Moneda | Condición Pago | Tiempo Entrega -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:2px;">
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Moneda</label>
+                <select id="fMoneda" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                    <option value="Soles (S/.)" selected>Soles (S/.)</option>
+                    <option value="Dólares ($)">Dólares ($)</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Condición de Pago <span style="color:#DC2626;font-weight:900;">*</span></label>
+                <select id="fCondicion" onchange="toggleCustomField('fCondicion','fCondicionCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
+                    <option value="Contado">Contado</option>
+                    <option value="Credito 7 Dias">Credito 7 Dias</option>
+                    <option value="Credito 15 Dias">Credito 15 Dias</option>
+                    <option value="Credito 30 Dias">Credito 30 Dias</option>
+                    <option value="Credito 45 Dias">Credito 45 Dias</option>
+                    <option value="Credito 60 Dias">Credito 60 Dias</option>
+                    <option value="Credito 90 Dias">Credito 90 Dias</option>
+                    <option value="Credito 120 Dias">Credito 120 Dias</option>
+                    <option value="Personalizado" selected>✏️ Personalizado...</option>
+                </select>
+                <input id="fCondicionCustom" placeholder="Ej: 50% anticipo, 50% contra entrega" style="display:block;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;" value="Personalizado">
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Tiempo de Entrega <span style="color:#DC2626;font-weight:900;">*</span></label>
+                <select id="fTiempo" onchange="toggleCustomField('fTiempo','fTiempoCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;border-left:3px solid #DC2626;">
+                    <option value="Inmediata">Inmediata</option>
+                    <option value="1 día hábil">1 día hábil</option>
+                    <option value="2 días hábiles">2 días hábiles</option>
+                    <option value="3 días hábiles">3 días hábiles</option>
+                    <option value="5 días hábiles" >5 días hábiles</option>
+                    <option value="7 días hábiles">7 días hábiles</option>
+                    <option value="10 días hábiles">10 días hábiles</option>
+                    <option value="15 días hábiles">15 días hábiles</option>
+                    <option value="Personalizado"selected>✏️ Personalizado...</option>
+                </select>
+                <input id="fTiempoCustom" placeholder="Ej: 10 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;border-left:3px solid #DC2626;">
+            </div>
+        </div>
         <!-- Validez Oferta | Dirección de Entrega -->
-<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
-    <div class="form-field">
-        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
-        <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
-            <option value="7 días" selected>7 días</option>
-            <option value="15 días">15 días</option>
-            <option value="30 días">30 días</option>
-            <option value="45 días">45 días</option>
-            <option value="60 días">60 días</option>
-            <option value="Personalizado">✏️ Personalizado...</option>
-        </select>
-        <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-    </div>
-<div class="form-field">
-    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-    <div style="display:flex;gap:4px;align-items:center;">
-        <select id="fDireccionEntrega" style="flex:1;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
-            <option value="">-- Seleccione --</option>
-            <option value="direccion_recogo">📦 Dirección de Recogo</option>
-            <option value="Personalizado">✏️ Personalizado...</option>
-        </select>
-        <span id="sedeSeleccionadaLabel" style="display:none;font-size:9px;font-weight:800;color:#2563EB;background:#DBEAFE;padding:2px 10px;border-radius:4px;white-space:nowrap;"></span>
-    </div>
-    <div id="subDireccionRecogo" style="display:none;margin-top:3px;">
-        <select id="fSubDireccionRecogo" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="actualizarDireccionRecogo(this.value)">
-            <option value="">-- Seleccione Sede --</option>
-            <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
-            <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
-            <option value="Personalizado">✏️ Personalizado...</option>
-        </select>
-        <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-    </div>
-    <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-</div>
-            <!-- Nota Comercial -->
-            <div style="display:grid;grid-template-columns:1fr;gap:3px;">
-                <div class="form-field">
-                    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
-                    <input id="fNotaComercial" placeholder="Comentarios comerciales..." style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
+        <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:4px;margin-bottom:2px;">
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Validez de Oferta</label>
+                <select id="fValidez" onchange="toggleCustomField('fValidez','fValidezCustom')" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;">
+                    <option value="7 días" selected>7 días</option>
+                    <option value="15 días">15 días</option>
+                    <option value="30 días">30 días</option>
+                    <option value="45 días">45 días</option>
+                    <option value="60 días">60 días</option>
+                    <option value="Personalizado">✏️ Personalizado...</option>
+                </select>
+                <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+            </div>
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
+                <div style="display:flex;gap:4px;align-items:center;">
+                    <select id="fDireccionEntrega" style="flex:1;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
+                        <option value="">-- Seleccione --</option>
+                        <option value="direccion_recogo">📦 Dirección de Recogo</option>
+                        <option value="Personalizado">✏️ Personalizado...</option>
+                    </select>
+                    <span id="sedeSeleccionadaLabel" style="display:none;font-size:9px;font-weight:800;color:#2563EB;background:#DBEAFE;padding:2px 10px;border-radius:4px;white-space:nowrap;"></span>
                 </div>
+                <div id="subDireccionRecogo" style="display:none;margin-top:3px;">
+                    <select id="fSubDireccionRecogo" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="actualizarDireccionRecogo(this.value)">
+                        <option value="">-- Seleccione Sede --</option>
+                        <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
+                        <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
+                        <option value="Personalizado">✏️ Personalizado...</option>
+                    </select>
+                    <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+                </div>
+                <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+            </div>
+        </div>
+        <!-- Nota Comercial -->
+        <div style="display:grid;grid-template-columns:1fr;gap:3px;">
+            <div class="form-field">
+                <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Nota Comercial</label>
+                <input id="fNotaComercial" placeholder="Comentarios comerciales..." style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 5px;">
             </div>
         </div>
     </div>
-
+</div>
     <!-- ============================================================ -->
 <!-- 3. RESUMEN - ESTILO IMAGEN (con orden corregido) -->
 <!-- ============================================================ -->
@@ -13317,45 +13317,65 @@ function renderCotizacionFormContent(isEdit) {
         
     `;
 }
-
-// ============================================================
-// FUNCIONES PARA DIRECCIÓN DE RECOGO - VERSIÓN CORREGIDA
-// ============================================================
-
+/**
+ * Muestra/oculta el sub-select de Dirección de Recogo, el input personalizado
+ * o el label azul según la opción elegida en el select principal.
+ * ✅ Versión unificada - maneja los 3 casos
+ */
 function mostrarSubDireccionRecogo(valor) {
-    const customInput = document.getElementById('fDireccionEntregaCustom');
-    const sedeLabel = document.getElementById('sedeSeleccionadaLabel');
+    console.log('🔄 mostrarSubDireccionRecogo - valor:', valor);
     
-    // Ocultar el input personalizado por defecto
-    if (customInput) {
-        customInput.style.display = 'none';
-        customInput.value = '';
+    const customInput   = document.getElementById('fDireccionEntregaCustom');
+    const sedeLabel     = document.getElementById('sedeSeleccionadaLabel');
+    const subContainer  = document.getElementById('subDireccionRecogo');
+    const subSelect     = document.getElementById('fSubDireccionRecogo');
+    const subCustom     = document.getElementById('fSubDireccionRecogoCustom');
+    
+    // ============================================================
+    // 1. OCULTAR TODO PRIMERO
+    // ============================================================
+    if (customInput)  { customInput.style.display  = 'none'; customInput.value = ''; }
+    if (subContainer) { subContainer.style.display = 'none'; }
+    if (subCustom)    { subCustom.style.display    = 'none'; subCustom.value   = ''; }
+    if (sedeLabel)    { sedeLabel.style.display    = 'none'; sedeLabel.textContent = ''; }
+    if (subSelect)    { subSelect.value = ''; }
+    
+    // ============================================================
+    // 2. "Dirección de Recogo" → MOSTRAR SUB-SELECT
+    // ============================================================
+    if (valor === 'direccion_recogo') {
+        console.log('✅ Mostrando sub-select de Dirección de Recogo');
+        if (subContainer) subContainer.style.display = 'block';
+        return;
     }
     
-    // Si es Personalizado, mostrar el input
+    // ============================================================
+    // 3. "Personalizado" → MOSTRAR INPUT PERSONALIZADO
+    // ============================================================
     if (valor === 'Personalizado') {
+        console.log('✅ Mostrando input personalizado');
         if (customInput) {
             customInput.style.display = 'block';
             customInput.focus();
         }
+        return;
+    }
+    
+    // ============================================================
+    // 4. Una dirección del cliente → MOSTRAR LABEL AZUL
+    // ============================================================
+    if (valor && valor !== '') {
+        console.log('✅ Mostrando label de dirección seleccionada');
         if (sedeLabel) {
-            sedeLabel.style.display = 'none';
-        }
-    } 
-    // Si es una dirección seleccionada, mostrar el label
-    else if (valor && valor !== '') {
-        if (sedeLabel) {
-            // Acortar el label si es muy largo
-            const labelCorto = valor.length > 40 ? valor.substring(0, 40) + '...' : valor;
+            const labelCorto = valor.length > 45 ? valor.substring(0, 45) + '...' : valor;
             sedeLabel.textContent = `📍 ${labelCorto}`;
             sedeLabel.style.display = 'inline-block';
         }
-    } else {
-        if (sedeLabel) {
-            sedeLabel.style.display = 'none';
-        }
     }
+    
+    // Si valor está vacío, ya se ocultó todo en el paso 1
 }
+
 
 function actualizarDireccionRecogo(valor) {
     console.log('🔄 actualizarDireccionRecogo - valor recibido:', valor);
@@ -13534,112 +13554,77 @@ function cargarDireccionEntregaExistente(direccion) {
  * Carga las direcciones de entrega del cliente en el desplegable
  * @param {Object} cliente - Datos del cliente con puntos_entrega
  */
-/**
- * Carga las direcciones del cliente en el select SIN borrar las opciones fijas
- * (Dirección de Recogo y Personalizado)
- */
 function cargarDireccionesClienteEnSelect(cliente) {
     const select = document.getElementById('fDireccionEntrega');
-    if (!select) {
-        console.warn('⚠️ No se encontró #fDireccionEntrega');
-        return;
-    }
+    if (!select) return;
     
-    // ============================================================
-    // 1. ELIMINAR SOLO LAS DIRECCIONES ANTERIORES DEL CLIENTE
-    //    (identificadas con data-tipo="cliente")
-    // ============================================================
-    select.querySelectorAll('option[data-tipo="cliente"]').forEach(opt => opt.remove());
+    // Limpiar opciones actuales
+    select.innerHTML = '<option value="">-- Seleccione --</option>';
     
-    // ============================================================
-    // 2. RECOPILAR DIRECCIONES ÚNICAS DEL CLIENTE
-    // ============================================================
+    // Array de direcciones únicas
     const direcciones = [];
-    const direccionesVistas = new Set();
     
-    // 2.1. Dirección fiscal
+    // 1. Agregar la dirección fiscal (si existe)
     if (cliente.direccion_fiscal && cliente.direccion_fiscal.trim()) {
-        const dirFiscal = cliente.direccion_fiscal.trim();
         direcciones.push({
-            valor: dirFiscal,
-            label: `🏢 ${dirFiscal}`,
-            tipo: 'cliente'
+            valor: cliente.direccion_fiscal.trim(),
+            label: `🏢 ${cliente.direccion_fiscal.trim()}`,
+            tipo: 'fiscal'
         });
-        direccionesVistas.add(dirFiscal.toLowerCase());
     }
     
-    // 2.2. Puntos de entrega
-    if (cliente.puntos_entrega && Array.isArray(cliente.puntos_entrega) && cliente.puntos_entrega.length > 0) {
+    // 2. Agregar los puntos de entrega
+    if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
         cliente.puntos_entrega.forEach((punto, idx) => {
-            const dir = (punto.direccion || punto.direccion_entrega || '').trim();
-            if (!dir) return;
-            if (direccionesVistas.has(dir.toLowerCase())) return;
-            
-            const nombre = (punto.punto || punto.nombre_punto || `Punto ${idx + 1}`).trim();
-            const esPrincipal = punto.principal === true ? ' ⭐' : '';
-            
-            direcciones.push({
-                valor: dir,
-                label: `📍 ${nombre}${esPrincipal} - ${dir}`,
-                tipo: 'cliente'
-            });
-            direccionesVistas.add(dir.toLowerCase());
+            const dir = punto.direccion ? punto.direccion.trim() : '';
+            if (dir) {
+                // Evitar duplicados con la dirección fiscal
+                const yaExiste = direcciones.some(d => d.valor === dir);
+                if (!yaExiste) {
+                    const nombre = punto.punto || punto.nombre_punto || `Punto ${idx + 1}`;
+                    const esPrincipal = punto.principal ? ' ⭐' : '';
+                    direcciones.push({
+                        valor: dir,
+                        label: `📍 ${nombre}${esPrincipal} - ${dir}`,
+                        tipo: 'punto'
+                    });
+                }
+            }
         });
     }
     
-    // ============================================================
-    // 3. SI NO HAY DIRECCIONES, NO HACER NADA
-    // ============================================================
-    if (direcciones.length === 0) {
-        console.log('ℹ️ El cliente no tiene direcciones registradas');
+    // 3. Agregar opción personalizada
+    direcciones.push({
+        valor: 'Personalizado',
+        label: '✏️ Ingresar dirección personalizada...',
+        tipo: 'custom'
+    });
+    
+    // Si no hay direcciones, al menos dejar el personalizado
+    if (direcciones.length === 1) {
+        select.innerHTML = '<option value="">-- El cliente no tiene direcciones registradas --</option>' +
+                          '<option value="Personalizado">✏️ Ingresar dirección personalizada...</option>';
         return;
     }
     
-    // ============================================================
-    // 4. INSERTAR LAS DIRECCIONES ANTES DE "Dirección de Recogo"
-    // ============================================================
-    const opcionRecogo = select.querySelector('option[value="direccion_recogo"]');
+    // Renderizar opciones
+    direcciones.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.valor;
+        opt.textContent = d.label;
+        opt.dataset.tipo = d.tipo;
+        select.appendChild(opt);
+    });
     
-    if (opcionRecogo) {
-        // Insertar ANTES de la opción "Dirección de Recogo"
-        direcciones.forEach(d => {
-            const opt = document.createElement('option');
-            opt.value = d.valor;
-            opt.textContent = d.label.length > 80 ? d.label.substring(0, 77) + '...' : d.label;
-            opt.dataset.tipo = d.tipo;
-            select.insertBefore(opt, opcionRecogo);
-        });
-    } else {
-        // Si no existe "direccion_recogo", insertar después de "-- Seleccione --"
-        direcciones.forEach(d => {
-            const opt = document.createElement('option');
-            opt.value = d.valor;
-            opt.textContent = d.label.length > 80 ? d.label.substring(0, 77) + '...' : d.label;
-            opt.dataset.tipo = d.tipo;
-            select.appendChild(opt);
-        });
-    }
-    
-    // ============================================================
-    // 5. SELECCIÓN AUTOMÁTICA
-    // ============================================================
-    // Si solo hay 1 dirección, seleccionarla automáticamente
-    if (direcciones.length === 1) {
-        select.value = direcciones[0].valor;
+    // Si hay una sola dirección (sin contar personalizado), seleccionarla automáticamente
+    const opcionesReales = direcciones.filter(d => d.tipo !== 'custom');
+    if (opcionesReales.length === 1) {
+        select.value = opcionesReales[0].valor;
+        // Disparar el evento por si acaso
         select.dispatchEvent(new Event('change'));
-        console.log(`✅ Única dirección seleccionada: ${direcciones[0].valor}`);
-    } 
-    // Si hay múltiples, seleccionar la principal si existe
-    else {
-        const principal = direcciones.find(d => d.label.includes('⭐'));
-        if (principal) {
-            select.value = principal.valor;
-            select.dispatchEvent(new Event('change'));
-            console.log(`✅ Dirección principal seleccionada: ${principal.valor}`);
-        }
     }
     
-    console.log(`✅ ${direcciones.length} direcciones del cliente cargadas`);
+    console.log(`✅ ${opcionesReales.length} direcciones cargadas para el cliente`);
 }
 // ============================================================
 // MOSTRAR/OCULTAR CAMPOS DE PAGO (Contado)
