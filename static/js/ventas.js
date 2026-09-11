@@ -13534,77 +13534,112 @@ function cargarDireccionEntregaExistente(direccion) {
  * Carga las direcciones de entrega del cliente en el desplegable
  * @param {Object} cliente - Datos del cliente con puntos_entrega
  */
+/**
+ * Carga las direcciones del cliente en el select SIN borrar las opciones fijas
+ * (Dirección de Recogo y Personalizado)
+ */
 function cargarDireccionesClienteEnSelect(cliente) {
     const select = document.getElementById('fDireccionEntrega');
-    if (!select) return;
-    
-    // Limpiar opciones actuales
-    select.innerHTML = '<option value="">-- Seleccione --</option>';
-    
-    // Array de direcciones únicas
-    const direcciones = [];
-    
-    // 1. Agregar la dirección fiscal (si existe)
-    if (cliente.direccion_fiscal && cliente.direccion_fiscal.trim()) {
-        direcciones.push({
-            valor: cliente.direccion_fiscal.trim(),
-            label: `🏢 ${cliente.direccion_fiscal.trim()}`,
-            tipo: 'fiscal'
-        });
-    }
-    
-    // 2. Agregar los puntos de entrega
-    if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
-        cliente.puntos_entrega.forEach((punto, idx) => {
-            const dir = punto.direccion ? punto.direccion.trim() : '';
-            if (dir) {
-                // Evitar duplicados con la dirección fiscal
-                const yaExiste = direcciones.some(d => d.valor === dir);
-                if (!yaExiste) {
-                    const nombre = punto.punto || punto.nombre_punto || `Punto ${idx + 1}`;
-                    const esPrincipal = punto.principal ? ' ⭐' : '';
-                    direcciones.push({
-                        valor: dir,
-                        label: `📍 ${nombre}${esPrincipal} - ${dir}`,
-                        tipo: 'punto'
-                    });
-                }
-            }
-        });
-    }
-    
-    // 3. Agregar opción personalizada
-    direcciones.push({
-        valor: 'Personalizado',
-        label: '✏️ Ingresar dirección personalizada...',
-        tipo: 'custom'
-    });
-    
-    // Si no hay direcciones, al menos dejar el personalizado
-    if (direcciones.length === 1) {
-        select.innerHTML = '<option value="">-- El cliente no tiene direcciones registradas --</option>' +
-                          '<option value="Personalizado">✏️ Ingresar dirección personalizada...</option>';
+    if (!select) {
+        console.warn('⚠️ No se encontró #fDireccionEntrega');
         return;
     }
     
-    // Renderizar opciones
-    direcciones.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d.valor;
-        opt.textContent = d.label;
-        opt.dataset.tipo = d.tipo;
-        select.appendChild(opt);
-    });
+    // ============================================================
+    // 1. ELIMINAR SOLO LAS DIRECCIONES ANTERIORES DEL CLIENTE
+    //    (identificadas con data-tipo="cliente")
+    // ============================================================
+    select.querySelectorAll('option[data-tipo="cliente"]').forEach(opt => opt.remove());
     
-    // Si hay una sola dirección (sin contar personalizado), seleccionarla automáticamente
-    const opcionesReales = direcciones.filter(d => d.tipo !== 'custom');
-    if (opcionesReales.length === 1) {
-        select.value = opcionesReales[0].valor;
-        // Disparar el evento por si acaso
-        select.dispatchEvent(new Event('change'));
+    // ============================================================
+    // 2. RECOPILAR DIRECCIONES ÚNICAS DEL CLIENTE
+    // ============================================================
+    const direcciones = [];
+    const direccionesVistas = new Set();
+    
+    // 2.1. Dirección fiscal
+    if (cliente.direccion_fiscal && cliente.direccion_fiscal.trim()) {
+        const dirFiscal = cliente.direccion_fiscal.trim();
+        direcciones.push({
+            valor: dirFiscal,
+            label: `🏢 ${dirFiscal}`,
+            tipo: 'cliente'
+        });
+        direccionesVistas.add(dirFiscal.toLowerCase());
     }
     
-    console.log(`✅ ${opcionesReales.length} direcciones cargadas para el cliente`);
+    // 2.2. Puntos de entrega
+    if (cliente.puntos_entrega && Array.isArray(cliente.puntos_entrega) && cliente.puntos_entrega.length > 0) {
+        cliente.puntos_entrega.forEach((punto, idx) => {
+            const dir = (punto.direccion || punto.direccion_entrega || '').trim();
+            if (!dir) return;
+            if (direccionesVistas.has(dir.toLowerCase())) return;
+            
+            const nombre = (punto.punto || punto.nombre_punto || `Punto ${idx + 1}`).trim();
+            const esPrincipal = punto.principal === true ? ' ⭐' : '';
+            
+            direcciones.push({
+                valor: dir,
+                label: `📍 ${nombre}${esPrincipal} - ${dir}`,
+                tipo: 'cliente'
+            });
+            direccionesVistas.add(dir.toLowerCase());
+        });
+    }
+    
+    // ============================================================
+    // 3. SI NO HAY DIRECCIONES, NO HACER NADA
+    // ============================================================
+    if (direcciones.length === 0) {
+        console.log('ℹ️ El cliente no tiene direcciones registradas');
+        return;
+    }
+    
+    // ============================================================
+    // 4. INSERTAR LAS DIRECCIONES ANTES DE "Dirección de Recogo"
+    // ============================================================
+    const opcionRecogo = select.querySelector('option[value="direccion_recogo"]');
+    
+    if (opcionRecogo) {
+        // Insertar ANTES de la opción "Dirección de Recogo"
+        direcciones.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.valor;
+            opt.textContent = d.label.length > 80 ? d.label.substring(0, 77) + '...' : d.label;
+            opt.dataset.tipo = d.tipo;
+            select.insertBefore(opt, opcionRecogo);
+        });
+    } else {
+        // Si no existe "direccion_recogo", insertar después de "-- Seleccione --"
+        direcciones.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.valor;
+            opt.textContent = d.label.length > 80 ? d.label.substring(0, 77) + '...' : d.label;
+            opt.dataset.tipo = d.tipo;
+            select.appendChild(opt);
+        });
+    }
+    
+    // ============================================================
+    // 5. SELECCIÓN AUTOMÁTICA
+    // ============================================================
+    // Si solo hay 1 dirección, seleccionarla automáticamente
+    if (direcciones.length === 1) {
+        select.value = direcciones[0].valor;
+        select.dispatchEvent(new Event('change'));
+        console.log(`✅ Única dirección seleccionada: ${direcciones[0].valor}`);
+    } 
+    // Si hay múltiples, seleccionar la principal si existe
+    else {
+        const principal = direcciones.find(d => d.label.includes('⭐'));
+        if (principal) {
+            select.value = principal.valor;
+            select.dispatchEvent(new Event('change'));
+            console.log(`✅ Dirección principal seleccionada: ${principal.valor}`);
+        }
+    }
+    
+    console.log(`✅ ${direcciones.length} direcciones del cliente cargadas`);
 }
 // ============================================================
 // MOSTRAR/OCULTAR CAMPOS DE PAGO (Contado)
