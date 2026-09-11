@@ -13130,7 +13130,6 @@ function renderCotizacionFormContent(isEdit) {
         <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
     </div>
     <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-</di
 </div>
             <!-- Nota Comercial -->
             <div style="display:grid;grid-template-columns:1fr;gap:3px;">
