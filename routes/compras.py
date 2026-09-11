@@ -426,21 +426,61 @@ def actualizar_orden_db(orden_id, data):
 # FUNCIONES DE AYUDA PARA COMPROBANTES DE PROVEEDOR
 # ============================================================
 
+# ============================================================
+# FUNCIONES DE AYUDA PARA COMPROBANTES DE PROVEEDOR
+# ============================================================
+
 def obtener_comprobantes_proveedor_db():
     """Obtiene todos los comprobantes de proveedor"""
     try:
         query = """
             SELECT 
-                id, tipo, numero, fecha, monto,
-                ruc_proveedor, proveedor,
-                orden_compra, estado, observaciones,
-                created_at, updated_at
+                id,
+                tipo,
+                numero,
+                fecha,
+                monto,
+                ruc_proveedor,
+                proveedor_nombre,
+                orden_compra_id,
+                orden_compra_numero,
+                estado,
+                observaciones,
+                creado_por,
+                created_at,
+                updated_at
             FROM comprobantes_proveedor
             ORDER BY id DESC
         """
-        return db_query(query)
+        rows = db_query(query) or []
+
+        normalized = []
+        for r in rows:
+            normalized.append({
+                'id': r.get('id'),
+                'tipo': r.get('tipo') or 'Factura',
+                'numero': r.get('numero') or '',
+                'fecha': r.get('fecha'),
+                'monto': float(r.get('monto') or 0),
+                'ruc_proveedor': r.get('ruc_proveedor') or '',
+                'ruc': r.get('ruc_proveedor') or '',
+                'proveedor_nombre': r.get('proveedor_nombre') or '',
+                'proveedor': r.get('proveedor_nombre') or '',
+                'orden_compra_id': r.get('orden_compra_id'),
+                'orden_compra_numero': r.get('orden_compra_numero') or '',
+                'orden_compra': r.get('orden_compra_numero') or '',
+                'estado': r.get('estado') or 'Pendiente',
+                'observaciones': r.get('observaciones') or '',
+                'created_at': r.get('created_at'),
+                'updated_at': r.get('updated_at'),
+            })
+
+        return normalized
+
     except Exception as e:
         print(f"❌ Error en obtener_comprobantes_proveedor_db: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 def guardar_comprobante_proveedor_db(data):
@@ -449,11 +489,12 @@ def guardar_comprobante_proveedor_db(data):
         query = """
             INSERT INTO comprobantes_proveedor (
                 tipo, numero, fecha, monto,
-                ruc_proveedor, proveedor,
-                orden_compra, estado, observaciones,
+                ruc_proveedor, proveedor_nombre,
+                orden_compra_id, orden_compra_numero,
+                estado, observaciones,
                 creado_por
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             RETURNING id, numero
         """
@@ -462,9 +503,10 @@ def guardar_comprobante_proveedor_db(data):
             data.get('numero'),
             data.get('fecha') or datetime.now().isoformat(),
             float(data.get('monto', 0)),
-            data.get('ruc'),
-            data.get('proveedor'),
-            data.get('orden_compra'),
+            data.get('ruc') or data.get('ruc_proveedor') or '',
+            data.get('proveedor') or data.get('proveedor_nombre') or '',
+            data.get('orden_compra_id'),                  # int o None
+            data.get('orden_compra') or data.get('orden_compra_numero') or '',
             data.get('estado', 'Pendiente'),
             data.get('observaciones', ''),
             data.get('creado_por') or session.get('usuario_id', 8)
@@ -473,9 +515,16 @@ def guardar_comprobante_proveedor_db(data):
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en guardar_comprobante_proveedor_db: {e}")
+        import traceback
+        traceback.print_exc()
         raise
+# ============================================================
+# FUNCIONES DE AYUDA PARA RECEPCIÓN DE MERCADERÍA
+# ============================================================
 
-
+# ============================================================
+# FUNCIONES DE AYUDA PARA RECEPCIÓN DE MERCADERÍA
+# ============================================================
 # ============================================================
 # FUNCIONES DE AYUDA PARA RECEPCIÓN DE MERCADERÍA
 # ============================================================
@@ -485,18 +534,57 @@ def obtener_recepciones_db():
     try:
         query = """
             SELECT 
-                id, numero_recepcion, fecha, estado,
-                orden_compra, proveedor,
-                producto, cantidad, unidad,
-                estado_mercaderia, observaciones,
-                created_at, updated_at
+                id,
+                numero_recepcion,
+                fecha,
+                estado,
+                orden_compra_id,
+                orden_compra_numero,
+                proveedor_nombre,
+                producto,
+                cantidad,
+                unidad,
+                estado_mercaderia,
+                observaciones,
+                creado_por,
+                created_at,
+                updated_at
             FROM recepciones_mercaderia
             ORDER BY id DESC
         """
-        return db_query(query)
+        rows = db_query(query) or []
+
+        normalized = []
+        for r in rows:
+            normalized.append({
+                'id': r.get('id'),
+                'numero': r.get('numero_recepcion') or '',
+                'numero_recepcion': r.get('numero_recepcion') or '',
+                'fecha': r.get('fecha'),
+                'estado': r.get('estado') or 'Pendiente',
+                'orden_compra_id': r.get('orden_compra_id'),
+                'orden_compra': r.get('orden_compra_numero') or '',
+                'orden': r.get('orden_compra_numero') or '',
+                'orden_compra_numero': r.get('orden_compra_numero') or '',
+                'proveedor': r.get('proveedor_nombre') or '',
+                'proveedor_nombre': r.get('proveedor_nombre') or '',
+                'producto': r.get('producto') or '',
+                'cantidad': float(r.get('cantidad') or 0),
+                'unidad': r.get('unidad') or 'UND',
+                'estado_mercaderia': r.get('estado_mercaderia') or '',
+                'observaciones': r.get('observaciones') or '',
+                'created_at': r.get('created_at'),
+                'updated_at': r.get('updated_at'),
+            })
+
+        return normalized
+
     except Exception as e:
         print(f"❌ Error en obtener_recepciones_db: {e}")
+        import traceback
+        traceback.print_exc()
         return []
+
 
 def guardar_recepcion_db(data):
     """Guarda una nueva recepción de mercadería"""
@@ -504,12 +592,12 @@ def guardar_recepcion_db(data):
         query = """
             INSERT INTO recepciones_mercaderia (
                 numero_recepcion, fecha, estado,
-                orden_compra, proveedor,
+                orden_compra_id, orden_compra_numero, proveedor_nombre,
                 producto, cantidad, unidad,
                 estado_mercaderia, observaciones,
                 creado_por
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             RETURNING id, numero_recepcion
         """
@@ -517,8 +605,9 @@ def guardar_recepcion_db(data):
             data.get('numero_recepcion'),
             data.get('fecha') or datetime.now().isoformat(),
             data.get('estado', 'Pendiente'),
-            data.get('orden_compra'),
-            data.get('proveedor'),
+            data.get('orden_compra_id'),                  # int o None
+            data.get('orden_compra') or data.get('orden_compra_numero') or '',
+            data.get('proveedor') or data.get('proveedor_nombre') or '',
             data.get('producto'),
             float(data.get('cantidad', 1)),
             data.get('unidad', 'UND'),
@@ -530,10 +619,10 @@ def guardar_recepcion_db(data):
         return result[0] if result else None
     except Exception as e:
         print(f"❌ Error en guardar_recepcion_db: {e}")
+        import traceback
+        traceback.print_exc()
         raise
 
-
-# ============================================================
 # RUTAS PRINCIPALES
 # ============================================================
 
@@ -959,33 +1048,75 @@ def api_ordenes_eliminar(id):
 # ============================================================
 # API - COMPROBANTES DE PROVEEDOR
 # ============================================================
-
 @compras_bp.route('/compras/api/comprobantes-proveedor/listar', methods=['GET'])
 @login_required
 def api_comprobantes_proveedor_listar():
     """Lista todos los comprobantes de proveedor"""
     try:
         data = obtener_comprobantes_proveedor_db()
-        
+
         formatted_data = []
         for row in data:
             formatted_data.append({
                 'id': row.get('id'),
-                'tipo': row.get('tipo'),
-                'numero': row.get('numero'),
+                'tipo': row.get('tipo') or 'Factura',
+                'numero': row.get('numero') or '',
                 'fecha': row.get('fecha'),
-                'monto': float(row.get('monto', 0)),
-                'ruc': row.get('ruc_proveedor'),
-                'proveedor': row.get('proveedor'),
-                'orden_compra': row.get('orden_compra'),
-                'estado': row.get('estado'),
-                'observaciones': row.get('observaciones', '')
+                'monto': float(row.get('monto') or 0),
+                'ruc': row.get('ruc_proveedor') or '',
+                'ruc_proveedor': row.get('ruc_proveedor') or '',
+                'proveedor': row.get('proveedor_nombre') or '',
+                'proveedor_nombre': row.get('proveedor_nombre') or '',
+                'orden_compra': row.get('orden_compra_numero') or '',
+                'orden_compra_numero': row.get('orden_compra_numero') or '',
+                'estado': row.get('estado') or 'Pendiente',
+                'observaciones': row.get('observaciones') or ''
             })
-        
+
         return jsonify({'success': True, 'data': formatted_data})
+
     except Exception as e:
         print(f"❌ Error en api_comprobantes_proveedor_listar: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        # Devolver 200 con lista vacía para no romper el frontend
+        return jsonify({'success': False, 'error': str(e), 'data': []}), 200
+
+
+@compras_bp.route('/compras/api/recepciones/listar', methods=['GET'])
+@login_required
+def api_recepciones_listar():
+    """Lista todas las recepciones de mercadería"""
+    try:
+        data = obtener_recepciones_db()
+
+        formatted_data = []
+        for row in data:
+            formatted_data.append({
+                'id': row.get('id'),
+                'numero': row.get('numero_recepcion') or '',
+                'numero_recepcion': row.get('numero_recepcion') or '',
+                'fecha': row.get('fecha'),
+                'estado': row.get('estado') or 'Pendiente',
+                'orden_compra': row.get('orden_compra_numero') or '',
+                'orden': row.get('orden_compra_numero') or '',
+                'proveedor': row.get('proveedor_nombre') or '',
+                'producto': row.get('producto') or '',
+                'cantidad': float(row.get('cantidad') or 0),
+                'unidad': row.get('unidad') or 'UND',
+                'estado_mercaderia': row.get('estado_mercaderia') or '',
+                'observaciones': row.get('observaciones') or ''
+            })
+
+        return jsonify({'success': True, 'data': formatted_data})
+
+    except Exception as e:
+        print(f"❌ Error en api_recepciones_listar: {e}")
+        import traceback
+        traceback.print_exc()
+        # Devolver 200 con lista vacía para no romper el frontend
+        return jsonify({'success': False, 'error': str(e), 'data': []}), 200
+
 
 @compras_bp.route('/compras/api/comprobantes-proveedor/guardar', methods=['POST'])
 @login_required
@@ -994,17 +1125,60 @@ def api_comprobantes_proveedor_guardar():
     try:
         data = request.get_json()
         print(f"🧾 Guardando comprobante de proveedor: {data}")
-        
+
         result = guardar_comprobante_proveedor_db(data)
         if result:
             return jsonify({'success': True, 'message': 'Comprobante registrado', 'data': result})
-        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 400
-        
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 200
+
     except Exception as e:
         print(f"❌ Error en api_comprobantes_proveedor_guardar: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 200
+
+
+@compras_bp.route('/compras/api/recepciones/guardar', methods=['POST'])
+@login_required
+def api_recepciones_guardar():
+    """Guarda una recepción de mercadería"""
+    try:
+        data = request.get_json()
+        print(f"📦 Guardando recepción: {data}")
+
+        if not data.get('numero_recepcion'):
+            count_data = db_query("SELECT COUNT(*) as total FROM recepciones_mercaderia")
+            count = count_data[0]['total'] + 1 if count_data else 1
+            data['numero_recepcion'] = f"REC-{datetime.now().strftime('%Y%m%d')}-{str(count).zfill(4)}"
+
+        result = guardar_recepcion_db(data)
+        if result:
+            # Si la recepción se aprueba o almacena, actualizar stock
+            if data.get('estado') in ('Aprobada', 'Almacenada'):
+                try:
+                    update_stock_query = """
+                        UPDATE productos 
+                        SET stock = stock + %s
+                        WHERE descripcion ILIKE %s OR codigo ILIKE %s
+                    """
+                    db_query(update_stock_query, (
+                        float(data.get('cantidad', 0)),
+                        f"%{data.get('producto', '')}%",
+                        f"%{data.get('producto', '')}%"
+                    ))
+                    print(f"✅ Stock actualizado para: {data.get('producto')}")
+                except Exception as e:
+                    print(f"⚠️ Error actualizando stock: {e}")
+
+            return jsonify({'success': True, 'message': 'Recepción guardada', 'data': result})
+        return jsonify({'success': False, 'error': 'No se pudo guardar'}), 200
+
+    except Exception as e:
+        print(f"❌ Error en api_recepciones_guardar: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 200
+
 
 @compras_bp.route('/compras/api/comprobantes-proveedor/<int:id>/toggle', methods=['PUT'])
 @login_required
