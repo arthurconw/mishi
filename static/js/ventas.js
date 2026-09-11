@@ -9038,23 +9038,25 @@ async function loadClient() {
             
             // ✅ Los siguientes campos SÍ se autocompletan:
             
-            // Dirección de entrega (si el cliente tiene puntos de entrega)
-            let direccionEntrega = '';
-            if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
-                const principal = cliente.puntos_entrega.find(p => p.principal === true);
-                if (principal) {
-                    direccionEntrega = principal.direccion || '';
-                } else {
-                    direccionEntrega = cliente.puntos_entrega[0].direccion || '';
-                }
-            }
-            if (!direccionEntrega && cliente.direccion_fiscal) {
-                direccionEntrega = cliente.direccion_fiscal;
-            }
-            if (direccionEntrega && fDireccionEntrega) {
-                setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
-            }
+        // Dirección de entrega (si el cliente tiene puntos de entrega)
+let direccionEntrega = '';
+if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
+    const principal = cliente.puntos_entrega.find(p => p.principal === true);
+    if (principal) {
+        direccionEntrega = principal.direccion || '';
+    } else {
+        direccionEntrega = cliente.puntos_entrega[0].direccion || '';
+    }
+}
+if (!direccionEntrega && cliente.direccion_fiscal) {
+    direccionEntrega = cliente.direccion_fiscal;
+}
+if (direccionEntrega && fDireccionEntrega) {
+    setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
+}
             
+cargarDireccionesClienteEnSelect(cliente);
+
             // Validez (por defecto 15 días)
             if (fValidez) fValidez.value = '15 días';
             
@@ -13108,28 +13110,25 @@ function renderCotizacionFormContent(isEdit) {
         </select>
         <input id="fValidezCustom" placeholder="Ej: 20 días" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
     </div>
-
-    <div class="form-field">
-        <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
-        <div style="display:flex;gap:4px;align-items:center;">
-            <select id="fDireccionEntrega" style="flex:1;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
-                <option value="">-- Seleccione --</option>
-                <option value="direccion_recogo">📦 Dirección de Recogo</option>
-                <option value="Personalizado">✏️ Personalizado...</option>
-            </select>
-            <span id="sedeSeleccionadaLabel" style="display:none;font-size:9px;font-weight:800;color:#2563EB;background:#DBEAFE;padding:2px 10px;border-radius:4px;white-space:nowrap;"></span>
-        </div>
-        <div id="subDireccionRecogo" style="display:none;margin-top:3px;">
-            <select id="fSubDireccionRecogo" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="actualizarDireccionRecogo(this.value)">
-                <option value="">-- Seleccione Sede --</option>
-                <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
-                <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
-                <option value="Personalizado">✏️ Personalizado...</option>
-            </select>
-            <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-        </div>
-        <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+<div class="form-field">
+    <label style="display:block;font-size:7.5px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Dirección de Entrega</label>
+    <div style="display:flex;gap:4px;align-items:center;">
+        <select id="fDireccionEntrega" style="flex:1;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
+            <option value="">-- Seleccione --</option>
+        </select>
+        <span id="sedeSeleccionadaLabel" style="display:none;font-size:9px;font-weight:800;color:#2563EB;background:#DBEAFE;padding:2px 10px;border-radius:4px;white-space:nowrap;"></span>
     </div>
+    <div id="subDireccionRecogo" style="display:none;margin-top:3px;">
+        <select id="fSubDireccionRecogo" style="width:100%;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="actualizarDireccionRecogo(this.value)">
+            <option value="">-- Seleccione Sede --</option>
+            <option value="JR. LAS ALMENDRAS VERDES NRO. 284 URB. VIRGEN DEL ROSARIO LIMA - LIMA - SAN MARTIN DE PORRES">📍 San Martin de Porres</option>
+            <option value="AV. BRASIL NRO. 1234 URB. BREÑA LIMA - LIMA - BREÑA">📍 Breña</option>
+            <option value="Personalizado">✏️ Personalizado...</option>
+        </select>
+        <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+    </div>
+    <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
+</div>
 </div>
             <!-- Nota Comercial -->
             <div style="display:grid;grid-template-columns:1fr;gap:3px;">
@@ -13323,44 +13322,36 @@ function renderCotizacionFormContent(isEdit) {
 // ============================================================
 
 function mostrarSubDireccionRecogo(valor) {
-    console.log('🔄 mostrarSubDireccionRecogo - valor recibido:', valor);
-    
-    const subContainer = document.getElementById('subDireccionRecogo');
     const customInput = document.getElementById('fDireccionEntregaCustom');
-    const subSelect = document.getElementById('fSubDireccionRecogo');
-    const subCustom = document.getElementById('fSubDireccionRecogoCustom');
     const sedeLabel = document.getElementById('sedeSeleccionadaLabel');
     
-    // Ocultar todo primero
-    if (subContainer) {
-        subContainer.style.display = 'none';
-    }
+    // Ocultar el input personalizado por defecto
     if (customInput) {
         customInput.style.display = 'none';
-    }
-    if (subCustom) {
-        subCustom.style.display = 'none';
-    }
-    if (sedeLabel) {
-        sedeLabel.style.display = 'none';
-        sedeLabel.textContent = '';
+        customInput.value = '';
     }
     
-    // Si el valor es "direccion_recogo", mostrar el sub-desplegable
-    if (valor === 'direccion_recogo') {
-        if (subContainer) {
-            subContainer.style.display = 'block';
-            // Resetear el sub-select a la primera opción vacía
-            if (subSelect) {
-                subSelect.value = '';
-            }
-        }
-    } 
-    // Si el valor es "Personalizado", mostrar el input personalizado principal
-    else if (valor === 'Personalizado') {
+    // Si es Personalizado, mostrar el input
+    if (valor === 'Personalizado') {
         if (customInput) {
             customInput.style.display = 'block';
             customInput.focus();
+        }
+        if (sedeLabel) {
+            sedeLabel.style.display = 'none';
+        }
+    } 
+    // Si es una dirección seleccionada, mostrar el label
+    else if (valor && valor !== '') {
+        if (sedeLabel) {
+            // Acortar el label si es muy largo
+            const labelCorto = valor.length > 40 ? valor.substring(0, 40) + '...' : valor;
+            sedeLabel.textContent = `📍 ${labelCorto}`;
+            sedeLabel.style.display = 'inline-block';
+        }
+    } else {
+        if (sedeLabel) {
+            sedeLabel.style.display = 'none';
         }
     }
 }
@@ -13426,56 +13417,25 @@ function actualizarDireccionRecogo(valor) {
     }
 }
 
-// Función para obtener el valor final de la dirección de entrega
 function getDireccionEntregaValue() {
     const mainSelect = document.getElementById('fDireccionEntrega');
-    const subSelect = document.getElementById('fSubDireccionRecogo');
-    const subCustom = document.getElementById('fSubDireccionRecogoCustom');
     const customInput = document.getElementById('fDireccionEntregaCustom');
     
     if (!mainSelect) return '';
     
     const valor = mainSelect.value;
-    console.log('🔍 getDireccionEntregaValue - valor actual del select:', valor);
+    console.log('🔍 getDireccionEntregaValue - valor del select:', valor);
     
-    // Si es Personalizado, usar el input personalizado principal
-    if (valor === 'Personalizado' && customInput) {
-        const customVal = customInput.value.trim();
-        console.log('🔍 Valor personalizado principal:', customVal);
-        return customVal || '';
+    // Si es Personalizado, usar el input personalizado
+    if (valor === 'Personalizado') {
+        return customInput ? customInput.value.trim() : '';
     }
     
-    // Si es dirección de recogo, ver el sub-select o el dato guardado
-    if (valor === 'direccion_recogo') {
-        // Primero verificar si hay una dirección guardada en el dataset
-        const direccionGuardada = mainSelect.dataset.direccionSeleccionada;
-        if (direccionGuardada) {
-            console.log('🔍 Dirección guardada en dataset:', direccionGuardada);
-            return direccionGuardada;
-        }
-        
-        // Si no hay dirección guardada, ver el sub-select
-        if (subSelect) {
-            const subValor = subSelect.value;
-            console.log('🔍 Valor del sub-select:', subValor);
-            
-            if (subValor === 'Personalizado' && subCustom) {
-                const customSubVal = subCustom.value.trim();
-                console.log('🔍 Valor personalizado del sub:', customSubVal);
-                return customSubVal || '';
-            }
-            return subValor || '';
-        }
-        return '';
-    }
-    
-    // Si es una dirección directa
-    if (valor && valor !== '' && valor !== '-- Seleccione --') {
-        console.log('🔍 Devolviendo valor directo:', valor);
+    // Si tiene valor seleccionado, devolverlo
+    if (valor && valor !== '') {
         return valor;
     }
     
-    console.log('🔍 No se encontró dirección, devolviendo vacío');
     return '';
 }
 
@@ -13563,6 +13523,87 @@ function cargarDireccionEntregaExistente(direccion) {
             console.log('✅ Cargada dirección directa:', direccion);
         }
     }
+}
+
+
+
+
+
+/**
+ * Carga las direcciones de entrega del cliente en el desplegable
+ * @param {Object} cliente - Datos del cliente con puntos_entrega
+ */
+function cargarDireccionesClienteEnSelect(cliente) {
+    const select = document.getElementById('fDireccionEntrega');
+    if (!select) return;
+    
+    // Limpiar opciones actuales
+    select.innerHTML = '<option value="">-- Seleccione --</option>';
+    
+    // Array de direcciones únicas
+    const direcciones = [];
+    
+    // 1. Agregar la dirección fiscal (si existe)
+    if (cliente.direccion_fiscal && cliente.direccion_fiscal.trim()) {
+        direcciones.push({
+            valor: cliente.direccion_fiscal.trim(),
+            label: `🏢 ${cliente.direccion_fiscal.trim()}`,
+            tipo: 'fiscal'
+        });
+    }
+    
+    // 2. Agregar los puntos de entrega
+    if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
+        cliente.puntos_entrega.forEach((punto, idx) => {
+            const dir = punto.direccion ? punto.direccion.trim() : '';
+            if (dir) {
+                // Evitar duplicados con la dirección fiscal
+                const yaExiste = direcciones.some(d => d.valor === dir);
+                if (!yaExiste) {
+                    const nombre = punto.punto || punto.nombre_punto || `Punto ${idx + 1}`;
+                    const esPrincipal = punto.principal ? ' ⭐' : '';
+                    direcciones.push({
+                        valor: dir,
+                        label: `📍 ${nombre}${esPrincipal} - ${dir}`,
+                        tipo: 'punto'
+                    });
+                }
+            }
+        });
+    }
+    
+    // 3. Agregar opción personalizada
+    direcciones.push({
+        valor: 'Personalizado',
+        label: '✏️ Ingresar dirección personalizada...',
+        tipo: 'custom'
+    });
+    
+    // Si no hay direcciones, al menos dejar el personalizado
+    if (direcciones.length === 1) {
+        select.innerHTML = '<option value="">-- El cliente no tiene direcciones registradas --</option>' +
+                          '<option value="Personalizado">✏️ Ingresar dirección personalizada...</option>';
+        return;
+    }
+    
+    // Renderizar opciones
+    direcciones.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.valor;
+        opt.textContent = d.label;
+        opt.dataset.tipo = d.tipo;
+        select.appendChild(opt);
+    });
+    
+    // Si hay una sola dirección (sin contar personalizado), seleccionarla automáticamente
+    const opcionesReales = direcciones.filter(d => d.tipo !== 'custom');
+    if (opcionesReales.length === 1) {
+        select.value = opcionesReales[0].valor;
+        // Disparar el evento por si acaso
+        select.dispatchEvent(new Event('change'));
+    }
+    
+    console.log(`✅ ${opcionesReales.length} direcciones cargadas para el cliente`);
 }
 // ============================================================
 // MOSTRAR/OCULTAR CAMPOS DE PAGO (Contado)
