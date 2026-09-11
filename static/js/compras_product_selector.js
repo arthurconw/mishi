@@ -1,5 +1,12 @@
 // ============================================================
-// SELECTOR GENÉRICO DE PRODUCTOS PARA COMPRAS
+// COMPRAS - SELECTOR DE PRODUCTOS + CONSULTA RUC
+// Archivo: static/js/compras_product_selector.js
+// ============================================================
+
+console.log('🚀 Cargando compras_product_selector.js...');
+
+// ============================================================
+// 1) SELECTOR GENÉRICO DE PRODUCTOS PARA COMPRAS
 // ============================================================
 (function() {
     'use strict';
@@ -9,7 +16,6 @@
     let _productSelComprasCallback = null;
 
     function _closeModalSafe(modalId) {
-        // Intenta con closeModal global, si no, lo hace directo
         if (typeof window.closeModal === 'function') {
             window.closeModal(modalId);
         } else {
@@ -27,7 +33,6 @@
     }
 
     function _getProductos() {
-        // Intentar varias fuentes
         if (typeof window.PRODUCTOS_MAESTROS !== 'undefined' && Array.isArray(window.PRODUCTOS_MAESTROS)) {
             return window.PRODUCTOS_MAESTROS;
         }
@@ -234,17 +239,19 @@
     console.log('✅ Selector genérico de productos de Compras cargado');
 })();
 
+
 // ============================================================
-// CONSULTA DE RUC CON MODALES VISUALES
+// 2) CONSULTA DE RUC CON MODALES VISUALES
 // ============================================================
 
-let _rucResultadoActual = null;       // Guardar resultado de la consulta
-let _rucCallbackUsarDatos = null;     // Callback a ejecutar al pulsar "Usar estos datos"
+// Estado global expuesto en window
+window._rucResultadoActual = null;
+window._rucCallbackUsarDatos = null;
 
 /**
  * Muestra el modal de carga
  */
-function mostrarLoadingRuc(ruc) {
+window.mostrarLoadingRuc = function(ruc) {
     const modal = document.getElementById('loadingRucModal');
     const numero = document.getElementById('loadingRucNumero');
     if (numero) numero.textContent = ruc;
@@ -252,131 +259,160 @@ function mostrarLoadingRuc(ruc) {
         modal.classList.add('show');
         modal.style.display = 'flex';
     }
-}
+};
 
 /**
  * Oculta el modal de carga
  */
-function ocultarLoadingRuc() {
+window.ocultarLoadingRuc = function() {
     const modal = document.getElementById('loadingRucModal');
     if (modal) {
         modal.classList.remove('show');
         modal.style.display = 'none';
     }
-}
+};
+
+/**
+ * Cierra el modal de resultado del RUC
+ */
+window.cerrarModalRUC = function(event) {
+    if (event) {
+        try { event.preventDefault(); } catch (e) {}
+        try { event.stopPropagation(); } catch (e) {}
+    }
+    console.log('🔒 cerrando modal RUC');
+
+    const modal = document.getElementById('rucResultModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+};
 
 /**
  * Muestra el modal con los datos recibidos
  */
-function mostrarResultadoRUC(datos, origen, callbackUsarDatos) {
+window.mostrarResultadoRUC = function(datos, origen, callbackUsarDatos) {
     if (!datos) return;
 
-    _rucResultadoActual = datos;
-    _rucCallbackUsarDatos = callbackUsarDatos || null;
+    window._rucResultadoActual = datos;
+    window._rucCallbackUsarDatos = (typeof callbackUsarDatos === 'function') ? callbackUsarDatos : null;
 
-    // Rellenar campos
-    document.getElementById('rucResultRazon').textContent     = datos.razon_social || datos.razon_comercial || 'Sin razón social';
-    document.getElementById('rucResultRuc').textContent       = datos.ruc || '-';
-    document.getElementById('rucResultEstado').textContent    = (datos.estado || 'ACTIVO').toUpperCase();
-    document.getElementById('rucResultDireccion').textContent = datos.direccion || 'Sin dirección registrada';
-    document.getElementById('rucResultCondicion').textContent = datos.condicion || 'HABIDO';
+    const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val || '-';
+    };
 
-    // Ubicación formateada
+    setText('rucResultRazon', datos.razon_social || datos.razon_comercial || 'Sin razón social');
+    setText('rucResultRuc', datos.ruc || '-');
+    setText('rucResultEstado', (datos.estado || 'ACTIVO').toUpperCase());
+    setText('rucResultDireccion', datos.direccion || 'Sin dirección registrada');
+    setText('rucResultCondicion', datos.condicion || 'HABIDO');
+
     const partesUbicacion = [];
     if (datos.distrito)     partesUbicacion.push(datos.distrito);
     if (datos.provincia)    partesUbicacion.push(datos.provincia);
     if (datos.departamento) partesUbicacion.push(datos.departamento);
-    document.getElementById('rucResultUbicacion').textContent = partesUbicacion.length > 0 
-        ? partesUbicacion.join(' / ') 
-        : 'Sin ubicación registrada';
+    setText('rucResultUbicacion', partesUbicacion.length > 0
+        ? partesUbicacion.join(' / ')
+        : 'Sin ubicación registrada');
 
-    // Origen (BD o SUNAT)
-    document.getElementById('rucResultOrigen').textContent = 
-        origen === 'bd' ? '📁 Fuente: Base de datos local' : '🌞 Fuente: SUNAT (consulta en vivo)';
-
-    // Cambiar color según estado
-    const estadoEl = document.getElementById('rucResultEstado');
-    const estadoUpper = (datos.estado || '').toUpperCase();
-    if (estadoUpper.includes('BAJA') || estadoUpper.includes('SUSPEND')) {
-        estadoEl.style.color = '#DC2626';
-    } else if (estadoUpper.includes('ACTIVO')) {
-        estadoEl.style.color = '#16A34A';
-    } else {
-        estadoEl.style.color = '#0F172A';
+    const origenEl = document.getElementById('rucResultOrigen');
+    if (origenEl) {
+        origenEl.textContent = origen === 'bd'
+            ? '📁 Fuente: Base de datos local'
+            : '🌞 Fuente: SUNAT (consulta en vivo)';
     }
 
-    // Mostrar modal
+    const estadoEl = document.getElementById('rucResultEstado');
+    const estadoUpper = (datos.estado || '').toUpperCase();
+    if (estadoEl) {
+        if (estadoUpper.includes('BAJA') || estadoUpper.includes('SUSPEND')) {
+            estadoEl.style.color = '#DC2626';
+        } else if (estadoUpper.includes('ACTIVO')) {
+            estadoEl.style.color = '#16A34A';
+        } else {
+            estadoEl.style.color = '#0F172A';
+        }
+    }
+
     const modal = document.getElementById('rucResultModal');
     if (modal) {
         modal.classList.add('show');
         modal.style.display = 'flex';
     }
-}
+};
 
 /**
- * Aplica los datos al formulario cuando el usuario hace clic en "Usar estos datos"
+ * Aplica los datos al formulario cuando el usuario pulsa "Usar estos datos"
  */
-function usarDatosRUC() {
-    if (typeof _rucCallbackUsarDatos === 'function' && _rucResultadoActual) {
-        _rucCallbackUsarDatos(_rucResultadoActual);
+window.usarDatosRUC = function(event) {
+    if (event) {
+        try { event.preventDefault(); } catch (e) {}
+        try { event.stopPropagation(); } catch (e) {}
     }
-    closeModal('rucResultModal');
-}
+
+    console.log('✅ usarDatosRUC');
+    console.log('   resultado:', window._rucResultadoActual);
+    console.log('   callback:', typeof window._rucCallbackUsarDatos);
+
+    if (typeof window._rucCallbackUsarDatos === 'function' && window._rucResultadoActual) {
+        try {
+            window._rucCallbackUsarDatos(window._rucResultadoActual);
+        } catch (e) {
+            console.error('❌ Error en callback:', e);
+            if (typeof window.showToast === 'function') {
+                window.showToast('❌ Error aplicando datos: ' + e.message, 'error');
+            }
+        }
+    } else {
+        console.warn('⚠️ No hay callback o datos guardados');
+    }
+
+    window.cerrarModalRUC();
+};
 
 /**
  * FUNCIÓN PRINCIPAL: consulta un RUC con modales visuales
- * @param {string} ruc
- * @param {Function} onUsarDatos - callback al pulsar "Usar estos datos"
- * @returns {Promise<Object|null>}
  */
-async function consultarRUCConspinner(ruc, onUsarDatos) {
+window.consultarRUCConspinner = async function(ruc, onUsarDatos) {
     if (!ruc || ruc.length !== 11 || !/^\d+$/.test(ruc)) {
-        showToast('⚠️ El RUC debe tener 11 dígitos numéricos', 'warning');
+        if (typeof window.showToast === 'function') {
+            window.showToast('⚠️ El RUC debe tener 11 dígitos numéricos', 'warning');
+        }
         return null;
     }
 
-    // 1) Mostrar spinner
-    mostrarLoadingRuc(ruc);
+    window.mostrarLoadingRuc(ruc);
 
     try {
-        // 2) Consultar al backend
         const resp = await fetch(`/compras/api/proveedores/buscar?q=${ruc}`);
         const data = await resp.json();
 
-        // 3) Ocultar spinner
-        ocultarLoadingRuc();
+        window.ocultarLoadingRuc();
 
-        // 4) Procesar respuesta
         if (data.success && data.data && data.data.length > 0) {
             const proveedor = data.data[0];
             const origen = proveedor.origen || data.source || 'sunat';
 
-            // Pequeña pausa para que se vea la transición
             await new Promise(r => setTimeout(r, 300));
 
-            // 5) Mostrar modal con los datos recibidos
-            mostrarResultadoRUC(proveedor, origen, onUsarDatos);
-
+            window.mostrarResultadoRUC(proveedor, origen, onUsarDatos);
             return proveedor;
         } else {
-            // No encontrado
-            showToast(`❌ ${data.error || 'RUC no encontrado en SUNAT'}`, 'error');
+            if (typeof window.showToast === 'function') {
+                window.showToast(`❌ ${data.error || 'RUC no encontrado en SUNAT'}`, 'error');
+            }
             return null;
         }
-
     } catch (error) {
-        ocultarLoadingRuc();
+        window.ocultarLoadingRuc();
         console.error('❌ Error consultando RUC:', error);
-        showToast('❌ Error de conexión. Intenta de nuevo.', 'error');
+        if (typeof window.showToast === 'function') {
+            window.showToast('❌ Error de conexión. Intenta de nuevo.', 'error');
+        }
         return null;
     }
-}
-
-// Exponer al window
-window.mostrarLoadingRuc = mostrarLoadingRuc;
-window.ocultarLoadingRuc = ocultarLoadingRuc;
-window.mostrarResultadoRUC = mostrarResultadoRUC;
-window.usarDatosRUC = usarDatosRUC;
-window.consultarRUCConspinner = consultarRUCConspinner;
+};
 
 console.log('✅ Sistema de consulta RUC con modales cargado');
