@@ -990,6 +990,73 @@
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1); }
 }
+/* ============================================================ */
+/* FIX: TODAS las columnas del grid (12 columnas)               */
+/* ============================================================ */
+.ficha-grid .col-1  { grid-column: span 1; }
+.ficha-grid .col-2  { grid-column: span 2; }
+.ficha-grid .col-3  { grid-column: span 3; }
+.ficha-grid .col-4  { grid-column: span 4; }
+.ficha-grid .col-5  { grid-column: span 5; }
+.ficha-grid .col-6  { grid-column: span 6; }
+.ficha-grid .col-7  { grid-column: span 7; }
+.ficha-grid .col-8  { grid-column: span 8; }
+.ficha-grid .col-9  { grid-column: span 9; }
+.ficha-grid .col-10 { grid-column: span 10; }
+.ficha-grid .col-11 { grid-column: span 11; }
+.ficha-grid .col-12 { grid-column: span 12; }
+
+/* Asegurar que los inputs ocupen el 100% de su columna */
+.ficha-grid .form-field input,
+.ficha-grid .form-field select,
+.ficha-grid .form-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Labels alineados y sin cortar */
+.ficha-grid .form-field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 950;
+    color: #334155;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Los grupos con botón al lado usan flex sin encoger el input */
+.ficha-grid .input-with-btn {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+    width: 100%;
+}
+.ficha-grid .input-with-btn input {
+    flex: 1;
+    min-width: 0;
+}
+.ficha-grid .input-with-btn button {
+    flex-shrink: 0;
+    height: 30px;
+    border-radius: 9px;
+    border: 0;
+    background: #059669;
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ficha-grid .input-with-btn button:hover {
+    background: #047857;
+}
 </style>
 <!-- ============================================================ -->
 <!-- MODALES -->

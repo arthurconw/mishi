@@ -61,31 +61,38 @@
             </div>
 
             <!-- SECCIÓN 2: PROVEEDOR -->
-            <div class="ficha-section">
-                <div class="ficha-section-title">🏢 Datos del proveedor</div>
-                <div class="ficha-grid">
-                    <div class="form-field col-3">
-                        <label>RUC <span class="text-danger">*</span></label>
-                        <div style="display:flex; gap:6px;">
-                            <input id="cpRuc" placeholder="11 dígitos" maxlength="11" style="flex:1;" oninput="cpBuscarProveedor()">
-                            <button type="button" onclick="cpBuscarProveedor(true)" style="height:30px; padding:0 12px; border-radius:9px; background:#059669; color:#fff; border:0; font-weight:900; cursor:pointer; font-size:11px;">🌞</button>
-                        </div>
-                    </div>
-                    <div class="form-field col-9">
-                        <label>Razón social <span class="text-danger">*</span></label>
-                        <input id="cpProveedor" placeholder="Nombre o razón social">
-                    </div>
-                    <div class="form-field col-6">
-                        <label>Dirección</label>
-                        <input id="cpDireccion" placeholder="Dirección fiscal">
-                    </div>
-                    <div class="form-field col-6">
-                        <label>Orden de compra relacionada</label>
-                        <input id="cpOrden" placeholder="OC-20260713-0001">
-                    </div>
-                </div>
-            </div>
+<div class="ficha-section">
+    <div class="ficha-section-title">🏢 Datos del proveedor</div>
+    <div class="ficha-grid">
 
+        <!-- Fila 1: RUC (4) + Razón social (8) -->
+        <div class="form-field col-4">
+            <label>RUC <span class="text-danger">*</span></label>
+            <div class="input-with-btn">
+                <input id="cpRuc" placeholder="11 dígitos" maxlength="11"
+                       oninput="cpBuscarProveedor()">
+                <button type="button" onclick="cpBuscarProveedor(true)" title="Consultar SUNAT">🌞</button>
+            </div>
+        </div>
+
+        <div class="form-field col-8">
+            <label>Razón social <span class="text-danger">*</span></label>
+            <input id="cpProveedor" placeholder="Nombre o razón social">
+        </div>
+
+        <!-- Fila 2: Dirección (6) + Orden de compra relacionada (6) -->
+        <div class="form-field col-6">
+            <label>Dirección</label>
+            <input id="cpDireccion" placeholder="Dirección fiscal">
+        </div>
+
+        <div class="form-field col-6">
+            <label>Orden de compra relacionada</label>
+            <input id="cpOrden" placeholder="OC-20260713-0001">
+        </div>
+
+    </div>
+</div>
             <!-- SECCIÓN 3: OBSERVACIONES -->
             <div class="ficha-section">
                 <div class="ficha-section-title">📝 Observaciones</div>
