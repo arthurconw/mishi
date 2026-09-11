@@ -13115,6 +13115,8 @@ function renderCotizacionFormContent(isEdit) {
     <div style="display:flex;gap:4px;align-items:center;">
         <select id="fDireccionEntrega" style="flex:1;height:22px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:10px;padding:0 3px;" onchange="mostrarSubDireccionRecogo(this.value)">
             <option value="">-- Seleccione --</option>
+            <option value="direccion_recogo">📦 Dirección de Recogo</option>
+            <option value="Personalizado">✏️ Personalizado...</option>
         </select>
         <span id="sedeSeleccionadaLabel" style="display:none;font-size:9px;font-weight:800;color:#2563EB;background:#DBEAFE;padding:2px 10px;border-radius:4px;white-space:nowrap;"></span>
     </div>
@@ -13128,7 +13130,7 @@ function renderCotizacionFormContent(isEdit) {
         <input id="fSubDireccionRecogoCustom" placeholder="Escribe la dirección..." style="display:none;margin-top:3px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
     </div>
     <input id="fDireccionEntregaCustom" placeholder="Ej: Av. Los Alamos 123" style="display:none;margin-top:1px;width:100%;height:20px;border:1px solid #E5E7EB;border-radius:4px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9px;padding:0 5px;">
-</div>
+</di
 </div>
             <!-- Nota Comercial -->
             <div style="display:grid;grid-template-columns:1fr;gap:3px;">
