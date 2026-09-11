@@ -173,3 +173,62 @@
     </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- MODAL GENÉRICO DE SELECCIÓN MÚLTIPLE DE PRODUCTOS (COMPRAS) -->
+<!-- ============================================================ -->
+<div class="modal-bg" id="productSelectorComprasModal" style="z-index: 999999;">
+    <div class="modal-box" style="width:min(950px,96vw); max-height:85vh; display:flex; flex-direction:column;">
+        <div class="modal-head" style="padding:8px 14px; min-height:38px; background:#0F172A; flex-shrink:0;">
+            <div class="modal-title" style="font-weight:600; font-size:1rem; color:#fff; margin:0;">
+                📋 Seleccionar productos
+            </div>
+            <button class="btn btn-secondary" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:4px 14px;min-height:28px;border-radius:20px;font-size:11px;cursor:pointer;" onclick="closeModal('productSelectorComprasModal')">✕ Cerrar</button>
+        </div>
+
+        <div class="modal-body" style="padding:12px 16px; flex:1 1 auto; overflow-y:auto; background:#F8FAFC;">
+
+            <!-- Buscador + acciones -->
+            <div style="display:flex; gap:8px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
+                <input id="productSelComprasSearch" 
+                       placeholder="Buscar producto por código, descripción o marca..." 
+                       style="flex:1; min-width:200px; height:36px; border:1px solid #E5E7EB; border-radius:8px; padding:0 12px; font-size:12px; outline:none;"
+                       oninput="filterProductSelectorCompras()">
+                <button class="btn btn-blue" onclick="filterProductSelectorCompras()" style="height:36px; padding:0 16px; font-size:11px; border-radius:8px; font-weight:900;">🔍 Buscar</button>
+                <button class="btn btn-green" onclick="selectAllProductsCompras()" style="height:36px; padding:0 14px; font-size:11px; border-radius:8px; font-weight:900; background:#16A34A; color:#fff; border:0;">✅ Todos</button>
+                <button class="btn btn-secondary" onclick="deselectAllProductsCompras()" style="height:36px; padding:0 14px; font-size:11px; border-radius:8px; font-weight:900;">⬜ Ninguno</button>
+            </div>
+
+            <!-- Tabla -->
+            <div style="border:1px solid #E5E7EB; border-radius:10px; overflow:auto; max-height:50vh; background:#fff;">
+                <table class="master-table" style="font-size:11px; width:100%;">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"><input type="checkbox" id="selectAllComprasCheckbox" onchange="toggleAllProductCheckboxesCompras(this.checked)"></th>
+                            <th style="width:80px;">Código</th>
+                            <th>Producto</th>
+                            <th style="width:80px;">Marca</th>
+                            <th style="width:80px;">Modelo</th>
+                            <th style="width:60px;">UM</th>
+                            <th style="width:60px;">Stock</th>
+                            <th style="width:90px;">Precio</th>
+                            <th style="width:80px;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productSelectorComprasRows">
+                        <tr><td colspan="9" style="text-align:center;padding:20px;color:#94A3B8;">Cargando productos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Resumen -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:10px 14px; background:#fff; border-radius:8px; border:1px solid #E5E7EB;">
+                <span style="font-weight:800; color:#0F172A; font-size:12px;">
+                    Seleccionados: <span id="selectedComprasCount">0</span> productos
+                </span>
+                <button class="btn btn-green" onclick="addSelectedProductsCompras()" style="height:36px; padding:0 24px; font-size:12px; border-radius:10px; font-weight:900; background:#16A34A; color:#fff; border:0;">
+                    ✅ Agregar seleccionados
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
