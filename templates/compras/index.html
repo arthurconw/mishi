@@ -911,8 +911,8 @@
 <!-- ============================================================ -->
 <!-- MODAL DE RESULTADO - DATOS RECIBIDOS DEL RUC -->
 <!-- ============================================================ -->
-<div class="modal-bg" id="rucResultModal" style="z-index: 9999999;">
-    <div class="modal-box" style="width:min(600px,95vw); max-height:90vh; display:flex; flex-direction:column;">
+<div class="modal-bg" id="rucResultModal" style="z-index: 99999999 !important; pointer-events: auto !important;">
+    <div class="modal-box" style="width:min(600px,95vw); max-height:90vh; display:flex; flex-direction:column; pointer-events: auto !important;">
         <div class="modal-head" style="padding:12px 20px; min-height:46px; background:linear-gradient(135deg,#16A34A,#059669); flex-shrink:0;">
             <div>
                 <div class="modal-title" style="font-weight:900; font-size:16px; color:#fff; margin:0;">
@@ -922,7 +922,7 @@
                     Fuente: SUNAT
                 </p>
             </div>
-            <button class="btn btn-secondary" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:5px 14px;min-height:30px;border-radius:20px;font-size:11px;cursor:pointer;" onclick="closeModal('rucResultModal')">✕ Cerrar</button>
+            <button class="btn btn-secondary" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:5px 14px;min-height:30px;border-radius:20px;font-size:11px;cursor:pointer;" onclick="cerrarModalRUC(event)">✕ Cerrar</button>
         </div>
 
         <div class="modal-body" style="padding:20px 24px; overflow-y:auto; flex:1 1 auto; background:#F8FAFC;">
@@ -970,9 +970,11 @@
             </div>
         </div>
 
-        <div class="modal-foot" style="padding:12px 20px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid #E5E7EB; background:#fff; flex-shrink:0;">
-            <button class="btn btn-secondary" onclick="closeModal('rucResultModal')" style="height:38px; padding:0 20px; font-size:12px; border-radius:9px; font-weight:800;">Cancelar</button>
-            <button class="btn btn-green" id="rucResultUsarBtn" onclick="usarDatosRUC()" style="height:38px; padding:0 24px; font-size:12px; border-radius:9px; font-weight:900; background:#16A34A; color:#fff; border:0;">
+        <div class="modal-foot" style="padding:12px 20px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid #E5E7EB; background:#fff; flex-shrink:0; pointer-events: auto !important;">
+            <button class="btn btn-secondary" onclick="cerrarModalRUC(event)" style="height:38px; padding:0 20px; font-size:12px; border-radius:9px; font-weight:800; cursor:pointer; pointer-events: auto !important;">
+                Cancelar
+            </button>
+            <button class="btn btn-green" id="rucResultUsarBtn" onclick="usarDatosRUC(event)" style="height:38px; padding:0 24px; font-size:12px; border-radius:9px; font-weight:900; background:#16A34A; color:#fff; border:0; cursor:pointer; pointer-events: auto !important;">
                 ✅ Usar estos datos
             </button>
         </div>
