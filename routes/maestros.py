@@ -210,7 +210,9 @@ def api_clientes_guardar():
         result = cur.fetchone()
         cliente_id = result[0]
 
-        # Guardar contactos
+        # ==========================================
+        # GUARDAR CONTACTOS
+        # ==========================================
         for c in data.get('contactos', []):
             if not (c.get('nombre') or c.get('telefono') or c.get('email')):
                 continue
@@ -224,10 +226,30 @@ def api_clientes_guardar():
                 c.get('telefono', ''), c.get('email', ''), bool(c.get('principal', False))
             ))
 
-        # Guardar puntos de entrega
-        for p in data.get('puntos_entrega', []):
-            if not (p.get('punto') or p.get('direccion') or p.get('instrucciones')):
+        # ==========================================
+        # GUARDAR PUNTOS DE ENTREGA (CORREGIDO)
+        # ==========================================
+        puntos_recibidos = data.get('puntos_entrega', [])
+        current_app.logger.info(f"📦 Puntos de entrega recibidos: {len(puntos_recibidos)}")
+        
+        for p in puntos_recibidos:
+            # Verificar si tiene AL MENOS UN campo con valor
+            tiene_datos = any([
+                p.get('punto'),
+                p.get('direccion'),
+                p.get('instrucciones'),
+                p.get('googleMaps'),
+                p.get('horario'),
+                p.get('contacto'),
+                p.get('telefono')
+            ])
+            
+            if not tiene_datos:
+                current_app.logger.info(f"⏭️ Punto saltado (sin datos): {p}")
                 continue
+            
+            current_app.logger.info(f"💾 Guardando punto: {p.get('punto') or p.get('direccion')}")
+            
             cur.execute("""
                 INSERT INTO clientes_puntos_entrega (
                     cliente_id, nombre_punto, direccion, telefono_contacto,
@@ -295,7 +317,6 @@ def api_clientes_guardar():
             "success": False, 
             "error": str(e)
         }), 500
-
 
 @maestros_bp.route('/api/clientes/<int:id>', methods=['GET'])
 @login_required

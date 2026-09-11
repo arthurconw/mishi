@@ -1722,12 +1722,11 @@
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.20) !important;
 }
 
-
 /* ============================================================
    MODALES ULTRA COMPACTOS - MÁXIMO AHORRO DE ESPACIO
    ============================================================ */
 
-/* Todas las clases de modal */
+/* Contenedor principal del modal - AHORA con flex column */
 .client-modal-wrap,
 .proveedor-modal-wrap,
 .almacen-modal-wrap,
@@ -1735,16 +1734,54 @@
     width: min(850px, 96vw) !important;
     max-height: 85vh !important;
     max-width: 850px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
 }
 
-/* Body con overflow hidden */
+/* Cuerpo del modal - SCROLL VERTICAL */
 .client-modal-wrap .cm-body,
 .proveedor-modal-wrap .mm-body,
 .almacen-modal-wrap .mm-body,
 .master-modal-wrap .mm-body {
+    flex: 1 1 auto !important;
     padding: 4px 10px 4px !important;
-    max-height: calc(85vh - 90px) !important;
-    overflow: hidden !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin;
+    scrollbar-color: #c4cdd8 #edf2f7;
+}
+
+/* Scrollbar personalizado (Chrome/Safari/Edge) */
+.client-modal-wrap .cm-body::-webkit-scrollbar,
+.proveedor-modal-wrap .mm-body::-webkit-scrollbar,
+.almacen-modal-wrap .mm-body::-webkit-scrollbar,
+.master-modal-wrap .mm-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.client-modal-wrap .cm-body::-webkit-scrollbar-track,
+.proveedor-modal-wrap .mm-body::-webkit-scrollbar-track,
+.almacen-modal-wrap .mm-body::-webkit-scrollbar-track,
+.master-modal-wrap .mm-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.client-modal-wrap .cm-body::-webkit-scrollbar-thumb,
+.proveedor-modal-wrap .mm-body::-webkit-scrollbar-thumb,
+.almacen-modal-wrap .mm-body::-webkit-scrollbar-thumb,
+.master-modal-wrap .mm-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.client-modal-wrap .cm-body::-webkit-scrollbar-thumb:hover,
+.proveedor-modal-wrap .mm-body::-webkit-scrollbar-thumb:hover,
+.almacen-modal-wrap .mm-body::-webkit-scrollbar-thumb:hover,
+.master-modal-wrap .mm-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 /* Secciones más compactas */
@@ -1776,7 +1813,7 @@
 .proveedor-modal-wrap .cm-grid-main,
 .almacen-modal-wrap .cm-grid-main,
 .master-modal-wrap .cm-grid-main {
-    grid-template-columns: 1fr 1fr 1fr !important; /* 🔧 CAMBIO: se quitó el "140px" */
+    grid-template-columns: 1fr 1fr 1fr !important;
 }
 
 /* Labels e inputs más pequeños */
@@ -1872,6 +1909,7 @@
 .master-modal-wrap .mm-head {
     min-height: 30px !important;
     padding: 0 10px !important;
+    flex: 0 0 auto !important;      /* ✅ NUEVO - header no se estira */
 }
 
 .client-modal-wrap .cm-head-title,
@@ -1887,6 +1925,7 @@
 .master-modal-wrap .mm-foot {
     padding: 4px 10px !important;
     min-height: 28px !important;
+    flex: 0 0 auto !important;      /* ✅ NUEVO - footer no se estira */
 }
 
 .client-modal-wrap .cm-btn,
@@ -1913,7 +1952,6 @@
     font-size: 8px !important;
     padding: 0 6px !important;
 }
-
 
 
 

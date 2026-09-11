@@ -1135,18 +1135,39 @@ function getContacts() {
 }
 
 function getPoints() {
-  return Array.from(document.querySelectorAll('[data-pid]')).map(b => ({
-    punto: b.querySelector('[data-pf="punto"]')?.value.trim() || '',
-    direccion: b.querySelector('[data-pf="direccion"]')?.value.trim() || '',
-    googleMaps: b.querySelector('[data-pf="googleMaps"]')?.value.trim() || '',
-    horario: b.querySelector('[data-pf="horario"]')?.value.trim() || '',
-    contacto: b.querySelector('[data-pf="contacto"]')?.value.trim() || '',
-    telefono: b.querySelector('[data-pf="telefono"]')?.value.trim() || '',
-    instrucciones: b.querySelector('[data-pf="instrucciones"]')?.value.trim() || '',
-    principal: !!b.querySelector('[data-pf="principal"]')?.checked
-  })).filter(p => p.punto || p.direccion || p.instrucciones);
+  const boxes = document.querySelectorAll('[data-pid]');
+  const points = [];
+  
+  boxes.forEach(box => {
+    const p = {
+      punto: box.querySelector('[data-pf="punto"]')?.value.trim() || '',
+      direccion: box.querySelector('[data-pf="direccion"]')?.value.trim() || '',
+      googleMaps: box.querySelector('[data-pf="googleMaps"]')?.value.trim() || '',
+      horario: box.querySelector('[data-pf="horario"]')?.value.trim() || '',
+      contacto: box.querySelector('[data-pf="contacto"]')?.value.trim() || '',
+      telefono: box.querySelector('[data-pf="telefono"]')?.value.trim() || '',
+      instrucciones: box.querySelector('[data-pf="instrucciones"]')?.value.trim() || '',
+      principal: !!box.querySelector('[data-pf="principal"]')?.checked
+    };
+    
+    // Solo incluir si tiene AL MENOS UNO de los campos con valor
+    const tieneDatos = 
+      p.punto || 
+      p.direccion || 
+      p.googleMaps || 
+      p.horario || 
+      p.contacto || 
+      p.telefono || 
+      p.instrucciones;
+    
+    if (tieneDatos) {
+      points.push(p);
+    }
+  });
+  
+  console.log('📦 Puntos de entrega a enviar:', points);
+  return points;
 }
-
 // ============================================================
 // CONSULTAR SUNAT
 // ============================================================
