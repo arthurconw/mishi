@@ -2235,10 +2235,11 @@ def api_test():
     """Endpoint para probar que la API funciona"""
     return jsonify({"success": True, "message": "API de maestros funcionando correctamente"})
 
-@maestros_bp.route('/api/clientes/buscar', methods=['GET'])
+
+ @maestros_bp.route('/api/clientes/buscar', methods=['GET'])
 @login_required
 def api_clientes_buscar():
-    """Buscar clientes por RUC, razón social o nombre comercial"""
+    """Buscar clientes por RUC, razón social o nombre comercial (con contactos)"""
     try:
         q = request.args.get('q', '').strip()
         
@@ -2258,16 +2259,40 @@ def api_clientes_buscar():
                 c.direccion_fiscal, 
                 c.condicion_pago,
                 c.activo,
+                -- 🔽 CONTACTOS (array JSON)
+                COALESCE(
+                    (SELECT json_agg(
+                        json_build_object(
+                            'id', cc.id,
+                            'nombre', cc.nombre_contacto,
+                            'nombre_contacto', cc.nombre_contacto,
+                            'cargo', cc.cargo,
+                            'telefono', cc.telefono,
+                            'email', cc.email,
+                            'principal', cc.principal
+                        ) ORDER BY cc.principal DESC, cc.id ASC
+                    ) FROM clientes_contactos cc 
+                      WHERE cc.cliente_id = c.id AND cc.activo = true),
+                    '[]'::json
+                ) as contactos,
+                -- 🔽 PUNTOS DE ENTREGA (array JSON)
                 COALESCE(
                     (SELECT json_agg(
                         json_build_object(
                             'id', pe.id,
                             'nombre_punto', pe.nombre_punto,
+                            'punto', pe.nombre_punto,
                             'direccion', pe.direccion,
                             'telefono_contacto', pe.telefono_contacto,
+                            'telefono', pe.telefono_contacto,
                             'responsable', pe.responsable,
+                            'contacto', pe.responsable,
                             'condicion_pago', pe.condicion_pago,
                             'tiempo_credito', pe.tiempo_credito,
+                            'instrucciones', pe.instrucciones,
+                            'google_maps', pe.google_maps,
+                            'googleMaps', pe.google_maps,
+                            'horario', pe.horario,
                             'principal', pe.principal,
                             'activo', pe.activo
                         )
@@ -2293,4 +2318,6 @@ def api_clientes_buscar():
         
     except Exception as e:
         print(f"❌ Error en api_clientes_buscar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
