@@ -13197,11 +13197,18 @@ function renderCotizacionFormContent(isEdit) {
                     <input id="fDireccion" placeholder="Dirección fiscal" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
                 </div>
                 <div class="form-field">
-                    <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
-                  <select id="fContacto" onchange="aplicarContactoSeleccionado()">
-    <option value="">-- Seleccione contacto --</option>
-</select> style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
-                </div>
+    <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
+    <div style="display:flex;gap:3px;align-items:center;">
+        <select id="fContacto" 
+                onchange="aplicarContactoSeleccionado()" 
+                style="flex:1;width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 3px;">
+            <option value="">-- Seleccione contacto --</option>
+        </select>
+        <input id="fContactoCustom" 
+               placeholder="Nombre" 
+               style="display:none;width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
+    </div>
+</div>
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono</label>
                     <input id="fTelefono" placeholder="Número" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
