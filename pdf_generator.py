@@ -349,12 +349,12 @@ class PDFGenerator:
     <meta charset="UTF-8">
     <title>{{ tipo }} {{ serie }}-{{ numero }}</title>
     <style>
-        @page { size: A4; margin: 1.2cm 1.5cm; }
+        @page { size: A4; margin: 1.0cm 1.3cm; }
         body { 
             font-family: 'Helvetica', Arial, sans-serif; 
-            font-size: 9.5px; 
+            font-size: 9px; 
             color: #333333;
-            line-height: 1.6; 
+            line-height: 1.5; 
             background: #ffffff;
         }
         
@@ -368,135 +368,136 @@ class PDFGenerator:
             display: flex; 
             justify-content: space-between; 
             align-items: stretch; 
-            margin-bottom: 10px; 
-            gap: 20px; 
+            margin-bottom: 8px; 
+            gap: 18px; 
             border-bottom: 2px solid #999999;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
         }
         .empresa-izquierda { 
             flex: 1; 
             display: flex; 
             align-items: center; 
-            gap: 18px; 
+            gap: 15px; 
         }
         .empresa-izquierda .logo-container { 
             flex-shrink: 0; 
-            width: 120px; 
-            height: 80px; 
+            width: 110px; 
+            height: 70px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
         }
         .empresa-izquierda .logo-container img { 
-            max-height: 75px; 
-            max-width: 130px; 
+            max-height: 65px; 
+            max-width: 120px; 
             object-fit: contain; 
         }
         .empresa-izquierda .info-texto { 
-            font-size: 8.5px; 
-            line-height: 1.5; 
+            font-size: 8px; 
+            line-height: 1.4; 
             color: #444444;
         }
         .empresa-izquierda .info-texto .nombre { 
-            font-size: 13px; 
+            font-size: 12px; 
             font-weight: bold; 
             text-transform: uppercase; 
             color: #333333;
             letter-spacing: 0.5px;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
         .empresa-izquierda .info-texto .ruc-line {
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: bold;
             color: #333333;
             margin-bottom: 1px;
         }
         .empresa-izquierda .info-texto .slogan {
-            font-size: 8px;
+            font-size: 7.5px;
             color: #666666;
             font-style: italic;
             margin-bottom: 1px;
         }
         .empresa-izquierda .info-texto .contacto-line {
-            font-size: 7.5px;
+            font-size: 7px;
             color: #555555;
         }
         .recuadro-derecha { 
             flex-shrink: 0; 
             border: 2px solid #999999;
-            border-radius: 12px; 
-            padding: 10px 20px; 
+            border-radius: 10px; 
+            padding: 8px 18px; 
             text-align: center; 
-            min-width: 200px; 
+            min-width: 180px; 
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
         .recuadro-derecha .ruc { 
-            font-size: 10px; 
+            font-size: 9px; 
             font-weight: bold; 
             color: #333333;
         }
         .recuadro-derecha .titulo { 
-            font-size: 13px; 
+            font-size: 12px; 
             font-weight: bold; 
             letter-spacing: 1px; 
             margin: 2px 0; 
             color: #CC0000;
         }
         .recuadro-derecha .numero { 
-            font-size: 15px; 
+            font-size: 14px; 
             font-weight: bold; 
             color: #CC0000;
         }
         
-        /* ===== LAYOUT DOS COLUMNAS - SIMÉTRICAS ===== */
+        /* ===== LAYOUT DOS COLUMNAS - SIMÉTRICAS Y COMPACTAS ===== */
         .layout-dos-columnas {
             display: flex;
-            gap: 15px;
-            margin-bottom: 6px;
+            gap: 12px;
+            margin-bottom: 5px;
         }
         .layout-dos-columnas .columna {
             flex: 1;
             border: 1px solid #cccccc;
-            border-radius: 6px;
-            padding: 6px 12px;
+            border-radius: 5px;
+            padding: 4px 10px;
         }
         .layout-dos-columnas .columna .seccion-titulo {
             font-weight: bold;
-            font-size: 9px;
-            margin-bottom: 4px;
+            font-size: 8.5px;
+            margin-bottom: 3px;
             text-transform: uppercase;
-            border-bottom: 2px solid #999999;
-            padding-bottom: 2px;
+            border-bottom: 1.5px solid #999999;
+            padding-bottom: 1px;
             color: #333333;
         }
         .layout-dos-columnas .columna .fila {
             display: flex;
-            padding: 1px 0;
+            padding: 0.5px 0;
             align-items: baseline;
-            font-size: 8.5px;
+            font-size: 8px;
+            line-height: 1.35;
         }
         .layout-dos-columnas .columna .fila .label {
             font-weight: bold;
-            min-width: 110px;
+            min-width: 95px;
             flex-shrink: 0;
             color: #555555;
         }
         .layout-dos-columnas .columna .fila .value {
             flex: 1;
             text-align: left;
-            padding-left: 5px;
+            padding-left: 4px;
             color: #333333;
         }
         
         /* ===== SECCIÓN ===== */
         .seccion { 
-            margin-bottom: 6px; 
+            margin-bottom: 5px; 
         }
         .seccion-titulo { 
             font-weight: bold; 
-            font-size: 9.5px; 
+            font-size: 9px; 
             margin-bottom: 3px; 
             text-transform: uppercase; 
             border-bottom: 2px solid #999999;
@@ -507,15 +508,15 @@ class PDFGenerator:
         /* ===== REFERENCIAS ===== */
         .referencias { 
             border: 1px solid #cccccc;
-            border-radius: 6px; 
-            padding: 4px 12px; 
-            margin-bottom: 6px; 
+            border-radius: 5px; 
+            padding: 3px 12px; 
+            margin-bottom: 5px; 
         }
         .referencias-grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr 1fr; 
-            gap: 8px; 
-            padding: 4px 0; 
+            gap: 6px; 
+            padding: 3px 0; 
         }
         .ref-item { 
             text-align: center; 
@@ -523,13 +524,13 @@ class PDFGenerator:
         .ref-item .ref-label { 
             font-weight: bold; 
             display: block; 
-            font-size: 7px; 
+            font-size: 6.5px; 
             color: #777777;
             text-transform: uppercase; 
             letter-spacing: 0.3px; 
         }
         .ref-item .ref-value { 
-            font-size: 8.5px; 
+            font-size: 8px; 
             font-weight: 600; 
             color: #333333;
         }
@@ -562,18 +563,36 @@ class PDFGenerator:
             background: #f9f9f9;
         }
         
-        /* ===== TOTALES ===== */
+        /* ===== TOTALES - CON SON AL LADO IZQUIERDO SIMÉTRICO ===== */
+        .totales-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 6px;
+            gap: 15px;
+        }
+        .total-letras {
+            flex: 1;
+            font-size: 8px;
+            color: #333333;
+            font-style: italic;
+            padding-bottom: 6px;
+            line-height: 1.4;
+        }
+        .total-letras strong {
+            font-style: normal;
+            color: #555555;
+        }
         .totales-box { 
             border: 2px solid #999999;
             border-radius: 6px; 
             padding: 6px 12px; 
-            margin-top: 6px; 
             display: flex; 
             flex-direction: column; 
             align-items: flex-start;
             width: 100%;
-            max-width: 320px;
-            margin-left: auto;
+            max-width: 300px;
+            flex-shrink: 0;
         }
         .totales-box .linea {
             display: flex;
@@ -614,31 +633,18 @@ class PDFGenerator:
             font-size: 14px;
             color: #333333;
         }
-        .total-letras {
-            font-size: 7px;
-            color: #555555;
-            margin-top: 4px;
-            padding-top: 4px;
-            border-top: 1px solid #d5d5d5;
-            width: 100%;
-            text-align: left;
-            font-style: italic;
-        }
-        .total-letras strong {
-            color: #333333;
-        }
         
         /* ===== QR ===== */
         .qr-container { 
             text-align: center; 
-            margin: 6px 0 4px 0; 
+            margin: 5px 0 3px 0; 
             padding: 4px; 
             border: 2px solid #999999;
             border-radius: 8px; 
         }
         .qr-container img { 
-            width: 80px; 
-            height: 80px; 
+            width: 75px; 
+            height: 75px; 
         }
         .qr-container .qr-text { 
             font-size: 6.5px; 
@@ -646,19 +652,23 @@ class PDFGenerator:
             margin-top: 2px; 
         }
         
-        /* ===== OBSERVACIONES ===== */
-        .observaciones { 
+        /* ===== OBSERVACIONES - UNA SOLA LÍNEA ===== */
+        .observaciones-linea { 
             margin-top: 4px; 
             padding: 4px 10px; 
             border: 1px solid #e5e7eb; 
-            border-radius: 6px; 
-            font-size: 8px; 
+            border-radius: 5px; 
+            font-size: 7.5px; 
             color: #555555;
+            line-height: 1.4;
+        }
+        .observaciones-linea strong {
+            color: #333333;
         }
         
         /* ===== FOOTER ===== */
         .footer { 
-            margin-top: 10px; 
+            margin-top: 8px; 
             text-align: center; 
             font-size: 7px; 
             color: #888888;
@@ -689,7 +699,7 @@ class PDFGenerator:
     </div>
 
     <!-- ============================================================ -->
-    <!-- DATOS DEL CLIENTE Y COMPROBANTE - SIMÉTRICOS                -->
+    <!-- DATOS DEL CLIENTE Y COMPROBANTE - COMPACTOS                 -->
     <!-- ============================================================ -->
     <div class="layout-dos-columnas">
         <div class="columna">
@@ -772,47 +782,49 @@ class PDFGenerator:
     </div>
 
     <!-- ============================================================ -->
-    <!-- TOTALES - TOTAL EN NEGRO                                    -->
+    <!-- TOTALES - CON SON A LA IZQUIERDA DEL TOTAL                  -->
     <!-- ============================================================ -->
-    <div class="totales-box">
-        <div class="linea">
-            <span class="label-total">OP. GRAVADA</span>
-            <span class="value-total">{{ moneda }} {{ subtotal }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">IGV (18%)</span>
-            <span class="value-total">{{ moneda }} {{ igv }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">OP. DESCUENTO</span>
-            <span class="value-total">{{ moneda }} {{ descuento }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">OP. INAFECTA</span>
-            <span class="value-total">{{ moneda }} {{ op_inafecta }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">OP. EXONERADA</span>
-            <span class="value-total">{{ moneda }} {{ op_exonerada }}</span>
-        </div>
-        <div class="linea">
-            <span class="label-total">TOTAL OP. GRATUITA</span>
-            <span class="value-total">{{ moneda }} {{ op_gratuita }}</span>
-        </div>
-        <div class="linea total">
-            <span class="label-total">TOTAL VENTA</span>
-            <span class="value-total">{{ moneda }} {{ total }}</span>
-        </div>
+    <div class="totales-wrapper">
         <div class="total-letras">
             <strong>SON:</strong> {{ total_letras }}
+        </div>
+        <div class="totales-box">
+            <div class="linea">
+                <span class="label-total">OP. GRAVADA</span>
+                <span class="value-total">{{ moneda }} {{ subtotal }}</span>
+            </div>
+            <div class="linea">
+                <span class="label-total">IGV (18%)</span>
+                <span class="value-total">{{ moneda }} {{ igv }}</span>
+            </div>
+            <div class="linea">
+                <span class="label-total">OP. DESCUENTO</span>
+                <span class="value-total">{{ moneda }} {{ descuento }}</span>
+            </div>
+            <div class="linea">
+                <span class="label-total">OP. INAFECTA</span>
+                <span class="value-total">{{ moneda }} {{ op_inafecta }}</span>
+            </div>
+            <div class="linea">
+                <span class="label-total">OP. EXONERADA</span>
+                <span class="value-total">{{ moneda }} {{ op_exonerada }}</span>
+            </div>
+            <div class="linea">
+                <span class="label-total">TOTAL OP. GRATUITA</span>
+                <span class="value-total">{{ moneda }} {{ op_gratuita }}</span>
+            </div>
+            <div class="linea total">
+                <span class="label-total">TOTAL VENTA</span>
+                <span class="value-total">{{ moneda }} {{ total }}</span>
+            </div>
         </div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- OBSERVACIONES                                                -->
+    <!-- OBSERVACIONES - UNA SOLA LÍNEA                              -->
     <!-- ============================================================ -->
     {% if observaciones %}
-    <div class="observaciones">
+    <div class="observaciones-linea">
         <strong>Observaciones:</strong> {{ observaciones }}
     </div>
     {% endif %}
@@ -979,13 +991,13 @@ class PDFGenerator:
     <meta charset="UTF-8">
     <title>Guía de Remisión {{ serie }}-{{ numero }}</title>
     <style>
-        @page { size: A4; margin: 1.5cm 1.5cm; }
+        @page { size: A4; margin: 1.3cm 1.5cm; }
         body { 
             font-family: 'Helvetica', Arial, sans-serif; 
-            font-size: 9.5px; 
+            font-size: 9px; 
             color: #333333;
-            line-height: 1.8; 
-            margin-top: 15px;
+            line-height: 1.5; 
+            margin-top: 10px;
             background: #ffffff;
         }
         
@@ -993,125 +1005,126 @@ class PDFGenerator:
             display: flex; 
             justify-content: space-between; 
             align-items: stretch; 
-            margin-bottom: 15px; 
-            gap: 20px; 
+            margin-bottom: 10px; 
+            gap: 18px; 
             padding-top: 5px;
             border-bottom: 1px solid #999999;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
         }
         .empresa-izquierda { 
             flex: 1; 
             display: flex; 
             align-items: center; 
-            gap: 18px; 
+            gap: 15px; 
         }
         .empresa-izquierda .logo-container { 
             flex-shrink: 0; 
-            width: 120px; 
-            height: 80px; 
+            width: 110px; 
+            height: 70px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
         }
         .empresa-izquierda .logo-container img { 
-            max-height: 75px; 
-            max-width: 130px; 
+            max-height: 65px; 
+            max-width: 120px; 
             object-fit: contain; 
         }
         .empresa-izquierda .info-texto { 
-            font-size: 8.5px; 
-            line-height: 1.5; 
+            font-size: 8px; 
+            line-height: 1.4; 
             color: #444444;
         }
         .empresa-izquierda .info-texto .nombre { 
-            font-size: 13px; 
+            font-size: 12px; 
             font-weight: bold; 
             text-transform: uppercase; 
             color: #000000;
             letter-spacing: 0.5px;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
         .empresa-izquierda .info-texto .ruc-line {
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: bold;
             color: #333333;
             margin-bottom: 1px;
         }
         .empresa-izquierda .info-texto .slogan {
-            font-size: 8px;
+            font-size: 7.5px;
             color: #666666;
             font-style: italic;
             margin-bottom: 1px;
         }
         .empresa-izquierda .info-texto .contacto-line {
-            font-size: 7.5px;
+            font-size: 7px;
             color: #555555;
         }
         .recuadro-derecha { 
             flex-shrink: 0; 
             border: 1px solid #999999;
             border-radius: 4px; 
-            padding: 8px 18px; 
+            padding: 6px 16px; 
             text-align: center; 
-            min-width: 180px; 
+            min-width: 170px; 
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
         .recuadro-derecha .ruc { 
-            font-size: 10px; 
+            font-size: 9px; 
             font-weight: bold; 
             color: #333333;
         }
         .recuadro-derecha .titulo { 
-            font-size: 11px; 
+            font-size: 10px; 
             font-weight: bold; 
             letter-spacing: 0.5px; 
             margin: 2px 0; 
             color: #000000;
         }
         .recuadro-derecha .numero { 
-            font-size: 16px; 
+            font-size: 15px; 
             font-weight: bold; 
             color: #CC0000;
             letter-spacing: 1px;
         }
         
         .seccion { 
-            margin-bottom: 6px; 
+            margin-bottom: 5px; 
         }
         
         .seccion-con-borde {
             border: 1px solid #cccccc;
             border-radius: 4px;
             padding: 0;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             overflow: hidden;
         }
         .seccion-con-borde .seccion-titulo {
             font-weight: bold;
-            font-size: 8.5px;
+            font-size: 8px;
             text-transform: uppercase;
             color: #000000;
-            padding: 3px 10px;
+            padding: 2px 10px;
             margin: 0;
             border-bottom: 1px solid #cccccc;
             letter-spacing: 0.3px;
             background: #f5f5f5;
         }
         .seccion-con-borde .seccion-contenido {
-            padding: 4px 10px;
+            padding: 3px 10px;
             background: #ffffff;
         }
         
         .fila { 
             display: flex; 
-            padding: 1px 0; 
+            padding: 0.5px 0; 
             align-items: baseline; 
+            font-size: 8px;
         }
         .fila .label { 
             font-weight: bold; 
-            min-width: 200px; 
+            min-width: 190px; 
             flex-shrink: 0; 
             color: #555555;
         }
@@ -1124,8 +1137,8 @@ class PDFGenerator:
         .products-table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin: 4px 0; 
-            font-size: 8px; 
+            margin: 3px 0; 
+            font-size: 7.5px; 
         }
         .products-table th { 
             color: #000000;
@@ -1149,14 +1162,14 @@ class PDFGenerator:
         }
         .qr-container { 
             text-align: center; 
-            margin: 8px 0 5px 0; 
-            padding: 6px; 
+            margin: 6px 0 4px 0; 
+            padding: 5px; 
             border: 1px solid #999999;
             border-radius: 4px; 
         }
         .qr-container img { 
-            width: 80px; 
-            height: 80px; 
+            width: 75px; 
+            height: 75px; 
         }
         .qr-container .qr-text { 
             font-size: 6.5px; 
@@ -1164,33 +1177,40 @@ class PDFGenerator:
             margin-top: 2px; 
         }
         .footer { 
-            margin-top: 12px; 
+            margin-top: 10px; 
             text-align: center; 
             font-size: 7px; 
             color: #888888;
-            padding-top: 6px; 
+            padding-top: 5px; 
         }
-        .referencias-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr 1fr; 
-            gap: 6px; 
-            padding: 3px 0; 
+        
+        /* ===== REFERENCIAS Y OBSERVACIONES EN UNA LÍNEA ===== */
+        .info-linea-unica {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 20px;
+            padding: 4px 10px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            background: #ffffff;
+            font-size: 8px;
+            margin-bottom: 4px;
         }
-        .ref-item { 
-            text-align: center; 
+        .info-linea-unica .info-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 3px;
         }
-        .ref-item .ref-label { 
-            font-weight: bold; 
-            display: block; 
-            font-size: 7px; 
-            color: #777777;
-            text-transform: uppercase; 
-            letter-spacing: 0.3px; 
+        .info-linea-unica .info-label {
+            font-weight: bold;
+            color: #555555;
+            text-transform: uppercase;
+            font-size: 7.5px;
         }
-        .ref-item .ref-value { 
-            font-size: 8.5px; 
-            font-weight: 600; 
+        .info-linea-unica .info-value {
+            font-weight: 600;
             color: #333333;
+            font-size: 8px;
         }
     </style>
 </head>
@@ -1268,21 +1288,25 @@ class PDFGenerator:
         </div>
     </div>
     
-    <div class="seccion seccion-con-borde">
-        <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
-        <div class="seccion-contenido">
-            <div class="referencias-grid">
-                <div class="ref-item"><span class="ref-label">NRO ORDEN DE COMPRA</span><span class="ref-value">{{ orden_compra_cliente or '—' }}</span></div>
-                <div class="ref-item"><span class="ref-label">NRO DE FACTURA</span><span class="ref-value">{{ factura or '—' }}</span></div>
-                <div class="ref-item"><span class="ref-label">NRO DE COTIZACION</span><span class="ref-value">{{ nro_cotizacion or '—' }}</span></div>
-            </div>
+    <!-- ============================================================ -->
+    <!-- DOCUMENTOS RELACIONADOS + OBSERVACIONES EN UNA SOLA LÍNEA   -->
+    <!-- ============================================================ -->
+    <div class="info-linea-unica">
+        <div class="info-item">
+            <span class="info-label">OC:</span>
+            <span class="info-value">{{ orden_compra_cliente or '—' }}</span>
         </div>
-    </div>
-    
-    <div class="seccion seccion-con-borde">
-        <div class="seccion-titulo">OBSERVACIONES</div>
-        <div class="seccion-contenido">
-            <div class="fila"><span class="label">OBSERVACIONES:</span><span class="value">{{ observaciones }}</span></div>
+        <div class="info-item">
+            <span class="info-label">FACTURA:</span>
+            <span class="info-value">{{ factura or '—' }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">COTIZACIÓN:</span>
+            <span class="info-value">{{ nro_cotizacion or '—' }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Observaciones:</span>
+            <span class="info-value">{{ observaciones or '—' }}</span>
         </div>
     </div>
     
