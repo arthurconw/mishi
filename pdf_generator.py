@@ -651,20 +651,22 @@ class PDFGenerator:
             color: #888888;
             margin-top: 2px; 
         }
-        
-        /* ===== OBSERVACIONES - UNA SOLA LÍNEA ===== */
-        .observaciones-linea { 
-            margin-top: 4px; 
-            padding: 4px 10px; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 5px; 
-            font-size: 7.5px; 
-            color: #555555;
-            line-height: 1.4;
-        }
-        .observaciones-linea strong {
-            color: #333333;
-        }
+       /* ===== OBSERVACIONES - UNA SOLA LÍNEA ANCHO COMPLETO ===== */
+.observaciones-linea { 
+    margin-top: 4px; 
+    padding: 5px 10px; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 5px; 
+    font-size: 8px; 
+    color: #555555;
+    line-height: 1.4;
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+}
+.observaciones-linea strong {
+    color: #333333;
+}
         
         /* ===== FOOTER ===== */
         .footer { 
@@ -1184,34 +1186,44 @@ class PDFGenerator:
             padding-top: 5px; 
         }
         
-        /* ===== REFERENCIAS Y OBSERVACIONES EN UNA LÍNEA ===== */
-        .info-linea-unica {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px 20px;
-            padding: 4px 10px;
-            border: 1px solid #cccccc;
-            border-radius: 4px;
-            background: #ffffff;
-            font-size: 8px;
-            margin-bottom: 4px;
-        }
-        .info-linea-unica .info-item {
-            display: inline-flex;
-            align-items: baseline;
-            gap: 3px;
-        }
-        .info-linea-unica .info-label {
-            font-weight: bold;
-            color: #555555;
-            text-transform: uppercase;
-            font-size: 7.5px;
-        }
-        .info-linea-unica .info-value {
-            font-weight: 600;
-            color: #333333;
-            font-size: 8px;
-        }
+     /* ===== REFERENCIAS Y OBSERVACIONES EN UNA LÍNEA - ANCHO COMPLETO ===== */
+.info-linea-unica {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    padding: 5px 10px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background: #ffffff;
+    font-size: 8px;
+    margin-bottom: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.info-linea-unica .info-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+}
+.info-linea-unica .info-label {
+    font-weight: bold;
+    color: #555555;
+    text-transform: uppercase;
+    font-size: 7.5px;
+}
+.info-linea-unica .info-value {
+    font-weight: 600;
+    color: #333333;
+    font-size: 8px;
+}
+.info-linea-unica .info-titulo {
+    font-weight: bold;
+    color: #333333;
+    font-size: 8px;
+    text-transform: uppercase;
+    margin-right: 4px;
+}
     </style>
 </head>
 <body>
@@ -1288,27 +1300,28 @@ class PDFGenerator:
         </div>
     </div>
     
-    <!-- ============================================================ -->
-    <!-- DOCUMENTOS RELACIONADOS + OBSERVACIONES EN UNA SOLA LÍNEA   -->
-    <!-- ============================================================ -->
-    <div class="info-linea-unica">
-        <div class="info-item">
-            <span class="info-label">OC:</span>
-            <span class="info-value">{{ orden_compra_cliente or '—' }}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">FACTURA:</span>
-            <span class="info-value">{{ factura or '—' }}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">COTIZACIÓN:</span>
-            <span class="info-value">{{ nro_cotizacion or '—' }}</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Observaciones:</span>
-            <span class="info-value">{{ observaciones or '—' }}</span>
-        </div>
+  <!-- ============================================================ -->
+<!-- DOCUMENTOS RELACIONADOS + OBSERVACIONES EN UNA SOLA LÍNEA   -->
+<!-- ============================================================ -->
+<div class="info-linea-unica">
+    <span class="info-titulo">Documentos relacionados:</span>
+    <div class="info-item">
+        <span class="info-label">OC:</span>
+        <span class="info-value">{{ orden_compra_cliente or '—' }}</span>
     </div>
+    <div class="info-item">
+        <span class="info-label">FACTURA:</span>
+        <span class="info-value">{{ factura or '—' }}</span>
+    </div>
+    <div class="info-item">
+        <span class="info-label">COTIZACIÓN:</span>
+        <span class="info-value">{{ nro_cotizacion or '—' }}</span>
+    </div>
+    <div class="info-item">
+        <span class="info-label">Observaciones:</span>
+        <span class="info-value">{{ observaciones or '—' }}</span>
+    </div>
+</div>
     
     <div class="qr-container">
         <img src="{{ qr_base64 }}" alt="QR">
