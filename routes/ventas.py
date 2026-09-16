@@ -5910,14 +5910,14 @@ def api_cotizaciones_preview_pdf(id):
             font-size: 8px; 
         }
         .tabla-productos th { 
-            color: #333333;
-            padding: 5px 4px; 
-            border: 1px solid #CCCCCC;
-            font-weight: bold; 
-            text-align: center; 
-            vertical-align: middle; 
-            background-color: #f5f5f5;
-        }
+    color: #333333;
+    padding: 5px 4px; 
+    border: 1px solid #CCCCCC;
+    font-weight: bold; 
+    text-align: center; 
+    vertical-align: middle; 
+    background-color: #F8C8C8; /* 🔴 Fondo rojo suave para todo el encabezado */
+}
         .tabla-productos td { 
             padding: 4px 4px; 
             border: 1px solid #d5d5d5; 
