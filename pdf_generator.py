@@ -505,34 +505,44 @@ class PDFGenerator:
             color: #333333;
         }
         
-        /* ===== REFERENCIAS ===== */
-        .referencias { 
+        /* ===== DOCUMENTOS RELACIONADOS EN UNA SOLA LÍNEA ===== */
+        .info-linea-unica {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 14px;
+            padding: 5px 10px;
             border: 1px solid #cccccc;
-            border-radius: 5px; 
-            padding: 3px 12px; 
-            margin-bottom: 5px; 
+            border-radius: 5px;
+            background: #ffffff;
+            font-size: 8px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .referencias-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr 1fr; 
-            gap: 6px; 
-            padding: 3px 0; 
+        .info-linea-unica .info-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 3px;
         }
-        .ref-item { 
-            text-align: center; 
+        .info-linea-unica .info-label {
+            font-weight: bold;
+            color: #555555;
+            text-transform: uppercase;
+            font-size: 7.5px;
         }
-        .ref-item .ref-label { 
-            font-weight: bold; 
-            display: block; 
-            font-size: 6.5px; 
-            color: #777777;
-            text-transform: uppercase; 
-            letter-spacing: 0.3px; 
-        }
-        .ref-item .ref-value { 
-            font-size: 8px; 
-            font-weight: 600; 
+        .info-linea-unica .info-value {
+            font-weight: 600;
             color: #333333;
+            font-size: 8px;
+        }
+        .info-linea-unica .info-titulo {
+            font-weight: bold;
+            color: #333333;
+            font-size: 8px;
+            text-transform: uppercase;
+            margin-right: 4px;
         }
         
         /* ===== TABLA DE PRODUCTOS ===== */
@@ -651,22 +661,6 @@ class PDFGenerator:
             color: #888888;
             margin-top: 2px; 
         }
-       /* ===== OBSERVACIONES - UNA SOLA LÍNEA ANCHO COMPLETO ===== */
-.observaciones-linea { 
-    margin-top: 4px; 
-    padding: 5px 10px; 
-    border: 1px solid #e5e7eb; 
-    border-radius: 5px; 
-    font-size: 8px; 
-    color: #555555;
-    line-height: 1.4;
-    width: 100%;
-    box-sizing: border-box;
-    display: block;
-}
-.observaciones-linea strong {
-    color: #333333;
-}
         
         /* ===== FOOTER ===== */
         .footer { 
@@ -724,25 +718,21 @@ class PDFGenerator:
     </div>
 
     <!-- ============================================================ -->
-    <!-- DOCUMENTOS RELACIONADOS                                      -->
+    <!-- DOCUMENTOS RELACIONADOS EN UNA SOLA LÍNEA                   -->
     <!-- ============================================================ -->
-    <div class="seccion">
-        <div class="seccion-titulo">DOCUMENTOS RELACIONADOS</div>
-        <div class="referencias">
-            <div class="referencias-grid">
-                <div class="ref-item">
-                    <span class="ref-label">NRO ORDEN DE COMPRA</span>
-                    <span class="ref-value">{{ orden_compra_cliente }}</span>
-                </div>
-                <div class="ref-item">
-                    <span class="ref-label">NRO DE GUÍA</span>
-                    <span class="ref-value">{{ guia_vinculada or '—' }}</span>
-                </div>
-                <div class="ref-item">
-                    <span class="ref-label">NRO DE COTIZACION</span>
-                    <span class="ref-value">{{ nro_cotizacion }}</span>
-                </div>
-            </div>
+    <div class="info-linea-unica">
+        <span class="info-titulo">Documentos relacionados:</span>
+        <div class="info-item">
+            <span class="info-label">OC:</span>
+            <span class="info-value">{{ orden_compra_cliente or '—' }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">GUÍA:</span>
+            <span class="info-value">{{ guia_vinculada or '—' }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">COTIZACIÓN:</span>
+            <span class="info-value">{{ nro_cotizacion or '—' }}</span>
         </div>
     </div>
 
@@ -826,8 +816,11 @@ class PDFGenerator:
     <!-- OBSERVACIONES - UNA SOLA LÍNEA                              -->
     <!-- ============================================================ -->
     {% if observaciones %}
-    <div class="observaciones-linea">
-        <strong>Observaciones:</strong> {{ observaciones }}
+    <div class="info-linea-unica" style="margin-top: 6px;">
+        <div class="info-item">
+            <span class="info-label">Observaciones:</span>
+            <span class="info-value">{{ observaciones }}</span>
+        </div>
     </div>
     {% endif %}
 
@@ -1186,44 +1179,44 @@ class PDFGenerator:
             padding-top: 5px; 
         }
         
-     /* ===== REFERENCIAS Y OBSERVACIONES EN UNA LÍNEA - ANCHO COMPLETO ===== */
-.info-linea-unica {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 4px 14px;
-    padding: 5px 10px;
-    border: 1px solid #cccccc;
-    border-radius: 4px;
-    background: #ffffff;
-    font-size: 8px;
-    margin-bottom: 4px;
-    width: 100%;
-    box-sizing: border-box;
-}
-.info-linea-unica .info-item {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 3px;
-}
-.info-linea-unica .info-label {
-    font-weight: bold;
-    color: #555555;
-    text-transform: uppercase;
-    font-size: 7.5px;
-}
-.info-linea-unica .info-value {
-    font-weight: 600;
-    color: #333333;
-    font-size: 8px;
-}
-.info-linea-unica .info-titulo {
-    font-weight: bold;
-    color: #333333;
-    font-size: 8px;
-    text-transform: uppercase;
-    margin-right: 4px;
-}
+        /* ===== REFERENCIAS Y OBSERVACIONES EN UNA LÍNEA - ANCHO COMPLETO ===== */
+        .info-linea-unica {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 14px;
+            padding: 5px 10px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            background: #ffffff;
+            font-size: 8px;
+            margin-bottom: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .info-linea-unica .info-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 3px;
+        }
+        .info-linea-unica .info-label {
+            font-weight: bold;
+            color: #555555;
+            text-transform: uppercase;
+            font-size: 7.5px;
+        }
+        .info-linea-unica .info-value {
+            font-weight: 600;
+            color: #333333;
+            font-size: 8px;
+        }
+        .info-linea-unica .info-titulo {
+            font-weight: bold;
+            color: #333333;
+            font-size: 8px;
+            text-transform: uppercase;
+            margin-right: 4px;
+        }
     </style>
 </head>
 <body>
@@ -1300,28 +1293,28 @@ class PDFGenerator:
         </div>
     </div>
     
-  <!-- ============================================================ -->
-<!-- DOCUMENTOS RELACIONADOS + OBSERVACIONES EN UNA SOLA LÍNEA   -->
-<!-- ============================================================ -->
-<div class="info-linea-unica">
-    <span class="info-titulo">Documentos relacionados:</span>
-    <div class="info-item">
-        <span class="info-label">OC:</span>
-        <span class="info-value">{{ orden_compra_cliente or '—' }}</span>
+    <!-- ============================================================ -->
+    <!-- DOCUMENTOS RELACIONADOS + OBSERVACIONES EN UNA SOLA LÍNEA   -->
+    <!-- ============================================================ -->
+    <div class="info-linea-unica">
+        <span class="info-titulo">Documentos relacionados:</span>
+        <div class="info-item">
+            <span class="info-label">OC:</span>
+            <span class="info-value">{{ orden_compra_cliente or '—' }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">FACTURA:</span>
+            <span class="info-value">{{ factura or '—' }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">COTIZACIÓN:</span>
+            <span class="info-value">{{ nro_cotizacion or '—' }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Observaciones:</span>
+            <span class="info-value">{{ observaciones or '—' }}</span>
+        </div>
     </div>
-    <div class="info-item">
-        <span class="info-label">FACTURA:</span>
-        <span class="info-value">{{ factura or '—' }}</span>
-    </div>
-    <div class="info-item">
-        <span class="info-label">COTIZACIÓN:</span>
-        <span class="info-value">{{ nro_cotizacion or '—' }}</span>
-    </div>
-    <div class="info-item">
-        <span class="info-label">Observaciones:</span>
-        <span class="info-value">{{ observaciones or '—' }}</span>
-    </div>
-</div>
     
     <div class="qr-container">
         <img src="{{ qr_base64 }}" alt="QR">
