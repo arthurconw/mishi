@@ -2161,7 +2161,7 @@ async function guardarCotizacion(estado) {
             razon: document.getElementById('fRazon')?.value?.trim() || '',
             razon_comercial: document.getElementById('fComercial')?.value?.trim() || '',
             direccion: document.getElementById('fDireccion')?.value?.trim() || '',
-            contacto: document.getElementById('fContacto')?.value?.trim() || '',
+            contacto: getContactoSeleccionadoNombre(),
             telefono: document.getElementById('fTelefono')?.value?.trim() || '',
             email: document.getElementById('fCorreo')?.value?.trim() || '',
             vendedor: document.getElementById('fVendedor')?.value || 'Helen Blas Príncipe',
@@ -6559,7 +6559,11 @@ async function cargarCotizacionParaEditar(id) {
         if (document.getElementById('fCodCliente')) document.getElementById('fCodCliente').value = c.cod_cliente || 'PENDIENTE';
         if (document.getElementById('fComercial')) document.getElementById('fComercial').value = c.cliente_nombre_comercial || '';
         if (document.getElementById('fDireccion')) document.getElementById('fDireccion').value = c.cliente_direccion || c.direccion_entrega || '';
-        if (document.getElementById('fContacto')) document.getElementById('fContacto').value = c.cliente_contacto || c.contacto_cliente || '';
+        
+const contactoGuardado = c.cliente_contacto || c.contacto_cliente || c.contacto || '';
+if (contactoGuardado) {
+    cargarContactoGuardadoEnSelect(contactoGuardado, c.cliente_telefono || c.telefono_cliente || '', c.cliente_email || c.email_cliente || '');
+}
         if (document.getElementById('fTelefono')) document.getElementById('fTelefono').value = c.cliente_telefono || c.telefono_cliente || '';
         if (document.getElementById('fCorreo')) document.getElementById('fCorreo').value = c.cliente_email || c.email_cliente || '';
                 
@@ -6891,6 +6895,51 @@ function llenarDepartamentosGuia(selectId) {
         opt.textContent = d;
         select.appendChild(opt);
     });
+}
+
+
+
+// ============================================================
+// CARGAR CONTACTO GUARDADO EN EL SELECT (para edición)
+// ============================================================
+function cargarContactoGuardadoEnSelect(nombreContacto, telefono, email) {
+    const select = document.getElementById('fContacto');
+    const customInput = document.getElementById('fContactoCustom');
+    const fTelefono = document.getElementById('fTelefono');
+    const fCorreo = document.getElementById('fCorreo');
+    
+    if (!select) return;
+    
+    // Autocompletar teléfono/email
+    if (fTelefono) fTelefono.value = telefono || '';
+    if (fCorreo) fCorreo.value = email || '';
+    
+    // Si el contacto guardado está en las opciones, seleccionarlo
+    let encontrado = false;
+    for (let i = 0; i < select.options.length; i++) {
+        const opt = select.options[i];
+        const nombreOpt = opt.dataset?.nombre || '';
+        if (nombreOpt && nombreOpt.toLowerCase() === nombreContacto.toLowerCase()) {
+            select.value = opt.value;
+            encontrado = true;
+            break;
+        }
+    }
+    
+    // Si no está en las opciones, mostrar como personalizado
+    if (!encontrado && nombreContacto) {
+        // Agregar opción personalizada con este nombre
+        const optNew = document.createElement('option');
+        optNew.value = '__custom__';
+        optNew.textContent = `✏️ ${nombreContacto}`;
+        select.appendChild(optNew);
+        select.value = '__custom__';
+        
+        if (customInput) {
+            customInput.style.display = 'block';
+            customInput.value = nombreContacto;
+        }
+    }
 }
 
 function llenarProvinciasGuia(depto, provSelectId, distSelectId) {
@@ -8939,6 +8988,9 @@ function renderQuoteProducts() {
     `).join('');
 }
 
+
+
+
 function calcQuote() {
     const subtotal = quoteProducts.reduce((s, p) => s + (Number(p.cantidad || 0) * Number(p.valorVenta || 0)), 0);
     
@@ -8964,7 +9016,6 @@ function calcQuote() {
     set('sumTotal', money(total));
     set('sumTiempoEntrega', tiempoEntrega);
 }
-
 
 async function loadClient() {
     const rucInput = document.getElementById('fRucSearch');
@@ -9003,7 +9054,6 @@ async function loadClient() {
             const fRuc = document.getElementById('fRuc');
             const fRazon = document.getElementById('fRazon');
             const fDireccion = document.getElementById('fDireccion');
-            const fContacto = document.getElementById('fContacto');
             const fTelefono = document.getElementById('fTelefono');
             const fCorreo = document.getElementById('fCorreo');
             const fReq = document.getElementById('fReq');
@@ -9012,19 +9062,20 @@ async function loadClient() {
             if (fRuc) fRuc.value = cliente.ruc || ruc;
             if (fRazon) fRazon.value = cliente.razon_social || '';
             if (fDireccion) fDireccion.value = cliente.direccion_fiscal || '';
-            if (fContacto) fContacto.value = cliente.nombre_contacto || '';
-            if (fTelefono) fTelefono.value = cliente.telefono_contacto || '';
-            if (fCorreo) fCorreo.value = cliente.email_contacto || '';
             
             // ============================================================
-            // 2. CONDICIONES COMERCIALES - NO SE AUTOCARGA NADA
+            // 2. CARGAR CONTACTOS EN EL SELECT
+            // ============================================================
+            cargarContactosEnSelect(cliente);
+            
+            // ============================================================
+            // 3. CONDICIONES COMERCIALES - NO SE AUTOCARGA NADA
             // ============================================================
             const fVendedor = document.getElementById('fVendedor');
             const fEmailAsesor = document.getElementById('fEmailAsesor');
             const fTelefonoAsesor = document.getElementById('fTelefonoAsesor');
             const fMoneda = document.getElementById('fMoneda');
             const fValidez = document.getElementById('fValidez');
-            const fDireccionEntrega = document.getElementById('fDireccionEntrega');
             const fDescuentoEspecial = document.getElementById('fDescuentoEspecial');
             const fNotaComercial = document.getElementById('fNotaComercial');
             
@@ -9033,39 +9084,35 @@ async function loadClient() {
             if (fTelefonoAsesor) fTelefonoAsesor.value = CONFIG.telefonoAsesorDefault;
             if (fMoneda) fMoneda.value = 'Soles (S/.)';
             
-            // ❌ ELIMINADO: No se autocompleta Condición de Pago
-            // ❌ ELIMINADO: No se autocompleta Tiempo de Entrega
+            // Dirección de entrega
+            let direccionEntrega = '';
+            if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
+                const principal = cliente.puntos_entrega.find(p => p.principal === true);
+                if (principal) {
+                    direccionEntrega = principal.direccion || '';
+                } else {
+                    direccionEntrega = cliente.puntos_entrega[0].direccion || '';
+                }
+            }
+            if (!direccionEntrega && cliente.direccion_fiscal) {
+                direccionEntrega = cliente.direccion_fiscal;
+            }
+            if (direccionEntrega) {
+                const fDireccionEntrega = document.getElementById('fDireccionEntrega');
+                if (fDireccionEntrega) {
+                    setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
+                }
+            }
             
-            // ✅ Los siguientes campos SÍ se autocompletan:
-            
-        // Dirección de entrega (si el cliente tiene puntos de entrega)
-let direccionEntrega = '';
-if (cliente.puntos_entrega && cliente.puntos_entrega.length > 0) {
-    const principal = cliente.puntos_entrega.find(p => p.principal === true);
-    if (principal) {
-        direccionEntrega = principal.direccion || '';
-    } else {
-        direccionEntrega = cliente.puntos_entrega[0].direccion || '';
-    }
-}
-if (!direccionEntrega && cliente.direccion_fiscal) {
-    direccionEntrega = cliente.direccion_fiscal;
-}
-if (direccionEntrega && fDireccionEntrega) {
-    setFieldValue('fDireccionEntrega', 'fDireccionEntregaCustom', direccionEntrega);
-}
-            
-cargarDireccionesClienteEnSelect(cliente);
-
-            // Validez (por defecto 15 días)
+            // Validez por defecto
             if (fValidez) fValidez.value = '15 días';
             
-            // Descuento y nota comercial (se dejan en blanco o 0)
             if (fDescuentoEspecial) fDescuentoEspecial.value = 0;
             if (fNotaComercial) fNotaComercial.value = '';
-            
             if (fReq) fReq.value = '';
             if (fFuente) fFuente.value = 'Correo';
+            
+            cargarDireccionesClienteEnSelect(cliente);
             
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
@@ -9078,7 +9125,7 @@ cargarDireccionesClienteEnSelect(cliente);
                 setTimeout(() => { confirmBox.className = ''; }, 6000);
             }
             
-            showToast(`✅ Cliente encontrado en sistema: ${cliente.razon_social}`, 'success');
+            showToast(`✅ Cliente encontrado: ${cliente.razon_social}`, 'success');
             return;
         }
         
@@ -9089,8 +9136,6 @@ cargarDireccionesClienteEnSelect(cliente);
         
         const sunatResponse = await fetch(`/api/sunat/consulta?ruc=${ruc}`);
         const sunatData = await sunatResponse.json();
-        
-        console.log('📦 Respuesta SUNAT:', sunatData);
         
         if (sunatData.success) {
             const fRuc = document.getElementById('fRuc');
@@ -9103,7 +9148,12 @@ cargarDireccionesClienteEnSelect(cliente);
             if (fDireccion) fDireccion.value = sunatData.direccion || '';
             if (fCorreo) fCorreo.value = sunatData.email || '';
             
-            // ❌ ELIMINADO: No se autocompleta ni condición de pago ni tiempo de entrega desde SUNAT
+            // Limpiar select de contactos (no hay contactos porque es nuevo)
+            const selectContacto = document.getElementById('fContacto');
+            if (selectContacto) {
+                selectContacto.innerHTML = '<option value="">-- Escriba un contacto manualmente --</option>';
+            }
+            mostrarInputContactoLibre();
             
             const confirmBox = document.getElementById('clientConfirmBox');
             if (confirmBox) {
@@ -9145,6 +9195,137 @@ function autoLoadClientByRuc(value) {
     } else if (ruc.length > 11) {
         const input = document.getElementById('fRucSearch');
         if (input) input.value = ruc.substring(0, 11);
+    }
+}
+
+
+// ============================================================
+// CARGAR CONTACTOS DEL CLIENTE EN EL SELECT
+// ============================================================
+function cargarContactosEnSelect(cliente) {
+    const select = document.getElementById('fContacto');
+    const customInput = document.getElementById('fContactoCustom');
+    const fTelefono = document.getElementById('fTelefono');
+    const fCorreo = document.getElementById('fCorreo');
+    
+    if (!select) return;
+    
+    // Limpiar select
+    select.innerHTML = '';
+    
+    // Ocultar input personalizado
+    if (customInput) {
+        customInput.style.display = 'none';
+        customInput.value = '';
+    }
+    
+    // Verificar si hay contactos
+    const contactos = cliente.contactos || [];
+    
+    if (contactos.length === 0) {
+        // Sin contactos: usar el input libre
+        select.innerHTML = '<option value="__custom__">✏️ Escribir contacto manualmente</option>';
+        select.value = '__custom__';
+        mostrarInputContactoLibre();
+        
+        // Autocompletar con datos aplanados del cliente (si existen)
+        if (fTelefono) fTelefono.value = cliente.telefono_contacto || '';
+        if (fCorreo) fCorreo.value = cliente.email_contacto || '';
+        return;
+    }
+    
+    // Hay contactos: poblar el select
+    select.innerHTML = '<option value="">-- Seleccione un contacto --</option>';
+    
+    contactos.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        const nombre = c.nombre || c.nombre_contacto || '';
+        const cargo = c.cargo || '';
+        const esPrincipal = c.principal === true;
+        
+        // Formatear texto: ⭐ Nombre (Cargo)
+        let texto = nombre;
+        if (cargo) texto += ` (${cargo})`;
+        if (esPrincipal) texto = `⭐ ${texto} — Principal`;
+        
+        opt.textContent = texto;
+        
+        // Guardar datos en dataset para autocompletar
+        opt.dataset.telefono = c.telefono || '';
+        opt.dataset.email = c.email || '';
+        opt.dataset.nombre = nombre;
+        opt.dataset.cargo = cargo;
+        opt.dataset.principal = esPrincipal ? '1' : '0';
+        
+        select.appendChild(opt);
+    });
+    
+    // Agregar opción "Personalizado" al final
+    const optCustom = document.createElement('option');
+    optCustom.value = '__custom__';
+    optCustom.textContent = '✏️ Escribir otro contacto...';
+    select.appendChild(optCustom);
+    
+    // Seleccionar el principal por defecto
+    const principal = contactos.find(c => c.principal === true);
+    if (principal) {
+        select.value = principal.id;
+    } else if (contactos.length > 0) {
+        select.value = contactos[0].id;
+    }
+    
+    // Aplicar el contacto seleccionado
+    aplicarContactoSeleccionado();
+    
+    console.log(`✅ ${contactos.length} contactos cargados en el select`);
+}
+
+
+// ============================================================
+// APLICAR CONTACTO SELECCIONADO (autocompletar tel/email)
+// ============================================================
+function aplicarContactoSeleccionado() {
+    const select = document.getElementById('fContacto');
+    const customInput = document.getElementById('fContactoCustom');
+    const fTelefono = document.getElementById('fTelefono');
+    const fCorreo = document.getElementById('fCorreo');
+    
+    if (!select) return;
+    
+    const opt = select.options[select.selectedIndex];
+    
+    // Si es "Personalizado", mostrar input libre
+    if (select.value === '__custom__') {
+        mostrarInputContactoLibre();
+        if (customInput) customInput.focus();
+        return;
+    }
+    
+    // Ocultar input libre
+    if (customInput) {
+        customInput.style.display = 'none';
+        customInput.value = '';
+    }
+    
+    // Si no hay opción seleccionada, no hacer nada
+    if (!opt || !opt.dataset.nombre) return;
+    
+    // Autocompletar teléfono y email
+    if (fTelefono) fTelefono.value = opt.dataset.telefono || '';
+    if (fCorreo) fCorreo.value = opt.dataset.email || '';
+    
+    console.log(`👤 Contacto aplicado: ${opt.dataset.nombre} | Tel: ${opt.dataset.telefono} | Email: ${opt.dataset.email}`);
+}
+
+
+// ============================================================
+// MOSTRAR INPUT LIBRE (cuando no hay contactos o se elige personalizado)
+// ============================================================
+function mostrarInputContactoLibre() {
+    const customInput = document.getElementById('fContactoCustom');
+    if (customInput) {
+        customInput.style.display = 'block';
     }
 }
 
@@ -9227,9 +9408,9 @@ async function saveClientFromQuote() {
     razon_social: document.getElementById('fRazon')?.value?.trim() || '',
     nombre_comercial: document.getElementById('fComercial')?.value?.trim() || '',
     direccion_fiscal: document.getElementById('fDireccion')?.value?.trim() || '',
-    nombre_contacto: document.getElementById('fContacto')?.value?.trim() || '',
-    telefono_contacto: document.getElementById('fTelefono')?.value?.trim() || '',
-    email_contacto: document.getElementById('fCorreo')?.value?.trim() || '', // 🔽 NUEVO
+   nombre_contacto: getContactoSeleccionadoNombre(),
+telefono_contacto: document.getElementById('fTelefono')?.value?.trim() || '',
+email_contacto: document.getElementById('fCorreo')?.value?.trim() || '',
     condicion_pago: document.getElementById('fCondicion')?.value || 'Contado',
     activo: true,
     estado: 'Activo'
@@ -9436,6 +9617,29 @@ function openDespachoModal(id = null) {
     document.getElementById('despachoModal').classList.add('show');
 }
 
+
+
+// ============================================================
+// OBTENER NOMBRE DEL CONTACTO SELECCIONADO (del select o del input)
+// ============================================================
+function getContactoSeleccionadoNombre() {
+    const select = document.getElementById('fContacto');
+    const customInput = document.getElementById('fContactoCustom');
+    
+    if (!select) return '';
+    
+    // Si es "Personalizado", devolver el valor del input libre
+    if (select.value === '__custom__') {
+        return customInput?.value?.trim() || '';
+    }
+    
+    // Si no hay contacto seleccionado
+    if (!select.value) return '';
+    
+    // Devolver el nombre del dataset
+    const opt = select.options[select.selectedIndex];
+    return opt?.dataset?.nombre || opt?.textContent || '';
+}
 
 function openGuiaModal(id = null) {
     // ✅ CERRAR CUALQUIER OTRO MODAL ANTES DE ABRIR GUÍA
@@ -12994,7 +13198,9 @@ function renderCotizacionFormContent(isEdit) {
                 </div>
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Contacto</label>
-                    <input id="fContacto" placeholder="Nombre" style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
+                  <select id="fContacto" onchange="aplicarContactoSeleccionado()">
+    <option value="">-- Seleccione contacto --</option>
+</select> style="width:100%;height:18px;border:1px solid #E5E7EB;border-radius:5px;background:#FFFFFF;outline:none;color:#0F172A;font-size:9.5px;padding:0 5px;">
                 </div>
                 <div class="form-field">
                     <label style="display:block;font-size:7px;font-weight:950;color:#334155;margin-bottom:1px;text-transform:uppercase;">Teléfono</label>
