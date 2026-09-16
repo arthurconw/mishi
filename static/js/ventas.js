@@ -9047,7 +9047,11 @@ async function loadClient() {
         
         if (bdData.success && bdData.data && bdData.data.length > 0) {
             const cliente = bdData.data[0];
-            
+            // 🔽 DEBUG TEMPORAL
+console.log('👤 Cliente completo:', cliente);
+console.log('📋 Contactos recibidos:', cliente.contactos);
+console.log('📍 Puntos de entrega:', cliente.puntos_entrega);
+window._ultimoCliente = cliente; // ← para poder inspeccionarlo en consola
             // ============================================================
             // 1. DATOS DEL CLIENTE
             // ============================================================
