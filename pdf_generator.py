@@ -18,6 +18,8 @@ class PDFGenerator:
         self.COLOR_GRIS = '#999999'
         self.COLOR_GRIS_CLARO = '#cccccc'
         self.COLOR_FONDO_GRIS = '#f5f5f5'
+        # Función db_query inyectable (se asigna desde app.py)
+        self.db_query = None
 
     # ============================================================
     # OBTENER LOGO EN BASE64
@@ -56,6 +58,39 @@ class PDFGenerator:
         
         print("❌ No se encontró el logo")
         return None
+
+    # ============================================================
+    # BUSCAR GUÍA DE REMISIÓN VINCULADA A UNA FACTURA
+    # ============================================================
+    def _buscar_guia_vinculada(self, serie_factura, numero_factura):
+        """
+        Busca en la BD una guía de remisión vinculada a la factura.
+        Retorna 'SERIE-NUMERO' o '' si no encuentra.
+        """
+        if not self.db_query:
+            return ''
+        
+        try:
+            referencia = f"{serie_factura}-{numero_factura}"
+            query = """
+                SELECT serie, numero
+                FROM guias_remision
+                WHERE factura = %s
+                   OR documento_asociado = %s
+                ORDER BY id DESC
+                LIMIT 1
+            """
+            resultado = self.db_query(query, (referencia, referencia))
+            
+            if resultado:
+                guia = resultado[0]
+                guia_str = f"{guia.get('serie', '')}-{guia.get('numero', '')}"
+                print(f"✅ Guía vinculada encontrada: {guia_str}")
+                return guia_str
+        except Exception as e:
+            print(f"⚠️ Error buscando guía vinculada: {e}")
+        
+        return ''
 
     # ============================================================
     # MÉTODO PRINCIPAL
@@ -279,6 +314,20 @@ class PDFGenerator:
                     '—'
                 )
 
+            # ============================================================
+            # BUSCAR GUÍA VINCULADA (automáticamente desde BD)
+            # ============================================================
+            guia_vinculada = datos_comprobante.get('guia_vinculada', '')
+            
+            if not guia_vinculada:
+                serie_fact = datos_comprobante.get('serie', 'F001')
+                numero_fact = datos_comprobante.get('numero', '')
+                if numero_fact:
+                    guia_vinculada = self._buscar_guia_vinculada(serie_fact, numero_fact)
+            
+            if not guia_vinculada:
+                guia_vinculada = '—'
+
             qr_base64 = self._generar_qr_comprobante(datos_comprobante)
 
             tipo_doc = datos_comprobante.get('tipo', datos_comprobante.get('tipo_comprobante', 'Factura'))
@@ -318,8 +367,8 @@ class PDFGenerator:
                 'orden_compra_cliente': orden_compra_cliente if orden_compra_cliente else '—',
                 'factura': factura if factura else '—',
                 'nro_cotizacion': nro_cotizacion if nro_cotizacion else '—',
+                'guia_vinculada': guia_vinculada,
                 'fecha_vencimiento': datos_comprobante.get('fecha_vencimiento', ''),
-                'guia_vinculada': datos_comprobante.get('guia_vinculada', '—'),
                 'items': items_formateados,
                 'qr_base64': qr_base64
             }
@@ -880,8 +929,8 @@ class PDFGenerator:
                 'orden_compra_cliente': datos.get('orden_compra_cliente', '—'),
                 'factura': datos.get('factura', '—'),
                 'nro_cotizacion': datos.get('nro_cotizacion', '—'),
-                'fecha_vencimiento': datos.get('fecha_vencimiento', ''),
                 'guia_vinculada': datos.get('guia_vinculada', '—'),
+                'fecha_vencimiento': datos.get('fecha_vencimiento', ''),
                 'qr_base64': datos.get('qr_base64', ''),
             }
             
@@ -953,7 +1002,7 @@ class PDFGenerator:
             return str(fecha)
 
     # ============================================================
-    # GUÍA DE REMISIÓN - MÉTODOS EXISTENTES
+    # GUÍA DE REMISIÓN
     # ============================================================
     def _generar_guia_remision(self, datos_guia):
         try:
@@ -1454,7 +1503,7 @@ class PDFGenerator:
         return motivos.get(codigo, codigo or 'Venta')
 
     # ============================================================
-    # GENERAR COTIZACIÓN - CON COLORES CORPORATIVOS
+    # GENERAR COTIZACIÓN
     # ============================================================
     def _generar_cotizacion(self, datos):
         try:
