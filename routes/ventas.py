@@ -5551,6 +5551,7 @@ def api_pedido_compra_obtener(id):
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/pdf/preview', methods=['GET'])
 @login_required
 def api_cotizaciones_preview_pdf(id):
@@ -5729,7 +5730,6 @@ def api_cotizaciones_preview_pdf(id):
             'summary_total_venta': total,
             'hay_descuentos': hay_descuentos
         }
-        
 
         # 4. Template HTML - CON COLORES SUAVES Y SOLO ROJO PARA COTIZACIÓN Y NÚMERO
         template_html = '''<!DOCTYPE html>
@@ -5936,11 +5936,13 @@ def api_cotizaciones_preview_pdf(id):
         .col-unidad-medida { text-align: center; width: 50px; }
         .col-cantidad { text-align: center; width: 40px; }
         .col-valor-unitario { text-align: right; width: 80px; }
+        
+        /* 🔴 VALOR VENTA TOTAL - ROJO SUAVE (encabezado) */
         .col-valor-total { 
             text-align: right; 
             width: 85px; 
             font-weight: bold; 
-            color: #333333;
+            color: #E57373;
         }
         
         .numero-formateado { 
@@ -5952,6 +5954,12 @@ def api_cotizaciones_preview_pdf(id):
         .text-left { text-align: left; }
         .text-right { text-align: right; }
         .fw-bold { font-weight: bold; }
+        
+        /* 🔴 VALOR VENTA TOTAL - ROJO SUAVE (celdas del cuerpo) */
+        .celda-valor-total {
+            color: #E57373 !important;
+            font-weight: bold;
+        }
         
         /* ===== SECCIÓN TOTALES ===== */
         .seccion-totales { 
@@ -5982,18 +5990,18 @@ def api_cotizaciones_preview_pdf(id):
             color: #333333;
         }
         
-        /* TOTAL A PAGAR - NEGRO, NO ROJO */
+        /* 🔵 TOTAL A PAGAR - AZUL CHIYÓN */
         .total-final { 
             border-top: 2px solid #CCCCCC; 
             padding-top: 8px; 
             margin-top: 6px; 
             font-weight: bold; 
             font-size: 14px;
-            color: #333333; 
+            color: #0033A0;
         }
         .total-final .numero-formateado {
             font-size: 18px;
-            color: #333333;
+            color: #0033A0;
         }
         
         /* ===== NOTA ACLARATORIA ===== */
@@ -6131,7 +6139,8 @@ def api_cotizaciones_preview_pdf(id):
         </div>
         <div class="seccion-condiciones">
             <h3>CONDICIONES COMERCIALES</h3>
-            <div class="condicion-line"><span class="condicion-label">Ejecutiva:</span><span class="condicion-value">{{ asesor_comercial }}</span></div>
+            <!-- ✅ CAMBIO 1: "Ejecutiva Comercial:" -->
+            <div class="condicion-line"><span class="condicion-label">Ejecutiva Comercial:</span><span class="condicion-value">{{ asesor_comercial }}</span></div>
             <div class="condicion-line"><span class="condicion-label">E-mail:</span><span class="condicion-value">{{ email_contacto }}</span></div>
             <div class="condicion-line"><span class="condicion-label">Teléfono:</span><span class="condicion-value">{{ telefono_contacto_user }}</span></div>
             <div class="condicion-line"><span class="condicion-label">Condición Pago:</span><span class="condicion-value">{{ condicion_pago }}</span></div>
@@ -6165,6 +6174,7 @@ def api_cotizaciones_preview_pdf(id):
                 <th class="col-unidad-medida">Unidad Medida</th>
                 <th class="col-cantidad">Cantidad</th>
                 <th class="col-valor-unitario">Valor Venta Unit S/.</th>
+                <!-- ✅ CAMBIO 3: encabezado en rojo suave -->
                 <th class="col-valor-total">Valor Venta Total S/.</th>
             </tr>
         </thead>
@@ -6180,7 +6190,8 @@ def api_cotizaciones_preview_pdf(id):
                     <td class="text-center">{{ producto.unidad|default('Unid') }}</td>
                     <td class="text-center">{{ "%.0f"|format(producto.cantidad|default(0)) }}</td>
                     <td class="numero-formateado">{{ "%.2f"|format(producto.precio_venta_unitario|default(0)) }}</td>
-                    <td class="numero-formateado fw-bold">{{ "%.2f"|format(producto.subtotal_venta_desc|default(producto.subtotal_venta|default(0))) }}</td>
+                    <!-- ✅ CAMBIO 3: celda en rojo suave -->
+                    <td class="numero-formateado celda-valor-total">{{ "%.2f"|format(producto.subtotal_venta_desc|default(producto.subtotal_venta|default(0))) }}</td>
                 </tr>
                 {% endfor %}
             {% else %}
@@ -6201,7 +6212,7 @@ def api_cotizaciones_preview_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- TOTALES - BORDE GRIS, TOTAL EN NEGRO                       -->
+    <!-- TOTALES - TOTAL A PAGAR EN AZUL CHIYÓN                     -->
     <!-- ============================================================ -->
     <div class="seccion-totales">
         <div class="total-line"><span>Subtotal (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
@@ -6210,6 +6221,7 @@ def api_cotizaciones_preview_pdf(id):
         {% endif %}
         <div class="total-line"><span>Subtotal con descuento (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta_desc|default(0)) }}</span></div>
         <div class="total-line"><span>IGV (18%):</span><span class="numero-formateado">S/ {{ "%.2f"|format(summary_igv|default(0)) }}</span></div>
+        <!-- ✅ CAMBIO 2: TOTAL A PAGAR en azul chiyón -->
         <div class="total-line total-final"><span><strong>TOTAL A PAGAR:</strong></span><span class="numero-formateado"><strong>S/ {{ "%.2f"|format(summary_total_venta|default(0)) }}</strong></span></div>
     </div>
 
@@ -6263,6 +6275,7 @@ def api_cotizaciones_preview_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @ventas_bp.route('/ventas/api/pedido-compra/<int:id>', methods=['DELETE'])
 @login_required
