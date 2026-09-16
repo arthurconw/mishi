@@ -3850,7 +3850,6 @@ def api_cotizaciones_duplicar(id):
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
     
-
 @ventas_bp.route('/ventas/api/cotizaciones/<int:id>/pdf', methods=['GET'])
 @login_required
 def api_cotizaciones_generar_pdf(id):
@@ -4026,7 +4025,7 @@ def api_cotizaciones_generar_pdf(id):
         
         print(f"📊 Datos preparados: {len(productos_list)} productos, Total: {total}")
         
-        # 5. Template HTML - SIN FONDOS DE COLOR, SOLO TEXTOS Y BORDES ROJOS
+        # 5. Template HTML - CON FONDO ROJO SUAVE EN ENCABEZADO Y TOTAL EN AZUL CHIYÓN
         template_html = '''<!DOCTYPE html>
 <html>
 <head>
@@ -4053,6 +4052,7 @@ def api_cotizaciones_generar_pdf(id):
         /* ===== COLORES CORPORATIVOS ===== */
         .color-rojo { color: #CC0000; }
         .color-rojo-oscuro { color: #990000; }
+        .color-azul-chiyon { color: #0033A0; }
         .border-rojo { border-color: #CC0000; }
         
         /* ===== HEADER CON BORDE ROJO ===== */
@@ -4204,13 +4204,16 @@ def api_cotizaciones_generar_pdf(id):
             margin: 8px 0; 
             font-size: 8px; 
         }
+        
+        /* 🔴 ENCABEZADO CON FONDO ROJO SUAVE */
         .tabla-productos th { 
-            color: #990000;
+            color: #333333;
             padding: 5px 4px; 
             border: 1px solid #CC0000;
             font-weight: bold; 
             text-align: center; 
             vertical-align: middle; 
+            background-color: #F8C8C8; /* Fondo rojo suave en todo el encabezado */
         }
         .tabla-productos td { 
             padding: 4px 4px; 
@@ -4234,7 +4237,7 @@ def api_cotizaciones_generar_pdf(id):
             text-align: right; 
             width: 85px; 
             font-weight: bold; 
-            color: #990000;
+            color: #333333;
         }
         
         .numero-formateado { 
@@ -4276,18 +4279,18 @@ def api_cotizaciones_generar_pdf(id):
             color: #333333;
         }
         
-        /* TOTAL A PAGAR - ROJO Y MÁS GRANDE */
+        /* 🔵 TOTAL A PAGAR - AZUL CHIYÓN */
         .total-final { 
             border-top: 3px solid #CC0000; 
             padding-top: 8px; 
             margin-top: 6px; 
             font-weight: bold; 
             font-size: 14px;
-            color: #990000; 
+            color: #0033A0;
         }
         .total-final .numero-formateado {
             font-size: 18px;
-            color: #CC0000;
+            color: #0033A0;
         }
         
         /* ===== NOTA ACLARATORIA ===== */
@@ -4425,7 +4428,8 @@ def api_cotizaciones_generar_pdf(id):
         </div>
         <div class="seccion-condiciones">
             <h3>CONDICIONES COMERCIALES</h3>
-            <div class="condicion-line"><span class="condicion-label">Ejecutiva:</span><span class="condicion-value">{{ asesor_comercial }}</span></div>
+            <!-- ✅ CAMBIO 1: "Ejecutiva Comercial:" -->
+            <div class="condicion-line"><span class="condicion-label">Ejecutiva Comercial:</span><span class="condicion-value">{{ asesor_comercial }}</span></div>
             <div class="condicion-line"><span class="condicion-label">E-mail:</span><span class="condicion-value">{{ email_contacto }}</span></div>
             <div class="condicion-line"><span class="condicion-label">Teléfono:</span><span class="condicion-value">{{ telefono_contacto_user }}</span></div>
             <div class="condicion-line"><span class="condicion-label">Condición Pago:</span><span class="condicion-value">{{ condicion_pago }}</span></div>
@@ -4446,7 +4450,7 @@ def api_cotizaciones_generar_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- TABLA DE PRODUCTOS - CABECERA ROJA                          -->
+    <!-- TABLA DE PRODUCTOS - ENCABEZADO CON FONDO ROJO SUAVE        -->
     <!-- ============================================================ -->
     <table class="tabla-productos">
         <thead>
@@ -4495,7 +4499,7 @@ def api_cotizaciones_generar_pdf(id):
     </div>
 
     <!-- ============================================================ -->
-    <!-- TOTALES - TOTAL A PAGAR EN ROJO Y MÁS GRANDE               -->
+    <!-- TOTALES - TOTAL A PAGAR EN AZUL CHIYÓN                      -->
     <!-- ============================================================ -->
     <div class="seccion-totales">
         <div class="total-line"><span>Subtotal (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta|default(0)) }}</span></div>
@@ -4504,6 +4508,7 @@ def api_cotizaciones_generar_pdf(id):
         {% endif %}
         <div class="total-line"><span>Subtotal con descuento (S/):</span><span class="numero-formateado">S/ {{ "%.2f"|format(total_subtotal_venta_desc|default(0)) }}</span></div>
         <div class="total-line"><span>IGV (18%):</span><span class="numero-formateado">S/ {{ "%.2f"|format(summary_igv|default(0)) }}</span></div>
+        <!-- ✅ CAMBIO 2: TOTAL A PAGAR en azul chiyón -->
         <div class="total-line total-final"><span><strong>TOTAL A PAGAR:</strong></span><span class="numero-formateado"><strong>S/ {{ "%.2f"|format(summary_total_venta|default(0)) }}</strong></span></div>
     </div>
 
@@ -4563,7 +4568,6 @@ def api_cotizaciones_generar_pdf(id):
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 # ventas.py - Reemplazar la función generar_pdf_guia_endpoint
 
 @ventas_bp.route('/ventas/api/guias/<int:guia_id>/pdf', methods=['GET'])
@@ -5955,11 +5959,7 @@ def api_cotizaciones_preview_pdf(id):
         .text-right { text-align: right; }
         .fw-bold { font-weight: bold; }
         
-        /* 🔴 VALOR VENTA TOTAL - ROJO SUAVE (celdas del cuerpo) */
-        .celda-valor-total {
-            color: #E57373 !important;
-            font-weight: bold;
-        }
+    
         
         /* ===== SECCIÓN TOTALES ===== */
         .seccion-totales { 
